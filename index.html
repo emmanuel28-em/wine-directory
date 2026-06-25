@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wine Directory</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Restaurant Wine Study Tool</p>
+        <h1>Wine Directory</h1>
+        <p class="intro">
+          Explore wines by region, subregion, grape, producer, and style.
+        </p>
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <aside class="filters" aria-label="Wine filters">
+        <div class="filter-block">
+          <label for="searchInput">Search</label>
+          <input id="searchInput" type="search" placeholder="Producer, grape, wine..." />
+        </div>
+
+        <div class="filter-block">
+          <label for="regionFilter">Region</label>
+          <select id="regionFilter">
+            <option value="all">All regions</option>
+          </select>
+        </div>
+
+        <div class="filter-block">
+          <label for="subregionFilter">Subregion</label>
+          <select id="subregionFilter">
+            <option value="all">All subregions</option>
+          </select>
+        </div>
+
+        <div class="filter-block">
+          <label for="grapeFilter">Grape</label>
+          <select id="grapeFilter">
+            <option value="all">All grapes</option>
+          </select>
+        </div>
+
+        <div class="filter-actions">
+          <button id="clearFilters" type="button">Clear filters</button>
+          <button id="quizMode" class="secondary-button" type="button">Quiz Mode</button>
+        </div>
+      </aside>
+
+      <section class="content-area">
+        <div class="toolbar">
+          <div>
+            <h2>Tech Sheets</h2>
+            <p id="resultCount">Showing 0 wines</p>
+          </div>
+        </div>
+
+        <div id="wineGrid" class="wine-grid" aria-live="polite"></div>
+
+        <section id="quizPanel" class="quiz-panel hidden" aria-live="polite">
+          <div class="quiz-card">
+            <div class="quiz-topline">
+              <p id="quizProgress">Question 1 of 10</p>
+              <p id="quizScore">Score: 0</p>
+            </div>
+
+            <h2 id="quizQuestion">Quiz question</h2>
+
+            <div id="quizChoices" class="quiz-choices"></div>
+
+            <p id="quizFeedback" class="quiz-feedback"></p>
+
+            <div class="quiz-actions">
+              <button id="nextQuestion" type="button" disabled>Next question</button>
+              <button id="restartQuiz" class="secondary-button" type="button">Restart quiz</button>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
