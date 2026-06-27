@@ -25,6 +25,15 @@
         </div>
 
         <div class="filter-block">
+          <label for="statusFilter">BTG Status</label>
+          <select id="statusFilter">
+            <option value="current">Current BTG</option>
+            <option value="previous">Previous BTG</option>
+            <option value="all">All wines</option>
+          </select>
+        </div>
+
+        <div class="filter-block">
           <label for="regionFilter">Region</label>
           <select id="regionFilter">
             <option value="all">All regions</option>
@@ -83,6 +92,7 @@
       </section>
     </main>
 
+    <script src="wine-data.js"></script>
     <script src="script.js"></script>
   </body>
 </html>

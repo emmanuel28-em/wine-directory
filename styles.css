@@ -188,6 +188,24 @@ button:hover {
   line-height: 1.25;
 }
 
+.status-badge {
+  display: inline-flex;
+  width: fit-content;
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #eef6ee;
+  color: #245b28;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.status-badge.previous {
+  background: #f3f0e8;
+  color: #735c24;
+}
+
 .producer {
   margin-bottom: 0;
   color: var(--muted);
