@@ -60,7 +60,7 @@ function normalizeStatus(value = "") {
   return "current";
 }
 
-function splitList(value) {
+function splitList(value = "") {
   return value
     .split(/[;,]/)
     .map((item) => item.trim())
