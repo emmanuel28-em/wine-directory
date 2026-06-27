@@ -35,6 +35,7 @@ function rowToWine(record, headers) {
     name: row.name,
     producer: row.producer,
     vintage: row.vintage,
+    status: normalizeStatus(row.status),
     region: row.region,
     subregion: row.subregion || row.subRegion,
     grapes: splitList(row.grapes || row.varietal),
@@ -47,6 +48,16 @@ function rowToWine(record, headers) {
     details: row.details || row["300Level"] || row.level300,
     pairing: row.pairing
   };
+}
+
+function normalizeStatus(value) {
+  const status = value.trim().toLowerCase();
+
+  if (status === "previous" || status === "past") {
+    return "previous";
+  }
+
+  return "current";
 }
 
 function splitList(value) {

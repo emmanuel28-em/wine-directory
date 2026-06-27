@@ -1,6 +1,7 @@
 const wines = window.wineDirectoryData || [];
 
 const searchInput = document.querySelector("#searchInput");
+const statusFilter = document.querySelector("#statusFilter");
 const regionFilter = document.querySelector("#regionFilter");
 const subregionFilter = document.querySelector("#subregionFilter");
 const grapeFilter = document.querySelector("#grapeFilter");
@@ -56,6 +57,14 @@ function getWrongAnswers(correctAnswer, possibleAnswers) {
   return shuffle(possibleAnswers.filter((answer) => answer !== correctAnswer)).slice(0, 3);
 }
 
+function getWineStatus(wine) {
+  return wine.status || "current";
+}
+
+function getWineStatusLabel(wine) {
+  return getWineStatus(wine) === "previous" ? "Previous BTG" : "Current BTG";
+}
+
 function buildFilters() {
   addOptions(regionFilter, uniqueSorted(wines.map((wine) => wine.region)));
   addOptions(subregionFilter, uniqueSorted(wines.map((wine) => wine.subregion)));
@@ -67,6 +76,7 @@ function wineMatchesSearch(wine, searchTerm) {
     wine.name,
     wine.producer,
     wine.vintage,
+    getWineStatusLabel(wine),
     wine.region,
     wine.subregion,
     wine.style,
@@ -86,17 +96,19 @@ function wineMatchesSearch(wine, searchTerm) {
 
 function getFilteredWines() {
   const searchTerm = searchInput.value.trim().toLowerCase();
+  const selectedStatus = statusFilter.value;
   const selectedRegion = regionFilter.value;
   const selectedSubregion = subregionFilter.value;
   const selectedGrape = grapeFilter.value;
 
   return wines.filter((wine) => {
+    const statusMatches = selectedStatus === "all" || getWineStatus(wine) === selectedStatus;
     const regionMatches = selectedRegion === "all" || wine.region === selectedRegion;
     const subregionMatches = selectedSubregion === "all" || wine.subregion === selectedSubregion;
     const grapeMatches = selectedGrape === "all" || wine.grapes.includes(selectedGrape);
     const searchMatches = !searchTerm || wineMatchesSearch(wine, searchTerm);
 
-    return regionMatches && subregionMatches && grapeMatches && searchMatches;
+    return statusMatches && regionMatches && subregionMatches && grapeMatches && searchMatches;
   });
 }
 
@@ -119,6 +131,7 @@ function renderWines() {
       ${wine.image ? `<img class="bottle-photo" src="${wine.image}" alt="Bottle of ${wine.producer} ${wine.name}" />` : ""}
 
       <div>
+        <span class="status-badge ${getWineStatus(wine) === "previous" ? "previous" : ""}">${getWineStatusLabel(wine)}</span>
         <h3>${wine.name} ${wine.vintage}</h3>
         <p class="producer">${wine.producer}</p>
       </div>
@@ -169,6 +182,7 @@ function renderWines() {
 
 function clearAllFilters() {
   searchInput.value = "";
+  statusFilter.value = "current";
   regionFilter.value = "all";
   subregionFilter.value = "all";
   grapeFilter.value = "all";
@@ -321,7 +335,7 @@ function showQuizResults() {
   nextQuestion.disabled = true;
 }
 
-[searchInput, regionFilter, subregionFilter, grapeFilter].forEach((element) => {
+[searchInput, statusFilter, regionFilter, subregionFilter, grapeFilter].forEach((element) => {
   element.addEventListener("input", renderWines);
 });
 

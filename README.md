@@ -5,6 +5,7 @@ A beginner-friendly personal project for organizing Italian wine tech sheets.
 ## What this first version does
 
 - Shows a browseable list of wines
+- Separates current BTG wines from previous BTG wines
 - Filters by region, subregion, and grape
 - Searches across producer, wine name, grape, region, pricing, and notes
 - Includes a randomized quiz mode built from the wine data
@@ -17,6 +18,7 @@ A beginner-friendly personal project for organizing Italian wine tech sheets.
 - `script.js` makes the filters, cards, and quiz work.
 - `wine-data.js` stores the wine list used by the directory and quiz.
 - `images/` is where bottle photos can go.
+- `wine-sheet-template.csv` can be imported into Google Sheets as a starter BTG list.
 - `scripts/update-wine-data.mjs` can rebuild `wine-data.js` from a Google Sheet CSV.
 - `.github/workflows/update-wine-data.yml` runs the update on a schedule in GitHub Actions.
 
@@ -33,6 +35,7 @@ In `wine-data.js`, copy one wine object inside the `window.wineDirectoryData` li
   name: "Predappio Sangiovese",
   producer: "Chiara Condello",
   vintage: "2023",
+  status: "current",
   region: "Emilia-Romagna",
   subregion: "Predappio, Romagna",
   grapes: ["Sangiovese"],
@@ -85,6 +88,7 @@ The project can be connected to a Google Sheet so the wine list can be updated w
 Use these column names in the first row of the sheet:
 
 ```text
+status
 name
 producer
 vintage
@@ -101,6 +105,8 @@ details
 pairing
 ```
 
+Use `current` for wines currently on BTG and `previous` for older BTG wines.
+
 The `grapes` column can use commas or semicolons for more than one grape:
 
 ```text
@@ -109,12 +115,15 @@ Nerello Mascalese, Nerello Cappuccio
 
 To connect the sheet:
 
-1. In Google Sheets, use `File` > `Share` > `Publish to web`.
-2. Publish the sheet as `Comma-separated values (.csv)`.
-3. Copy the published CSV link.
-4. In GitHub, open the repository settings.
-5. Go to `Secrets and variables` > `Actions`.
-6. Add a repository secret named `WINE_CSV_URL`.
-7. Paste the published CSV link as the secret value.
+1. In Google Sheets, create a new blank sheet.
+2. Import `wine-sheet-template.csv` to start with the current wine list.
+3. Use the `status` column to enter `current` or `previous`.
+4. Use `File` > `Share` > `Publish to web`.
+5. Publish the sheet as `Comma-separated values (.csv)`.
+6. Copy the published CSV link.
+7. In GitHub, open the repository settings.
+8. Go to `Secrets and variables` > `Actions`.
+9. Add a repository secret named `WINE_CSV_URL`.
+10. Paste the published CSV link as the secret value.
 
 The workflow runs every day and can also be run manually from the `Actions` tab.
