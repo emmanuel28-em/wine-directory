@@ -1,4 +1,4 @@
-# Italian Wine Atlas
+# Wine Directory
 
 A beginner-friendly personal project for organizing Italian wine tech sheets.
 
@@ -14,8 +14,11 @@ A beginner-friendly personal project for organizing Italian wine tech sheets.
 
 - `index.html` is the page structure.
 - `styles.css` controls how the site looks.
-- `script.js` stores the sample wine data and makes the filters work.
+- `script.js` makes the filters, cards, and quiz work.
+- `wine-data.js` stores the wine list used by the directory and quiz.
 - `images/` is where bottle photos can go.
+- `scripts/update-wine-data.mjs` can rebuild `wine-data.js` from a Google Sheet CSV.
+- `.github/workflows/update-wine-data.yml` runs the update on a schedule in GitHub Actions.
 
 ## How to open it
 
@@ -23,7 +26,7 @@ Open `index.html` in a browser.
 
 ## How to add a wine
 
-In `script.js`, copy one wine object inside the `wines` list and edit the values:
+In `wine-data.js`, copy one wine object inside the `window.wineDirectoryData` list and edit the values:
 
 ```js
 {
@@ -71,6 +74,47 @@ image: "",
 
 ## Quiz mode
 
-The quiz uses the wine entries in `script.js` as the source of truth.
+The quiz uses the wine entries in `wine-data.js` as the source of truth.
 
 Each round creates 10 randomized questions from the current wine list. When a new wine is added with region, grape, producer, style, farming, and price information, it automatically becomes part of future quiz rounds.
+
+## Google Sheet automation
+
+The project can be connected to a Google Sheet so the wine list can be updated without editing code.
+
+Use these column names in the first row of the sheet:
+
+```text
+name
+producer
+vintage
+region
+subregion
+grapes
+style
+body
+image
+farming
+price
+oneLiner
+details
+pairing
+```
+
+The `grapes` column can use commas or semicolons for more than one grape:
+
+```text
+Nerello Mascalese, Nerello Cappuccio
+```
+
+To connect the sheet:
+
+1. In Google Sheets, use `File` > `Share` > `Publish to web`.
+2. Publish the sheet as `Comma-separated values (.csv)`.
+3. Copy the published CSV link.
+4. In GitHub, open the repository settings.
+5. Go to `Secrets and variables` > `Actions`.
+6. Add a repository secret named `WINE_CSV_URL`.
+7. Paste the published CSV link as the secret value.
+
+The workflow runs every day and can also be run manually from the `Actions` tab.

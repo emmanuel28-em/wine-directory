@@ -1,0 +1,39 @@
+name: Update wine data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 13 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  update-wine-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Update wine data from CSV
+        run: node scripts/update-wine-data.mjs
+        env:
+          WINE_CSV_URL: ${{ secrets.WINE_CSV_URL }}
+
+      - name: Commit updates
+        run: |
+          if git diff --quiet wine-data.js; then
+            echo "No wine data changes to commit."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add wine-data.js
+            git commit -m "Update wine data"
+            git push
+          fi
