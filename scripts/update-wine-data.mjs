@@ -21,6 +21,12 @@ const wines = records
   .map((record) => rowToWine(record, normalizedHeaders))
   .filter((wine) => wine.name && wine.producer);
 
+if (wines.length === 0) {
+  throw new Error(
+    "No wines were found in the CSV. Check that the published Google Sheet tab has name and producer columns with filled rows."
+  );
+}
+
 fs.writeFileSync(
   "wine-data.js",
   `window.wineDirectoryData = ${JSON.stringify(wines, null, 2)};\n`
