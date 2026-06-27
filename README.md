@@ -101,7 +101,7 @@ image
 farming
 price
 oneLiner
-details
+300Level
 pairing
 ```
 
