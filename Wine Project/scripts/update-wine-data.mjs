@@ -50,7 +50,7 @@ function rowToWine(record, headers) {
   };
 }
 
-function normalizeStatus(value) {
+function normalizeStatus(value = "") {
   const status = value.trim().toLowerCase();
 
   if (status === "previous" || status === "past") {
