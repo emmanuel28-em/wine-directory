@@ -462,5 +462,119 @@ window.wineDirectoryData = [
     "oneLiner": "A silky milk punch inspired by the classic Cosmopolitan, with juicy watermelon and tart raspberry flavors.",
     "details": "A silky milk punch inspired by the classic Cosmopolitan, the San Martino Cosmo is an easy-sipping cocktail. Juicy watermelon and tart raspberry create a summery profile, supported by rosemary-infused Tuscan vodka, Cocchi Rossa, Nonino L'Aperitivo, lime, and simple syrup.",
     "pairing": "Guest-facing talking points: clarified texture, Cosmo inspiration, watermelon-raspberry fruit, and a frozen watermelon garnish."
+  },
+  {
+    "type": "cocktail",
+    "name": "Tortafortuna",
+    "status": "current",
+    "replaces": "N/A",
+    "category": "Signature",
+    "baseSpirit": "Gin",
+    "ingredients": [
+      "Quattro Gatti Classico Gin",
+      "Cappelletti Aperitivo",
+      "Cocchi Dopo Teatro",
+      "Nardini Mandorla",
+      "Cherry Reduction"
+    ],
+    "method": "Butter wash",
+    "glassware": "N/A",
+    "garnish": "N/A",
+    "allergies": [
+      "Stone fruit",
+      "Dairy",
+      "Tree nut"
+    ],
+    "style": "Seasonal Negroni",
+    "image": "",
+    "price": "$24",
+    "oneLiner": "A seasonal Negroni inspired by classic cherry pie, with rustic cherry fruit, classic bitterness, and a silky butter-washed texture.",
+    "details": "Tortafortuna draws inspiration from classic cherry pie. A house-made cherry reduction anchors the cocktail, delivering rustic fruit notes while preserving the signature bitterness of a traditional Negroni. A final butter wash adds silky texture. The name plays on portafortuna, the Italian term for a good-luck charm.",
+    "pairing": "Guest-facing talking points: cherry pie inspiration, Negroni structure, bittersweet profile, and silky texture."
+  },
+  {
+    "type": "cocktail",
+    "name": "Landoro",
+    "status": "current",
+    "replaces": "N/A",
+    "category": "Signature",
+    "baseSpirit": "Bourbon",
+    "ingredients": [
+      "Michter's Bourbon",
+      "Bernard Barathier",
+      "Gotha Blu",
+      "Honey",
+      "Lemon"
+    ],
+    "method": "N/A",
+    "glassware": "N/A",
+    "garnish": "N/A",
+    "allergies": [
+      "Alcohol",
+      "Citrus"
+    ],
+    "style": "Whiskey sour / Gold Rush riff",
+    "image": "",
+    "price": "$22",
+    "oneLiner": "Inspired by the Gold Rush, Landoro leans into warm honeyed richness with bourbon, layered spice, and lemon brightness.",
+    "details": "Landoro is inspired by the Gold Rush. Bernard Barathier and honey syrup create a lush sweetness, while Michter's Bourbon and Gotha Blu add layered spice. The name Landoro references a mythical Italian sea serpent.",
+    "pairing": "Guest-facing talking points: bourbon base, honeyed richness, lemon brightness, and layered spice."
+  },
+  {
+    "type": "cocktail",
+    "name": "Two Peas in a Couppe",
+    "status": "current",
+    "replaces": "N/A",
+    "category": "Signature",
+    "baseSpirit": "Gin",
+    "ingredients": [
+      "Snap Pea-Infused Fred Jerbis Gin",
+      "Vernelli Amaro dell'Erborista",
+      "Lemon",
+      "Black Pepper Syrup",
+      "Egg White"
+    ],
+    "method": "Sour",
+    "glassware": "Coupe",
+    "garnish": "N/A",
+    "allergies": [
+      "Egg",
+      "Citrus",
+      "Alcohol"
+    ],
+    "style": "Savory gin sour",
+    "image": "",
+    "price": "$24",
+    "oneLiner": "A playful gin sour with snap pea freshness, lemon brightness, and a subtle warming finish from black pepper syrup.",
+    "details": "Two Peas in a Couppe is a playful take on a gin sour. Snap pea infusion creates a fresh, green base, while black pepper syrup adds a subtle warming finish. The result is savory, bright, and refreshing.",
+    "pairing": "Guest-facing talking points: fresh green snap pea, savory gin sour structure, lemon, and black pepper lift."
+  },
+  {
+    "type": "cocktail",
+    "name": "Postcards",
+    "status": "current",
+    "replaces": "N/A",
+    "category": "Signature",
+    "baseSpirit": "Vermouth",
+    "ingredients": [
+      "Bordiga Vermouth Excelsior Riserva",
+      "Bernard Rabarbaro",
+      "Lambrusco di Sorbara",
+      "Orange",
+      "Simple"
+    ],
+    "method": "Built",
+    "glassware": "N/A",
+    "garnish": "N/A",
+    "allergies": [
+      "Citrus",
+      "Alcohol"
+    ],
+    "style": "Spritz / vermouth",
+    "image": "",
+    "price": "$24",
+    "oneLiner": "A refined alternative to the Aperol Spritz, built around aged vermouth, earthy brightness, and a lively Lambrusco di Sorbara finish.",
+    "details": "Built around aged vermouth, Postcards offers a refined alternative to the Aperol Spritz. Bernard Rabarbaro provides earthy brightness, while Bordiga Vermouth Excelsior Riserva delivers depth and structure. Lambrusco di Sorbara brings a lively, citrus-forward finish.",
+    "pairing": "Guest-facing talking points: spritz-adjacent, aged vermouth depth, Rabarbaro earthiness, citrus, and Lambrusco lift."
   }
 ];
