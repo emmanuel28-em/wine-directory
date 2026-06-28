@@ -250,6 +250,27 @@ window.wineDirectoryData = [
     "pairing": "A perfect match for Tagliolini, either with Ragu Modenese or funghi, where the dark fruit, tannin, earth, and savory structure can meet the richness of the dish."
   },
   {
+    "name": "Le Volte dell'Ornellaia IGT Toscana Rosso",
+    "producer": "Ornellaia",
+    "vintage": "2023",
+    "status": "current",
+    "region": "Tuscany",
+    "subregion": "Bolgheri",
+    "grapes": [
+      "Cabernet Sauvignon",
+      "Merlot",
+      "Petit Verdot"
+    ],
+    "style": "Red",
+    "body": "Full",
+    "image": "",
+    "farming": "Conventional",
+    "price": "$25 glass / $95 bottle",
+    "oneLiner": "A perfect introduction to the legendary Tuscan estate, Le Volte dell'Ornellaia offers the opportunity to drink one of Italy's most celebrated and collected producers at an approachable price. A strong fit for fans of full-bodied, silky, California Cabernet-style wines.",
+    "details": "Ornellaia is one of the most famous producers of Super Tuscans, a category often associated with Bordeaux blends, sometimes with Sangiovese, aged in oak to compete with great wines from France and the United States. Other famous names connected to this style include Sassicaia, Tignanello, and Solaia, wines frequently requested by guests who enjoy a modern, international style of winemaking. Following the model of Bordeaux estates, Ornellaia does not produce single-vineyard or single-varietal wines, but instead a first, second, and third wine of the estate. Le Volte is Ornellaia's third wine, aged in used barrique and cement, and offers a softer but still characteristic expression of the house style: ripe, exuberant, silky, and very drinkable.",
+    "pairing": "Pair with Costata, Cow Grazing, and guests looking for a polished full-bodied red in a familiar Cabernet-like style."
+  },
+  {
     "type": "cocktail",
     "name": "Sample Negroni",
     "status": "current",
