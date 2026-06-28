@@ -349,23 +349,118 @@ window.wineDirectoryData = [
   },
   {
     "type": "cocktail",
-    "name": "Sample Negroni",
+    "name": "Strawberry Fields",
     "status": "current",
-    "category": "Classic",
+    "replaces": "Little Piggy",
+    "category": "Signature",
+    "baseSpirit": "Verita",
+    "ingredients": [
+      "Strawberry Infused Verita",
+      "Strawberry Tea infused Verita",
+      "Fragola Liqueur",
+      "Rosemary-infused Borgogno"
+    ],
+    "method": "N/A",
+    "glassware": "Nick & Nora",
+    "garnish": "Strawberry Powder",
+    "allergies": [
+      "Berries",
+      "Alcohol"
+    ],
+    "style": "Strawberry martini",
+    "image": "",
+    "price": "$20",
+    "oneLiner": "A crisp strawberry martini full of berry flavor, balanced by a subtle herbaceous undertone from rosemary-infused vermouth.",
+    "details": "Just like a breezy spring day wandering through the strawberry fields in Emilia-Romagna, this strawberry martini is crisp and full of berry flavor. The rosemary-infused vermouth adds a subtle herbaceous undertone to balance the cocktail.",
+    "pairing": "Guest-facing talking points: bright berry flavor, crisp martini structure, and a gentle rosemary accent."
+  },
+  {
+    "type": "cocktail",
+    "name": "Brumble in Jalisco",
+    "status": "current",
+    "replaces": "Uva in Jalisco",
+    "category": "Signature",
+    "baseSpirit": "Tequila",
+    "ingredients": [
+      "El Tesoro Blanco",
+      "Viola Liqueur",
+      "Blueberry Lemon Verbena Syrup",
+      "Lemon"
+    ],
+    "method": "N/A",
+    "glassware": "Collins",
+    "garnish": "Flower",
+    "allergies": [
+      "Berries",
+      "Flower",
+      "Citrus",
+      "Alcohol"
+    ],
+    "style": "Citrusy / juicy",
+    "image": "",
+    "price": "$20",
+    "oneLiner": "A tequila riff on a Bramble with bright Lemon Verbena, blueberry, and citrus flavors for an easy warm-weather cocktail.",
+    "details": "A riff on a Bramble, the Brumble in Jalisco lets the tequila take a backseat and allows the bright flavors of Lemon Verbena to shine through. When combined, the cocktail is citrusy, juicy, and easy to enjoy on a hot summer day.",
+    "pairing": "Guest-facing talking points: tequila base, blueberry-lemon brightness, floral garnish, and a refreshing Collins presentation."
+  },
+  {
+    "type": "cocktail",
+    "name": "Casa D(e)i Verdi",
+    "status": "current",
+    "replaces": "Frutteto",
+    "category": "Signature",
     "baseSpirit": "Gin",
     "ingredients": [
-      "Gin",
-      "Campari",
-      "Sweet vermouth"
+      "Erbazzone Quattro Gatti Gin",
+      "Bordiga Chiot",
+      "Simple Syrup",
+      "Lemon Juice"
     ],
-    "method": "Stirred",
-    "glassware": "Rocks glass",
-    "garnish": "Orange twist",
-    "style": "Bitter / stirred",
+    "method": "N/A",
+    "glassware": "Nick & Nora",
+    "garnish": "Nepitella",
+    "allergies": [
+      "Mint",
+      "Citrus",
+      "Alcohol"
+    ],
+    "style": "Herbaceous / citrus",
     "image": "",
-    "price": "",
-    "oneLiner": "A placeholder cocktail entry showing how cocktail specs will appear in the directory.",
-    "details": "Replace this sample with a real cocktail spec from the restaurant. Cocktail entries can include base spirit, ingredients, method, glassware, garnish, service notes, and price.",
-    "pairing": "Use this area for guest-facing talking points or menu pairing notes."
+    "price": "$23",
+    "oneLiner": "An herbaceous gin cocktail inspired by bright bitter greens, with Alpine lift from Bordiga Chiot and citrus structure.",
+    "details": "The Erbazzone filling in the Collare del Rey was a major contributor to this cocktail. Inspired by bright and bitter greens, Casa D(e)i Verdi uses leafy greens infused with Quattro Gatti Gin Classico to create an herbaceous base. Bordiga Chiot offers an Alpine hint, and the name references the house of Giuseppe Verdi, the Italian composer.",
+    "pairing": "Guest-facing talking points: herbaceous, green, lightly Alpine, and inspired by Italian culinary references."
+  },
+  {
+    "type": "cocktail",
+    "name": "San Martino Cosmo",
+    "status": "current",
+    "replaces": "Love in Portofino",
+    "category": "Signature",
+    "baseSpirit": "Vodka",
+    "ingredients": [
+      "Rosemary-infused Winestillery Tuscan Vodka",
+      "Cocchi Rossa",
+      "Nonino L'Aperitivo",
+      "Simple",
+      "Raspberry Juice",
+      "Lime",
+      "Watermelon Juice"
+    ],
+    "method": "Milk punch",
+    "glassware": "Coupe",
+    "garnish": "Frozen Watermelon Balls",
+    "allergies": [
+      "Berries",
+      "Citrus",
+      "Alcohol",
+      "Dairy"
+    ],
+    "style": "Silky / fruity",
+    "image": "",
+    "price": "$22",
+    "oneLiner": "A silky milk punch inspired by the classic Cosmopolitan, with juicy watermelon and tart raspberry flavors.",
+    "details": "A silky milk punch inspired by the classic Cosmopolitan, the San Martino Cosmo is an easy-sipping cocktail. Juicy watermelon and tart raspberry create a summery profile, supported by rosemary-infused Tuscan vodka, Cocchi Rossa, Nonino L'Aperitivo, lime, and simple syrup.",
+    "pairing": "Guest-facing talking points: clarified texture, Cosmo inspiration, watermelon-raspberry fruit, and a frozen watermelon garnish."
   }
 ];

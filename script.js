@@ -94,6 +94,7 @@ function wineMatchesSearch(wine, searchTerm) {
     wine.vintage,
     wine.category,
     wine.baseSpirit,
+    wine.replaces,
     getWineStatusLabel(wine),
     wine.region,
     wine.subregion,
@@ -104,6 +105,7 @@ function wineMatchesSearch(wine, searchTerm) {
     wine.method,
     wine.glassware,
     wine.garnish,
+    ...(wine.allergies || []),
     wine.oneLiner,
     wine.details,
     wine.pairing,
@@ -229,6 +231,10 @@ function renderCocktailCard(cocktail) {
         <dd>${cocktail.baseSpirit || "N/A"}</dd>
       </div>
       <div class="meta-row">
+        <dt class="meta-label">Replaces</dt>
+        <dd>${cocktail.replaces || "N/A"}</dd>
+      </div>
+      <div class="meta-row">
         <dt class="meta-label">Method</dt>
         <dd>${cocktail.method || "N/A"}</dd>
       </div>
@@ -243,6 +249,10 @@ function renderCocktailCard(cocktail) {
       <div class="meta-row">
         <dt class="meta-label">Price</dt>
         <dd>${cocktail.price || "N/A"}</dd>
+      </div>
+      <div class="meta-row">
+        <dt class="meta-label">Allergies</dt>
+        <dd>${(cocktail.allergies || []).join(", ") || "N/A"}</dd>
       </div>
     </dl>
 
