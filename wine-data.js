@@ -290,6 +290,45 @@ window.wineDirectoryData = [
     "pairing": "An ideal accompaniment to almost any food, and especially well suited to the bright, umami-rich profile of pomodoro."
   },
   {
+    "name": "Blu di Burson Longanesi",
+    "producer": "Azienda Agricola Randi",
+    "vintage": "2023",
+    "status": "current",
+    "region": "Emilia-Romagna",
+    "subregion": "Ravenna",
+    "grapes": [
+      "Longanesi",
+      "Burson"
+    ],
+    "style": "Red",
+    "body": "Medium-full",
+    "image": "",
+    "farming": "N/A",
+    "price": "N/A",
+    "oneLiner": "An obscure grape from one of the smallest winemaking areas in Emilia-Romagna, Randi Longanesi has a hearty warmth that emphasizes similar qualities in robust pomodoro and Vacche Rosse Parmigiano.",
+    "details": "Longanesi, also called Burson, is a native vine from the Ravenna plains, recognized and authorized since July 1999 and made into Burson wine by members of the Bagnacavallo consortium within the official production area. The wine shows clear ruby red color with medium depth, dense consistency, and well-defined legs. Aromatically, it offers ripe fruit such as plums, tertiary notes, green notes on the finish, developing hints of menthol and balsamic, and a slightly iodine character. On the palate it is direct and pleasing, with tannins that combine with ripe fruit flavors such as medlar and young red fruits. The finish is long and energetic, ending with a slightly bitter note from the balance between acidity and tannic astringency.",
+    "pairing": "A warm, hearty match for robust pomodoro and Vacche Rosse Parmigiano."
+  },
+  {
+    "name": "Lambrusco Grasparossa di Castelvetro Monovitigno",
+    "producer": "Fattoria Moretto",
+    "vintage": "2024",
+    "status": "current",
+    "region": "Emilia-Romagna",
+    "subregion": "Castelvetro",
+    "grapes": [
+      "Lambrusco Grasparossa"
+    ],
+    "style": "Sparkling red",
+    "body": "Medium",
+    "image": "",
+    "farming": "Organic",
+    "price": "N/A",
+    "oneLiner": "A dry, organically farmed, single-vineyard sparkling red wine from one of the top producers of traditional Lambrusco in Emilia-Romagna. Deeply fruited with a refreshing mineral edge and herbal note.",
+    "details": "This wine comes from Lambrusco Grasparossa grapes grown on the hillsides of Castelvetro, unlike much bulk Lambrusco produced in warmer flatland areas. The soils are a mix of clay, limestone, and silt, giving a mineral lift that makes the wine especially food-friendly. It is produced by Domenica and Albertina Altariva, who have held official organic certification since 1997, an uncommon designation in Lambrusco. Their wines are also vintage dated, reflecting their commitment to terroir-driven, vintage-specific wines. Monovitigno is a single-vineyard planting of Grasparossa, originally planted in 1969 and replanted between 2010 and 2012. The wine is mineral inflected, with fruit that is purer and more precise than many Lambrusco wines, representing the movement toward more terroir-specific fine wines in a region often associated with sweet, inexpensive bulk wine.",
+    "pairing": "Complements the savory funk of Parmesan and refreshes the palate between sips of rich capone brodo."
+  },
+  {
     "type": "cocktail",
     "name": "Sample Negroni",
     "status": "current",
