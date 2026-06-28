@@ -340,7 +340,7 @@ window.wineDirectoryData = [
     ],
     "style": "Sparkling rosato",
     "body": "Light-medium",
-    "image": "",
+    "image": "images/TerreviveSanVincent.jpeg",
     "farming": "Biodynamic since inception",
     "price": "$20 glass / $70 bottle",
     "oneLiner": "A brisk, fresh, ancestral-method Lambrusco di Sorbara from a staunch traditionalist just outside of Modena.",

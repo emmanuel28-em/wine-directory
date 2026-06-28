@@ -1,4 +1,4 @@
-# Beverage Directory
+# Rezdora Directory
 
 A beginner-friendly personal project for organizing beverage tech sheets.
 
@@ -8,7 +8,7 @@ A beginner-friendly personal project for organizing beverage tech sheets.
 - Separates current BTG wines from previous BTG wines
 - Filters by beverage type, region, subregion, and grape
 - Searches across producer, wine name, cocktail name, grape, ingredient, region, pricing, and notes
-- Includes a randomized quiz mode built from the wine data
+- Includes randomized wine and cocktail quiz modes built from the directory data
 - Uses a simple data structure that can later move into a database
 
 ## Files
@@ -101,9 +101,9 @@ image: "",
 
 ## Quiz mode
 
-The quiz uses the wine entries in `wine-data.js` as the source of truth.
+The quiz uses entries in `wine-data.js` as the source of truth.
 
-Each round creates 10 randomized questions from the current wine list. When a new wine is added with region, grape, producer, style, farming, and price information, it automatically becomes part of future quiz rounds.
+Wine quiz rounds create 10 randomized questions from wine entries. Cocktail quiz rounds create 10 randomized questions from cocktail entries. New wines and cocktails automatically become part of future quiz rounds when they include the relevant fields.
 
 ## Google Sheet automation
 

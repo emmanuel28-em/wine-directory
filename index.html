@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Beverage Directory</title>
+    <title>Rezdora Directory</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header class="app-header">
       <div>
-        <p class="eyebrow">Restaurant Beverage Study Tool</p>
-        <h1>Beverage Directory</h1>
+        <p class="eyebrow">Restaurant Study Tool</p>
+        <h1>Rezdora Directory</h1>
         <p class="intro">
           Explore wines and cocktails by style, ingredients, producer, region, and service notes.
         </p>
@@ -81,6 +81,14 @@
 
         <section id="quizPanel" class="quiz-panel hidden" aria-live="polite">
           <div class="quiz-card">
+            <div class="quiz-selector">
+              <label for="quizType">Quiz Type</label>
+              <select id="quizType">
+                <option value="wine">Wine Quiz</option>
+                <option value="cocktail">Cocktail Quiz</option>
+              </select>
+            </div>
+
             <div class="quiz-topline">
               <p id="quizProgress">Question 1 of 10</p>
               <p id="quizScore">Score: 0</p>
