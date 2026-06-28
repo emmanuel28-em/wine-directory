@@ -368,7 +368,7 @@ window.wineDirectoryData = [
       "Alcohol"
     ],
     "style": "Strawberry martini",
-    "image": "",
+    "image": "images/strawberryfields.jpg",
     "price": "$20",
     "oneLiner": "A crisp strawberry martini full of berry flavor, balanced by a subtle herbaceous undertone from rosemary-infused vermouth.",
     "details": "Just like a breezy spring day wandering through the strawberry fields in Emilia-Romagna, this strawberry martini is crisp and full of berry flavor. The rosemary-infused vermouth adds a subtle herbaceous undertone to balance the cocktail.",
@@ -397,7 +397,7 @@ window.wineDirectoryData = [
       "Alcohol"
     ],
     "style": "Citrusy / juicy",
-    "image": "",
+    "image": "images/brumble.jpg",
     "price": "$20",
     "oneLiner": "A tequila riff on a Bramble with bright Lemon Verbena, blueberry, and citrus flavors for an easy warm-weather cocktail.",
     "details": "A riff on a Bramble, the Brumble in Jalisco lets the tequila take a backseat and allows the bright flavors of Lemon Verbena to shine through. When combined, the cocktail is citrusy, juicy, and easy to enjoy on a hot summer day.",
@@ -425,7 +425,7 @@ window.wineDirectoryData = [
       "Alcohol"
     ],
     "style": "Herbaceous / citrus",
-    "image": "",
+    "image": "images/casadeverdi.jpg",
     "price": "$23",
     "oneLiner": "An herbaceous gin cocktail inspired by bright bitter greens, with Alpine lift from Bordiga Chiot and citrus structure.",
     "details": "The Erbazzone filling in the Collare del Rey was a major contributor to this cocktail. Inspired by bright and bitter greens, Casa D(e)i Verdi uses leafy greens infused with Quattro Gatti Gin Classico to create an herbaceous base. Bordiga Chiot offers an Alpine hint, and the name references the house of Giuseppe Verdi, the Italian composer.",
@@ -514,7 +514,7 @@ window.wineDirectoryData = [
       "Citrus"
     ],
     "style": "Whiskey sour / Gold Rush riff",
-    "image": "",
+    "image": "images/landoro.jpg",
     "price": "$22",
     "oneLiner": "Inspired by the Gold Rush, Landoro leans into warm honeyed richness with bourbon, layered spice, and lemon brightness.",
     "details": "Landoro is inspired by the Gold Rush. Bernard Barathier and honey syrup create a lush sweetness, while Michter's Bourbon and Gotha Blu add layered spice. The name Landoro references a mythical Italian sea serpent.",
@@ -543,7 +543,7 @@ window.wineDirectoryData = [
       "Alcohol"
     ],
     "style": "Savory gin sour",
-    "image": "",
+    "image": "images/twopeas.jpg",
     "price": "$24",
     "oneLiner": "A playful gin sour with snap pea freshness, lemon brightness, and a subtle warming finish from black pepper syrup.",
     "details": "Two Peas in a Couppe is a playful take on a gin sour. Snap pea infusion creates a fresh, green base, while black pepper syrup adds a subtle warming finish. The result is savory, bright, and refreshing.",
