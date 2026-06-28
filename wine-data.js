@@ -190,5 +190,163 @@ window.wineDirectoryData = [
     "oneLiner": "A shining example of what happens when farmers cultivate wine from their own land, Alexandre\nChartogne hones the terroir of the Montagne de Reims to create a precise, generous, and romantic\nChampagne.",
     "details": "There are few producers in all of Champagne who could make a better case for terroir-driven\nwines than Alexandre Chartogne. A visit with him at his family estate offers a deep dive into both\nthe largely overlooked history and geological diversity of his hometown of Merfy, just a\nfifteen-minute drive from Reims in the Massif de Saint-Thierry, where his family has tended vines\nfor centuries.\nSince taking over his family's estate in 2006, Alexandre is constantly evolving, observing and\nquestioning how to best express his individual parcels. Convinced that it is indeed the soils and\nsubsoils, alive and preserved, which forge the identity of wine, in Champagne as much as in\nneighboring Burgundy, he has dug deep into historical maps and documents from his family\narchive, spent countless hours carefully analyzing soils of each plot to better guide his work and\nhas never been afraid of experimentation in his cellar.\nThis inquisitive and passionate approach over the past ten years, has made him one of the\nsuperstars in Champagne today. The resulting wines have energy, character and longevity with a\ndelicate touch and finesse that highlights both an underlying salinity and the personality of each of\nhis terroirs. We are honored to play a part in the preservation of something so special.\n‘Sainte Anne’ is a village wine, blending the three main grapes used in Champagne to express\ndifferent pockets of terroir from around the region.",
     "pairing": "Chartogne-Taillet ‘Sainte-Anne’ Brut Champagne NV, we can determine traditional pairings based on its described characteristics. Since it is noted as a precise, generous Champagne with an underlying salinity, it would pair excellently with fresh seafood like oysters, caviar, or roasted poultry. Additionally, its bright acidity and bubbles make it a perfect standalone aperitif or a great match for rich, savory appetizers."
+  },
+  {
+    "name": "Mombeltramo Roero Rosso Riserva",
+    "producer": "Malvira",
+    "vintage": "2013",
+    "status": "current",
+    "region": "Piedmont",
+    "subregion": "Roero",
+    "grapes": [
+      "Nebbiolo"
+    ],
+    "style": "Red",
+    "body": "Medium-full",
+    "image": "",
+    "farming": "Certified Organic",
+    "price": "$32 glass / $135 bottle",
+    "oneLiner": "Aged Nebbiolo is the hallmark of the fifth course of the pasta tasting, complementing Pedroni's 12 year DOP balsamico. Fruit has taken a back seat in favor of tertiary notes of mushrooms and leather.",
+    "details": "Malvira has long been a featured wine at Rezdora due to the close, familial relationship between Chef and Giacomo Damonte, cellar manager. Roero, on the left bank of the Tanaro River in Piemonte, produces age-worthy Nebbiolo that is often featured on the list. Giuseppe Damonte established Malvira in 1950, a time when Roero's potential was not yet fully realized. His passion for farming and wine passed to his sons Roberto and Massimo, who took the reins in 1974 and slowly transformed the family bulk wine business into an estate focused on quality wine production. Today, production comes from six organically farmed vineyards over about 40 hectares. The Mombeltramo vineyard, originally belonging to the maternal grandmother of the Damonte family, sits 280 meters above sea level. Grapes are hand harvested and ferment in stainless steel for five weeks. The wine then ages in 50% new oak for 36 months before bottling, and rests for years in the underground cellar before shipping.",
+    "pairing": "Built for the fifth course of the pasta tasting and Pedroni's 12 year DOP balsamico, with tertiary mushroom, leather, and aged Nebbiolo notes that suit savory, deeply flavored dishes."
+  },
+  {
+    "name": "Monte Grande Soave Classico",
+    "producer": "Pra",
+    "vintage": "2023",
+    "status": "current",
+    "region": "Veneto",
+    "subregion": "Monteforte D'Alpone, Soave Classico",
+    "grapes": [
+      "Garganega",
+      "Trebbiano di Soave"
+    ],
+    "style": "White",
+    "body": "Medium-full",
+    "image": "",
+    "farming": "Certified Organic",
+    "price": "$26 glass / $105 bottle",
+    "oneLiner": "An unctuous but refreshing Soave from a benchmark producer of the style. Notes of wild herbs, stone fruit, and honey, with lifting acidity and medium to full body.",
+    "details": "Graziano Pra is now seen as one of the quintessential producers in Soave, especially impressive given that the winery only began production in the 1980s. The Monte Grande bottling comes from a single parcel and consists of 70% Garganega, the grape that distinguishes Soave aromatically and texturally, and 30% Trebbiano di Soave, a relative of Verdicchio. The Trebbiano is harvested early for freshness and acidity, while the Garganega is allowed to overripen and raisinate slightly on the vine, giving the wine uncommon aromatic intensity and richness. Compared with Massa's more inorganic notes of petrol and stone, Pra Monte Grande is distinguished by powerful herbal and fruit notes.",
+    "pairing": "The wine's richness and acidity make it a strong match for the Gnudi and brown butter, functioning similarly to the Massa pairing."
+  },
+  {
+    "name": "Vigna del Generale Predappio di Predappio Romagna Sangiovese Superiore Riserva",
+    "producer": "Nicolucci",
+    "vintage": "2019",
+    "status": "current",
+    "region": "Emilia-Romagna",
+    "subregion": "Predappio",
+    "grapes": [
+      "Sangiovese"
+    ],
+    "style": "Red",
+    "body": "Full",
+    "image": "",
+    "farming": "Conventional",
+    "price": "$35 glass / $140 bottle",
+    "oneLiner": "A structured, supple Sangiovese, widely considered among the best from Romagna. Dark-fruited, savory, and earthy, a perfect match for Tagliolini with Ragu Modenese or funghi.",
+    "details": "Nicolucci is known for producing high-quality, terroir-driven wines from Romagna. This wine is from Predappio, one of the recognized growing areas for Sangiovese in the region and the same area where Chiara Condello produces wines. It is a fuller and rounder expression of Sangiovese than other Romagna bottlings previously poured, showing dark fruit, supple silky texture, pronounced tannins, and lifted acidity. The Vigna del Generale vineyard is home to the oldest vines on the estate, averaging about 90 years, giving the wine depth and complexity. The vineyard name comes from a local legend of a general who returned to Predappio from war and planted Sangiovese, promising to sell the vineyard to Amadeo Nicolucci, founder of the winery. The wine is aged for 2 years in 30 hectoliter oak casks, then bottled for three months before release. The oak softens tannins and elevates the wine's voluptuous dark fruit.",
+    "pairing": "A perfect match for Tagliolini, either with Ragu Modenese or funghi, where the dark fruit, tannin, earth, and savory structure can meet the richness of the dish."
+  },
+  {
+    "name": "Le Volte dell'Ornellaia IGT Toscana Rosso",
+    "producer": "Ornellaia",
+    "vintage": "2023",
+    "status": "current",
+    "region": "Tuscany",
+    "subregion": "Bolgheri",
+    "grapes": [
+      "Cabernet Sauvignon",
+      "Merlot",
+      "Petit Verdot"
+    ],
+    "style": "Red",
+    "body": "Full",
+    "image": "",
+    "farming": "Conventional",
+    "price": "$25 glass / $95 bottle",
+    "oneLiner": "A perfect introduction to the legendary Tuscan estate, Le Volte dell'Ornellaia offers the opportunity to drink one of Italy's most celebrated and collected producers at an approachable price. A strong fit for fans of full-bodied, silky, California Cabernet-style wines.",
+    "details": "Ornellaia is one of the most famous producers of Super Tuscans, a category often associated with Bordeaux blends, sometimes with Sangiovese, aged in oak to compete with great wines from France and the United States. Other famous names connected to this style include Sassicaia, Tignanello, and Solaia, wines frequently requested by guests who enjoy a modern, international style of winemaking. Following the model of Bordeaux estates, Ornellaia does not produce single-vineyard or single-varietal wines, but instead a first, second, and third wine of the estate. Le Volte is Ornellaia's third wine, aged in used barrique and cement, and offers a softer but still characteristic expression of the house style: ripe, exuberant, silky, and very drinkable.",
+    "pairing": "Pair with Costata, Cow Grazing, and guests looking for a polished full-bodied red in a familiar Cabernet-like style."
+  },
+  {
+    "name": "Vigneti delle Dolomiti Teroldego",
+    "producer": "Foradori",
+    "vintage": "2024",
+    "status": "current",
+    "region": "Trentino-Alto Adige",
+    "subregion": "Mezzolombardo, Campo Rotaliano Plateau",
+    "grapes": [
+      "Teroldego"
+    ],
+    "style": "Red",
+    "body": "Medium",
+    "image": "",
+    "farming": "Biodynamic",
+    "price": "$22 glass / $85 bottle",
+    "oneLiner": "A deliciously drinkable but dazzlingly complex bottle from the Queen of Teroldego, Elizabetta Foradori. Dark fresh fruits, mountain herbs, pronounced minerality, gentle but present tannins, and bright acidity make this an uncommonly food-friendly wine.",
+    "details": "Foradori's wines have long been mainstays on the list, and this Teroldego from her home estate in the Dolomites of Alto Adige may be her most iconic and representative wine. Farmed biodynamically, it is made entirely from Teroldego, a relative of Syrah and Lagrein that was on the verge of obscurity when Elizabetta took over her family's estate in the 1990s. She transformed the estate by converting to organic and later biodynamic farming, changing aging vessels, introducing amphora, altering vine training methods, and turning the estate into a polyculture farm that sells heirloom vegetables and even makes cheese from cows grazing in the hills. In the wine world, Teroldego and Elizabetta are nearly synonymous. Her examples emphasize dark brambly fruit with a mineral-driven, herbaceous, alpine profile. The wine is fermented with indigenous yeasts, aged for about a year in large used foudre and concrete, and bottled with minimal sulfur dioxide in her trademark green bottles with red capsule.",
+    "pairing": "An ideal accompaniment to almost any food, and especially well suited to the bright, umami-rich profile of pomodoro."
+  },
+  {
+    "name": "Blu di Burson Longanesi",
+    "producer": "Azienda Agricola Randi",
+    "vintage": "2023",
+    "status": "current",
+    "region": "Emilia-Romagna",
+    "subregion": "Ravenna",
+    "grapes": [
+      "Longanesi",
+      "Burson"
+    ],
+    "style": "Red",
+    "body": "Medium-full",
+    "image": "",
+    "farming": "N/A",
+    "price": "N/A",
+    "oneLiner": "An obscure grape from one of the smallest winemaking areas in Emilia-Romagna, Randi Longanesi has a hearty warmth that emphasizes similar qualities in robust pomodoro and Vacche Rosse Parmigiano.",
+    "details": "Longanesi, also called Burson, is a native vine from the Ravenna plains, recognized and authorized since July 1999 and made into Burson wine by members of the Bagnacavallo consortium within the official production area. The wine shows clear ruby red color with medium depth, dense consistency, and well-defined legs. Aromatically, it offers ripe fruit such as plums, tertiary notes, green notes on the finish, developing hints of menthol and balsamic, and a slightly iodine character. On the palate it is direct and pleasing, with tannins that combine with ripe fruit flavors such as medlar and young red fruits. The finish is long and energetic, ending with a slightly bitter note from the balance between acidity and tannic astringency.",
+    "pairing": "A warm, hearty match for robust pomodoro and Vacche Rosse Parmigiano."
+  },
+  {
+    "name": "Lambrusco Grasparossa di Castelvetro Monovitigno",
+    "producer": "Fattoria Moretto",
+    "vintage": "2024",
+    "status": "current",
+    "region": "Emilia-Romagna",
+    "subregion": "Castelvetro",
+    "grapes": [
+      "Lambrusco Grasparossa"
+    ],
+    "style": "Sparkling red",
+    "body": "Medium",
+    "image": "",
+    "farming": "Organic",
+    "price": "N/A",
+    "oneLiner": "A dry, organically farmed, single-vineyard sparkling red wine from one of the top producers of traditional Lambrusco in Emilia-Romagna. Deeply fruited with a refreshing mineral edge and herbal note.",
+    "details": "This wine comes from Lambrusco Grasparossa grapes grown on the hillsides of Castelvetro, unlike much bulk Lambrusco produced in warmer flatland areas. The soils are a mix of clay, limestone, and silt, giving a mineral lift that makes the wine especially food-friendly. It is produced by Domenica and Albertina Altariva, who have held official organic certification since 1997, an uncommon designation in Lambrusco. Their wines are also vintage dated, reflecting their commitment to terroir-driven, vintage-specific wines. Monovitigno is a single-vineyard planting of Grasparossa, originally planted in 1969 and replanted between 2010 and 2012. The wine is mineral inflected, with fruit that is purer and more precise than many Lambrusco wines, representing the movement toward more terroir-specific fine wines in a region often associated with sweet, inexpensive bulk wine.",
+    "pairing": "Complements the savory funk of Parmesan and refreshes the palate between sips of rich capone brodo."
+  },
+  {
+    "type": "cocktail",
+    "name": "Sample Negroni",
+    "status": "current",
+    "category": "Classic",
+    "baseSpirit": "Gin",
+    "ingredients": [
+      "Gin",
+      "Campari",
+      "Sweet vermouth"
+    ],
+    "method": "Stirred",
+    "glassware": "Rocks glass",
+    "garnish": "Orange twist",
+    "style": "Bitter / stirred",
+    "image": "",
+    "price": "",
+    "oneLiner": "A placeholder cocktail entry showing how cocktail specs will appear in the directory.",
+    "details": "Replace this sample with a real cocktail spec from the restaurant. Cocktail entries can include base spirit, ingredients, method, glassware, garnish, service notes, and price.",
+    "pairing": "Use this area for guest-facing talking points or menu pairing notes."
   }
 ];
