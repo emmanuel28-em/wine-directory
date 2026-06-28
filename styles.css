@@ -336,6 +336,11 @@ button:hover {
   border-radius: 8px;
 }
 
+.quiz-selector {
+  display: grid;
+  gap: 7px;
+}
+
 .quiz-topline,
 .quiz-actions {
   display: flex;

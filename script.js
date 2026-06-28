@@ -12,6 +12,7 @@ const wineGrid = document.querySelector("#wineGrid");
 const resultCount = document.querySelector("#resultCount");
 const toolbar = document.querySelector(".toolbar");
 const quizPanel = document.querySelector("#quizPanel");
+const quizType = document.querySelector("#quizType");
 const quizProgress = document.querySelector("#quizProgress");
 const quizScore = document.querySelector("#quizScore");
 const quizQuestion = document.querySelector("#quizQuestion");
@@ -55,7 +56,11 @@ function getUniqueGrapes() {
 }
 
 function getWrongAnswers(correctAnswer, possibleAnswers) {
-  return shuffle(possibleAnswers.filter((answer) => answer !== correctAnswer)).slice(0, 3);
+  if (!correctAnswer) {
+    return [];
+  }
+
+  return shuffle(possibleAnswers.filter((answer) => answer && answer !== correctAnswer)).slice(0, 3);
 }
 
 function getWineStatus(wine) {
@@ -78,6 +83,22 @@ function getQuizWines() {
   return wines.filter((item) => getBeverageType(item) === "wine");
 }
 
+function getQuizCocktails() {
+  return wines.filter((item) => getBeverageType(item) === "cocktail");
+}
+
+function getUniqueCocktailValues(getValue) {
+  return uniqueSorted(getQuizCocktails().map(getValue).filter(Boolean));
+}
+
+function getUniqueIngredients() {
+  return uniqueSorted(getQuizCocktails().flatMap((cocktail) => cocktail.ingredients || []));
+}
+
+function getUniqueAllergies() {
+  return uniqueSorted(getQuizCocktails().flatMap((cocktail) => cocktail.allergies || []));
+}
+
 function buildFilters() {
   const wineEntries = wines.filter((item) => getBeverageType(item) === "wine");
 
@@ -94,6 +115,7 @@ function wineMatchesSearch(wine, searchTerm) {
     wine.vintage,
     wine.category,
     wine.baseSpirit,
+    wine.replaces,
     getWineStatusLabel(wine),
     wine.region,
     wine.subregion,
@@ -104,6 +126,7 @@ function wineMatchesSearch(wine, searchTerm) {
     wine.method,
     wine.glassware,
     wine.garnish,
+    ...(wine.allergies || []),
     wine.oneLiner,
     wine.details,
     wine.pairing,
@@ -229,6 +252,10 @@ function renderCocktailCard(cocktail) {
         <dd>${cocktail.baseSpirit || "N/A"}</dd>
       </div>
       <div class="meta-row">
+        <dt class="meta-label">Replaces</dt>
+        <dd>${cocktail.replaces || "N/A"}</dd>
+      </div>
+      <div class="meta-row">
         <dt class="meta-label">Method</dt>
         <dd>${cocktail.method || "N/A"}</dd>
       </div>
@@ -243,6 +270,10 @@ function renderCocktailCard(cocktail) {
       <div class="meta-row">
         <dt class="meta-label">Price</dt>
         <dd>${cocktail.price || "N/A"}</dd>
+      </div>
+      <div class="meta-row">
+        <dt class="meta-label">Allergies</dt>
+        <dd>${(cocktail.allergies || []).join(", ") || "N/A"}</dd>
       </div>
     </dl>
 
@@ -309,6 +340,63 @@ function buildQuestion(wine, questionType) {
   };
 
   const selectedType = questionTypes[questionType];
+  if (!selectedType.answer) {
+    return null;
+  }
+
+  const wrongAnswers = getWrongAnswers(selectedType.answer, selectedType.possibleAnswers);
+
+  return {
+    prompt: selectedType.prompt,
+    answer: selectedType.answer,
+    choices: shuffle([selectedType.answer, ...wrongAnswers])
+  };
+}
+
+function buildCocktailQuestion(cocktail, questionType) {
+  const questionTypes = {
+    ingredient: {
+      prompt: `Which ingredient is used in ${cocktail.name}?`,
+      answer: (cocktail.ingredients || [])[0],
+      possibleAnswers: getUniqueIngredients()
+    },
+    baseSpirit: {
+      prompt: `What is the base spirit for ${cocktail.name}?`,
+      answer: cocktail.baseSpirit,
+      possibleAnswers: getUniqueCocktailValues((item) => item.baseSpirit)
+    },
+    glassware: {
+      prompt: `What glassware is listed for ${cocktail.name}?`,
+      answer: cocktail.glassware,
+      possibleAnswers: getUniqueCocktailValues((item) => item.glassware)
+    },
+    garnish: {
+      prompt: `What is the garnish for ${cocktail.name}?`,
+      answer: cocktail.garnish,
+      possibleAnswers: getUniqueCocktailValues((item) => item.garnish)
+    },
+    allergy: {
+      prompt: `Which allergy is listed for ${cocktail.name}?`,
+      answer: (cocktail.allergies || [])[0],
+      possibleAnswers: getUniqueAllergies()
+    },
+    price: {
+      prompt: `What is the listed price for ${cocktail.name}?`,
+      answer: cocktail.price,
+      possibleAnswers: getUniqueCocktailValues((item) => item.price)
+    },
+    replaces: {
+      prompt: `Which cocktail did ${cocktail.name} replace?`,
+      answer: cocktail.replaces,
+      possibleAnswers: getUniqueCocktailValues((item) => item.replaces)
+    }
+  };
+
+  const selectedType = questionTypes[questionType];
+  if (!selectedType.answer) {
+    return null;
+  }
+
   const wrongAnswers = getWrongAnswers(selectedType.answer, selectedType.possibleAnswers);
 
   return {
@@ -319,10 +407,19 @@ function buildQuestion(wine, questionType) {
 }
 
 function createQuizRound() {
+  if (quizType.value === "cocktail") {
+    const questionTypes = ["ingredient", "baseSpirit", "glassware", "garnish", "allergy", "price", "replaces"];
+    const possibleQuestions = getQuizCocktails().flatMap((cocktail) =>
+      questionTypes.map((questionType) => buildCocktailQuestion(cocktail, questionType))
+    ).filter(Boolean);
+
+    return shuffle(possibleQuestions).slice(0, 10);
+  }
+
   const questionTypes = ["grape", "region", "producer", "style", "farming", "price"];
   const possibleQuestions = getQuizWines().flatMap((wine) =>
     questionTypes.map((questionType) => buildQuestion(wine, questionType))
-  );
+  ).filter(Boolean);
 
   return shuffle(possibleQuestions).slice(0, 10);
 }

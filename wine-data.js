@@ -329,24 +329,252 @@ window.wineDirectoryData = [
     "pairing": "Complements the savory funk of Parmesan and refreshes the palate between sips of rich capone brodo."
   },
   {
-    "type": "cocktail",
-    "name": "Sample Negroni",
+    "name": "San Vincent Lambrusco di Sorbara Rosato Frizzante",
+    "producer": "Terrevive",
+    "vintage": "2021",
     "status": "current",
-    "category": "Classic",
+    "region": "Emilia-Romagna",
+    "subregion": "Colli Modenesi",
+    "grapes": [
+      "Lambrusco di Sorbara"
+    ],
+    "style": "Sparkling rosato",
+    "body": "Light-medium",
+    "image": "images/TerreviveSanVincent.jpeg",
+    "farming": "Biodynamic since inception",
+    "price": "$20 glass / $70 bottle",
+    "oneLiner": "A brisk, fresh, ancestral-method Lambrusco di Sorbara from a staunch traditionalist just outside of Modena.",
+    "details": "Terrevive was founded in 2008 by Gianluca Bergianti as a polycultural biodynamic farm in the hills just outside Modena. His 35 hectares include fruits, herbs, grains, and vegetables, with less than a third of the property planted to vine. He makes almost all of his wines in the Ancestral Method, or Metodo Ancestrale, which predates both the Champagne or Traditional Method and the Charmat or Martinotti Method. Metodo Ancestrale, often known as pet nat, involves bottling the wine before fermentation is complete and allowing that process to finish in bottle, resulting in a hazy, lightly sparkling wine. The wine shows salinity, herbaceousness, underripe berries, and watermelon, with more rustic character than Zucchi's polished Metodo Classico. These wines are made with very little intervention: indigenous yeast fermentations only, no chaptalization, and no dosage. The resulting wines are fresh, soulful, bone-dry, and low in alcohol.",
+    "pairing": "A bright, bone-dry, lightly sparkling rosato for antipasti, savory snacks, and dishes that benefit from salinity, herbal lift, and refreshing acidity."
+  },
+  {
+    "type": "cocktail",
+    "name": "Strawberry Fields",
+    "status": "current",
+    "replaces": "Little Piggy",
+    "category": "Signature",
+    "baseSpirit": "Verita",
+    "ingredients": [
+      "Strawberry Infused Verita",
+      "Strawberry Tea infused Verita",
+      "Fragola Liqueur",
+      "Rosemary-infused Borgogno"
+    ],
+    "method": "N/A",
+    "glassware": "Nick & Nora",
+    "garnish": "Strawberry Powder",
+    "allergies": [
+      "Berries",
+      "Alcohol"
+    ],
+    "style": "Strawberry martini",
+    "image": "",
+    "price": "$20",
+    "oneLiner": "A crisp strawberry martini full of berry flavor, balanced by a subtle herbaceous undertone from rosemary-infused vermouth.",
+    "details": "Just like a breezy spring day wandering through the strawberry fields in Emilia-Romagna, this strawberry martini is crisp and full of berry flavor. The rosemary-infused vermouth adds a subtle herbaceous undertone to balance the cocktail.",
+    "pairing": "Guest-facing talking points: bright berry flavor, crisp martini structure, and a gentle rosemary accent."
+  },
+  {
+    "type": "cocktail",
+    "name": "Brumble in Jalisco",
+    "status": "current",
+    "replaces": "Uva in Jalisco",
+    "category": "Signature",
+    "baseSpirit": "Tequila",
+    "ingredients": [
+      "El Tesoro Blanco",
+      "Viola Liqueur",
+      "Blueberry Lemon Verbena Syrup",
+      "Lemon"
+    ],
+    "method": "N/A",
+    "glassware": "Collins",
+    "garnish": "Flower",
+    "allergies": [
+      "Berries",
+      "Flower",
+      "Citrus",
+      "Alcohol"
+    ],
+    "style": "Citrusy / juicy",
+    "image": "",
+    "price": "$20",
+    "oneLiner": "A tequila riff on a Bramble with bright Lemon Verbena, blueberry, and citrus flavors for an easy warm-weather cocktail.",
+    "details": "A riff on a Bramble, the Brumble in Jalisco lets the tequila take a backseat and allows the bright flavors of Lemon Verbena to shine through. When combined, the cocktail is citrusy, juicy, and easy to enjoy on a hot summer day.",
+    "pairing": "Guest-facing talking points: tequila base, blueberry-lemon brightness, floral garnish, and a refreshing Collins presentation."
+  },
+  {
+    "type": "cocktail",
+    "name": "Casa D(e)i Verdi",
+    "status": "current",
+    "replaces": "Frutteto",
+    "category": "Signature",
     "baseSpirit": "Gin",
     "ingredients": [
-      "Gin",
-      "Campari",
-      "Sweet vermouth"
+      "Erbazzone Quattro Gatti Gin",
+      "Bordiga Chiot",
+      "Simple Syrup",
+      "Lemon Juice"
     ],
-    "method": "Stirred",
-    "glassware": "Rocks glass",
-    "garnish": "Orange twist",
-    "style": "Bitter / stirred",
+    "method": "N/A",
+    "glassware": "Nick & Nora",
+    "garnish": "Nepitella",
+    "allergies": [
+      "Mint",
+      "Citrus",
+      "Alcohol"
+    ],
+    "style": "Herbaceous / citrus",
     "image": "",
-    "price": "",
-    "oneLiner": "A placeholder cocktail entry showing how cocktail specs will appear in the directory.",
-    "details": "Replace this sample with a real cocktail spec from the restaurant. Cocktail entries can include base spirit, ingredients, method, glassware, garnish, service notes, and price.",
-    "pairing": "Use this area for guest-facing talking points or menu pairing notes."
+    "price": "$23",
+    "oneLiner": "An herbaceous gin cocktail inspired by bright bitter greens, with Alpine lift from Bordiga Chiot and citrus structure.",
+    "details": "The Erbazzone filling in the Collare del Rey was a major contributor to this cocktail. Inspired by bright and bitter greens, Casa D(e)i Verdi uses leafy greens infused with Quattro Gatti Gin Classico to create an herbaceous base. Bordiga Chiot offers an Alpine hint, and the name references the house of Giuseppe Verdi, the Italian composer.",
+    "pairing": "Guest-facing talking points: herbaceous, green, lightly Alpine, and inspired by Italian culinary references."
+  },
+  {
+    "type": "cocktail",
+    "name": "San Martino Cosmo",
+    "status": "current",
+    "replaces": "Love in Portofino",
+    "category": "Signature",
+    "baseSpirit": "Vodka",
+    "ingredients": [
+      "Rosemary-infused Winestillery Tuscan Vodka",
+      "Cocchi Rossa",
+      "Nonino L'Aperitivo",
+      "Simple",
+      "Raspberry Juice",
+      "Lime",
+      "Watermelon Juice"
+    ],
+    "method": "Milk punch",
+    "glassware": "Coupe",
+    "garnish": "Frozen Watermelon Balls",
+    "allergies": [
+      "Berries",
+      "Citrus",
+      "Alcohol",
+      "Dairy"
+    ],
+    "style": "Silky / fruity",
+    "image": "",
+    "price": "$22",
+    "oneLiner": "A silky milk punch inspired by the classic Cosmopolitan, with juicy watermelon and tart raspberry flavors.",
+    "details": "A silky milk punch inspired by the classic Cosmopolitan, the San Martino Cosmo is an easy-sipping cocktail. Juicy watermelon and tart raspberry create a summery profile, supported by rosemary-infused Tuscan vodka, Cocchi Rossa, Nonino L'Aperitivo, lime, and simple syrup.",
+    "pairing": "Guest-facing talking points: clarified texture, Cosmo inspiration, watermelon-raspberry fruit, and a frozen watermelon garnish."
+  },
+  {
+    "type": "cocktail",
+    "name": "Tortafortuna",
+    "status": "current",
+    "replaces": "N/A",
+    "category": "Signature",
+    "baseSpirit": "Gin",
+    "ingredients": [
+      "Quattro Gatti Classico Gin",
+      "Cappelletti Aperitivo",
+      "Cocchi Dopo Teatro",
+      "Nardini Mandorla",
+      "Cherry Reduction"
+    ],
+    "method": "Butter wash",
+    "glassware": "N/A",
+    "garnish": "N/A",
+    "allergies": [
+      "Stone fruit",
+      "Dairy",
+      "Tree nut"
+    ],
+    "style": "Seasonal Negroni",
+    "image": "",
+    "price": "$24",
+    "oneLiner": "A seasonal Negroni inspired by classic cherry pie, with rustic cherry fruit, classic bitterness, and a silky butter-washed texture.",
+    "details": "Tortafortuna draws inspiration from classic cherry pie. A house-made cherry reduction anchors the cocktail, delivering rustic fruit notes while preserving the signature bitterness of a traditional Negroni. A final butter wash adds silky texture. The name plays on portafortuna, the Italian term for a good-luck charm.",
+    "pairing": "Guest-facing talking points: cherry pie inspiration, Negroni structure, bittersweet profile, and silky texture."
+  },
+  {
+    "type": "cocktail",
+    "name": "Landoro",
+    "status": "current",
+    "replaces": "N/A",
+    "category": "Signature",
+    "baseSpirit": "Bourbon",
+    "ingredients": [
+      "Michter's Bourbon",
+      "Bernard Barathier",
+      "Gotha Blu",
+      "Honey",
+      "Lemon"
+    ],
+    "method": "N/A",
+    "glassware": "N/A",
+    "garnish": "N/A",
+    "allergies": [
+      "Alcohol",
+      "Citrus"
+    ],
+    "style": "Whiskey sour / Gold Rush riff",
+    "image": "",
+    "price": "$22",
+    "oneLiner": "Inspired by the Gold Rush, Landoro leans into warm honeyed richness with bourbon, layered spice, and lemon brightness.",
+    "details": "Landoro is inspired by the Gold Rush. Bernard Barathier and honey syrup create a lush sweetness, while Michter's Bourbon and Gotha Blu add layered spice. The name Landoro references a mythical Italian sea serpent.",
+    "pairing": "Guest-facing talking points: bourbon base, honeyed richness, lemon brightness, and layered spice."
+  },
+  {
+    "type": "cocktail",
+    "name": "Two Peas in a Couppe",
+    "status": "current",
+    "replaces": "N/A",
+    "category": "Signature",
+    "baseSpirit": "Gin",
+    "ingredients": [
+      "Snap Pea-Infused Fred Jerbis Gin",
+      "Vernelli Amaro dell'Erborista",
+      "Lemon",
+      "Black Pepper Syrup",
+      "Egg White"
+    ],
+    "method": "Sour",
+    "glassware": "Coupe",
+    "garnish": "N/A",
+    "allergies": [
+      "Egg",
+      "Citrus",
+      "Alcohol"
+    ],
+    "style": "Savory gin sour",
+    "image": "",
+    "price": "$24",
+    "oneLiner": "A playful gin sour with snap pea freshness, lemon brightness, and a subtle warming finish from black pepper syrup.",
+    "details": "Two Peas in a Couppe is a playful take on a gin sour. Snap pea infusion creates a fresh, green base, while black pepper syrup adds a subtle warming finish. The result is savory, bright, and refreshing.",
+    "pairing": "Guest-facing talking points: fresh green snap pea, savory gin sour structure, lemon, and black pepper lift."
+  },
+  {
+    "type": "cocktail",
+    "name": "Postcards",
+    "status": "current",
+    "replaces": "N/A",
+    "category": "Signature",
+    "baseSpirit": "Vermouth",
+    "ingredients": [
+      "Bordiga Vermouth Excelsior Riserva",
+      "Bernard Rabarbaro",
+      "Lambrusco di Sorbara",
+      "Orange",
+      "Simple"
+    ],
+    "method": "Built",
+    "glassware": "N/A",
+    "garnish": "N/A",
+    "allergies": [
+      "Citrus",
+      "Alcohol"
+    ],
+    "style": "Spritz / vermouth",
+    "image": "",
+    "price": "$24",
+    "oneLiner": "A refined alternative to the Aperol Spritz, built around aged vermouth, earthy brightness, and a lively Lambrusco di Sorbara finish.",
+    "details": "Built around aged vermouth, Postcards offers a refined alternative to the Aperol Spritz. Bernard Rabarbaro provides earthy brightness, while Bordiga Vermouth Excelsior Riserva delivers depth and structure. Lambrusco di Sorbara brings a lively, citrus-forward finish.",
+    "pairing": "Guest-facing talking points: spritz-adjacent, aged vermouth depth, Rabarbaro earthiness, citrus, and Lambrusco lift."
   }
 ];
