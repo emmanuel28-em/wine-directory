@@ -192,6 +192,25 @@ window.wineDirectoryData = [
     "pairing": "Chartogne-Taillet ‘Sainte-Anne’ Brut Champagne NV, we can determine traditional pairings based on its described characteristics. Since it is noted as a precise, generous Champagne with an underlying salinity, it would pair excellently with fresh seafood like oysters, caviar, or roasted poultry. Additionally, its bright acidity and bubbles make it a perfect standalone aperitif or a great match for rich, savory appetizers."
   },
   {
+    "name": "Mombeltramo Roero Rosso Riserva",
+    "producer": "Malvira",
+    "vintage": "2013",
+    "status": "current",
+    "region": "Piedmont",
+    "subregion": "Roero",
+    "grapes": [
+      "Nebbiolo"
+    ],
+    "style": "Red",
+    "body": "Medium-full",
+    "image": "",
+    "farming": "Certified Organic",
+    "price": "$32 glass / $135 bottle",
+    "oneLiner": "Aged Nebbiolo is the hallmark of the fifth course of the pasta tasting, complementing Pedroni's 12 year DOP balsamico. Fruit has taken a back seat in favor of tertiary notes of mushrooms and leather.",
+    "details": "Malvira has long been a featured wine at Rezdora due to the close, familial relationship between Chef and Giacomo Damonte, cellar manager. Roero, on the left bank of the Tanaro River in Piemonte, produces age-worthy Nebbiolo that is often featured on the list. Giuseppe Damonte established Malvira in 1950, a time when Roero's potential was not yet fully realized. His passion for farming and wine passed to his sons Roberto and Massimo, who took the reins in 1974 and slowly transformed the family bulk wine business into an estate focused on quality wine production. Today, production comes from six organically farmed vineyards over about 40 hectares. The Mombeltramo vineyard, originally belonging to the maternal grandmother of the Damonte family, sits 280 meters above sea level. Grapes are hand harvested and ferment in stainless steel for five weeks. The wine then ages in 50% new oak for 36 months before bottling, and rests for years in the underground cellar before shipping.",
+    "pairing": "Built for the fifth course of the pasta tasting and Pedroni's 12 year DOP balsamico, with tertiary mushroom, leather, and aged Nebbiolo notes that suit savory, deeply flavored dishes."
+  },
+  {
     "type": "cocktail",
     "name": "Sample Negroni",
     "status": "current",
