@@ -329,6 +329,25 @@ window.wineDirectoryData = [
     "pairing": "Complements the savory funk of Parmesan and refreshes the palate between sips of rich capone brodo."
   },
   {
+    "name": "San Vincent Lambrusco di Sorbara Rosato Frizzante",
+    "producer": "Terrevive",
+    "vintage": "2021",
+    "status": "current",
+    "region": "Emilia-Romagna",
+    "subregion": "Colli Modenesi",
+    "grapes": [
+      "Lambrusco di Sorbara"
+    ],
+    "style": "Sparkling rosato",
+    "body": "Light-medium",
+    "image": "",
+    "farming": "Biodynamic since inception",
+    "price": "$20 glass / $70 bottle",
+    "oneLiner": "A brisk, fresh, ancestral-method Lambrusco di Sorbara from a staunch traditionalist just outside of Modena.",
+    "details": "Terrevive was founded in 2008 by Gianluca Bergianti as a polycultural biodynamic farm in the hills just outside Modena. His 35 hectares include fruits, herbs, grains, and vegetables, with less than a third of the property planted to vine. He makes almost all of his wines in the Ancestral Method, or Metodo Ancestrale, which predates both the Champagne or Traditional Method and the Charmat or Martinotti Method. Metodo Ancestrale, often known as pet nat, involves bottling the wine before fermentation is complete and allowing that process to finish in bottle, resulting in a hazy, lightly sparkling wine. The wine shows salinity, herbaceousness, underripe berries, and watermelon, with more rustic character than Zucchi's polished Metodo Classico. These wines are made with very little intervention: indigenous yeast fermentations only, no chaptalization, and no dosage. The resulting wines are fresh, soulful, bone-dry, and low in alcohol.",
+    "pairing": "A bright, bone-dry, lightly sparkling rosato for antipasti, savory snacks, and dishes that benefit from salinity, herbal lift, and refreshing acidity."
+  },
+  {
     "type": "cocktail",
     "name": "Sample Negroni",
     "status": "current",
