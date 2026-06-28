@@ -211,6 +211,45 @@ window.wineDirectoryData = [
     "pairing": "Built for the fifth course of the pasta tasting and Pedroni's 12 year DOP balsamico, with tertiary mushroom, leather, and aged Nebbiolo notes that suit savory, deeply flavored dishes."
   },
   {
+    "name": "Monte Grande Soave Classico",
+    "producer": "Pra",
+    "vintage": "2023",
+    "status": "current",
+    "region": "Veneto",
+    "subregion": "Monteforte D'Alpone, Soave Classico",
+    "grapes": [
+      "Garganega",
+      "Trebbiano di Soave"
+    ],
+    "style": "White",
+    "body": "Medium-full",
+    "image": "",
+    "farming": "Certified Organic",
+    "price": "$26 glass / $105 bottle",
+    "oneLiner": "An unctuous but refreshing Soave from a benchmark producer of the style. Notes of wild herbs, stone fruit, and honey, with lifting acidity and medium to full body.",
+    "details": "Graziano Pra is now seen as one of the quintessential producers in Soave, especially impressive given that the winery only began production in the 1980s. The Monte Grande bottling comes from a single parcel and consists of 70% Garganega, the grape that distinguishes Soave aromatically and texturally, and 30% Trebbiano di Soave, a relative of Verdicchio. The Trebbiano is harvested early for freshness and acidity, while the Garganega is allowed to overripen and raisinate slightly on the vine, giving the wine uncommon aromatic intensity and richness. Compared with Massa's more inorganic notes of petrol and stone, Pra Monte Grande is distinguished by powerful herbal and fruit notes.",
+    "pairing": "The wine's richness and acidity make it a strong match for the Gnudi and brown butter, functioning similarly to the Massa pairing."
+  },
+  {
+    "name": "Vigna del Generale Predappio di Predappio Romagna Sangiovese Superiore Riserva",
+    "producer": "Nicolucci",
+    "vintage": "2019",
+    "status": "current",
+    "region": "Emilia-Romagna",
+    "subregion": "Predappio",
+    "grapes": [
+      "Sangiovese"
+    ],
+    "style": "Red",
+    "body": "Full",
+    "image": "",
+    "farming": "Conventional",
+    "price": "$35 glass / $140 bottle",
+    "oneLiner": "A structured, supple Sangiovese, widely considered among the best from Romagna. Dark-fruited, savory, and earthy, a perfect match for Tagliolini with Ragu Modenese or funghi.",
+    "details": "Nicolucci is known for producing high-quality, terroir-driven wines from Romagna. This wine is from Predappio, one of the recognized growing areas for Sangiovese in the region and the same area where Chiara Condello produces wines. It is a fuller and rounder expression of Sangiovese than other Romagna bottlings previously poured, showing dark fruit, supple silky texture, pronounced tannins, and lifted acidity. The Vigna del Generale vineyard is home to the oldest vines on the estate, averaging about 90 years, giving the wine depth and complexity. The vineyard name comes from a local legend of a general who returned to Predappio from war and planted Sangiovese, promising to sell the vineyard to Amadeo Nicolucci, founder of the winery. The wine is aged for 2 years in 30 hectoliter oak casks, then bottled for three months before release. The oak softens tannins and elevates the wine's voluptuous dark fruit.",
+    "pairing": "A perfect match for Tagliolini, either with Ragu Modenese or funghi, where the dark fruit, tannin, earth, and savory structure can meet the richness of the dish."
+  },
+  {
     "type": "cocktail",
     "name": "Sample Negroni",
     "status": "current",
