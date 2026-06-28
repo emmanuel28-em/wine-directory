@@ -1,6 +1,7 @@
 const wines = window.wineDirectoryData || [];
 
 const searchInput = document.querySelector("#searchInput");
+const typeFilter = document.querySelector("#typeFilter");
 const statusFilter = document.querySelector("#statusFilter");
 const regionFilter = document.querySelector("#regionFilter");
 const subregionFilter = document.querySelector("#subregionFilter");
@@ -42,15 +43,15 @@ function shuffle(items) {
 }
 
 function formatWineName(wine) {
-  return `${wine.producer} ${wine.name} ${wine.vintage}`;
+  return [wine.producer, wine.name, wine.vintage].filter(Boolean).join(" ");
 }
 
 function getUniqueWineValues(getValue) {
-  return uniqueSorted(wines.map(getValue).filter(Boolean));
+  return uniqueSorted(getQuizWines().map(getValue).filter(Boolean));
 }
 
 function getUniqueGrapes() {
-  return uniqueSorted(wines.flatMap((wine) => wine.grapes));
+  return uniqueSorted(getQuizWines().flatMap((wine) => wine.grapes || []));
 }
 
 function getWrongAnswers(correctAnswer, possibleAnswers) {
@@ -62,20 +63,37 @@ function getWineStatus(wine) {
 }
 
 function getWineStatusLabel(wine) {
-  return getWineStatus(wine) === "previous" ? "Previous BTG" : "Current BTG";
+  return getWineStatus(wine) === "previous" ? "Previous" : "Current";
+}
+
+function getBeverageType(item) {
+  return item.type || "wine";
+}
+
+function getTypeLabel(item) {
+  return getBeverageType(item) === "cocktail" ? "Cocktail" : "Wine";
+}
+
+function getQuizWines() {
+  return wines.filter((item) => getBeverageType(item) === "wine");
 }
 
 function buildFilters() {
-  addOptions(regionFilter, uniqueSorted(wines.map((wine) => wine.region)));
-  addOptions(subregionFilter, uniqueSorted(wines.map((wine) => wine.subregion)));
-  addOptions(grapeFilter, uniqueSorted(wines.flatMap((wine) => wine.grapes)));
+  const wineEntries = wines.filter((item) => getBeverageType(item) === "wine");
+
+  addOptions(regionFilter, uniqueSorted(wineEntries.map((wine) => wine.region)));
+  addOptions(subregionFilter, uniqueSorted(wineEntries.map((wine) => wine.subregion)));
+  addOptions(grapeFilter, uniqueSorted(wineEntries.flatMap((wine) => wine.grapes || [])));
 }
 
 function wineMatchesSearch(wine, searchTerm) {
   const searchableText = [
+    getTypeLabel(wine),
     wine.name,
     wine.producer,
     wine.vintage,
+    wine.category,
+    wine.baseSpirit,
     getWineStatusLabel(wine),
     wine.region,
     wine.subregion,
@@ -83,10 +101,14 @@ function wineMatchesSearch(wine, searchTerm) {
     wine.body,
     wine.farming,
     wine.price,
+    wine.method,
+    wine.glassware,
+    wine.garnish,
     wine.oneLiner,
     wine.details,
     wine.pairing,
-    ...wine.grapes
+    ...(wine.grapes || []),
+    ...(wine.ingredients || [])
   ]
     .join(" ")
     .toLowerCase();
@@ -96,26 +118,31 @@ function wineMatchesSearch(wine, searchTerm) {
 
 function getFilteredWines() {
   const searchTerm = searchInput.value.trim().toLowerCase();
+  const selectedType = typeFilter.value;
   const selectedStatus = statusFilter.value;
   const selectedRegion = regionFilter.value;
   const selectedSubregion = subregionFilter.value;
   const selectedGrape = grapeFilter.value;
+  const wineFilterActive = selectedRegion !== "all" || selectedSubregion !== "all" || selectedGrape !== "all";
 
   return wines.filter((wine) => {
+    const typeMatches = selectedType === "all" || getBeverageType(wine) === selectedType;
     const statusMatches = selectedStatus === "all" || getWineStatus(wine) === selectedStatus;
-    const regionMatches = selectedRegion === "all" || wine.region === selectedRegion;
-    const subregionMatches = selectedSubregion === "all" || wine.subregion === selectedSubregion;
-    const grapeMatches = selectedGrape === "all" || wine.grapes.includes(selectedGrape);
+    const isCocktail = getBeverageType(wine) === "cocktail";
+    const cocktailMatchesWineFilters = !isCocktail || selectedType === "cocktail" || !wineFilterActive;
+    const regionMatches = isCocktail || selectedRegion === "all" || wine.region === selectedRegion;
+    const subregionMatches = isCocktail || selectedSubregion === "all" || wine.subregion === selectedSubregion;
+    const grapeMatches = isCocktail || selectedGrape === "all" || (wine.grapes || []).includes(selectedGrape);
     const searchMatches = !searchTerm || wineMatchesSearch(wine, searchTerm);
 
-    return statusMatches && regionMatches && subregionMatches && grapeMatches && searchMatches;
+    return typeMatches && statusMatches && cocktailMatchesWineFilters && regionMatches && subregionMatches && grapeMatches && searchMatches;
   });
 }
 
 function renderWines() {
   const filteredWines = getFilteredWines();
 
-  resultCount.textContent = `Showing ${filteredWines.length} ${filteredWines.length === 1 ? "wine" : "wines"}`;
+  resultCount.textContent = `Showing ${filteredWines.length} ${filteredWines.length === 1 ? "beverage" : "beverages"}`;
   wineGrid.innerHTML = "";
 
   if (filteredWines.length === 0) {
@@ -127,61 +154,119 @@ function renderWines() {
     const card = document.createElement("article");
     card.className = "wine-card";
 
-    card.innerHTML = `
-      ${wine.image ? `<img class="bottle-photo" src="${wine.image}" alt="Bottle of ${wine.producer} ${wine.name}" />` : ""}
-
-      <div>
-        <span class="status-badge ${getWineStatus(wine) === "previous" ? "previous" : ""}">${getWineStatusLabel(wine)}</span>
-        <h3>${wine.name} ${wine.vintage}</h3>
-        <p class="producer">${wine.producer}</p>
-      </div>
-
-      <dl class="meta-list">
-        <div class="meta-row">
-          <dt class="meta-label">Region</dt>
-          <dd>${wine.region}</dd>
-        </div>
-        <div class="meta-row">
-          <dt class="meta-label">Subregion</dt>
-          <dd>${wine.subregion}</dd>
-        </div>
-        <div class="meta-row">
-          <dt class="meta-label">Style</dt>
-          <dd>${wine.style} / ${wine.body}</dd>
-        </div>
-        <div class="meta-row">
-          <dt class="meta-label">Farming</dt>
-          <dd>${wine.farming}</dd>
-        </div>
-        <div class="meta-row">
-          <dt class="meta-label">Price</dt>
-          <dd>${wine.price}</dd>
-        </div>
-      </dl>
-
-      <div class="tag-row">
-        ${wine.grapes.map((grape) => `<span class="tag">${grape}</span>`).join("")}
-      </div>
-
-      <p class="one-liner">${wine.oneLiner}</p>
-
-      <details class="study-notes">
-        <summary>300-level notes</summary>
-        <p>${wine.details}</p>
-      </details>
-
-      <div class="pairing">
-        <h4>Pairing</h4>
-        <p>${wine.pairing}</p>
-      </div>
-    `;
+    card.innerHTML = getBeverageType(wine) === "cocktail" ? renderCocktailCard(wine) : renderWineCard(wine);
 
     wineGrid.append(card);
   });
 }
 
+function renderWineCard(wine) {
+  return `
+    ${wine.image ? `<img class="bottle-photo" src="${wine.image}" alt="Bottle of ${wine.producer} ${wine.name}" />` : ""}
+
+    <div>
+      <span class="status-badge ${getWineStatus(wine) === "previous" ? "previous" : ""}">${getWineStatusLabel(wine)}</span>
+      <span class="type-badge">Wine</span>
+      <h3>${wine.name} ${wine.vintage}</h3>
+      <p class="producer">${wine.producer}</p>
+    </div>
+
+    <dl class="meta-list">
+      <div class="meta-row">
+        <dt class="meta-label">Region</dt>
+        <dd>${wine.region}</dd>
+      </div>
+      <div class="meta-row">
+        <dt class="meta-label">Subregion</dt>
+        <dd>${wine.subregion}</dd>
+      </div>
+      <div class="meta-row">
+        <dt class="meta-label">Style</dt>
+        <dd>${wine.style} / ${wine.body}</dd>
+      </div>
+      <div class="meta-row">
+        <dt class="meta-label">Farming</dt>
+        <dd>${wine.farming}</dd>
+      </div>
+      <div class="meta-row">
+        <dt class="meta-label">Price</dt>
+        <dd>${wine.price}</dd>
+      </div>
+    </dl>
+
+    <div class="tag-row">
+      ${(wine.grapes || []).map((grape) => `<span class="tag">${grape}</span>`).join("")}
+    </div>
+
+    <p class="one-liner">${wine.oneLiner}</p>
+
+    <details class="study-notes">
+      <summary>300-level notes</summary>
+      <p>${wine.details}</p>
+    </details>
+
+    <div class="pairing">
+      <h4>Pairing</h4>
+      <p>${wine.pairing}</p>
+    </div>
+  `;
+}
+
+function renderCocktailCard(cocktail) {
+  return `
+    ${cocktail.image ? `<img class="bottle-photo" src="${cocktail.image}" alt="${cocktail.name}" />` : ""}
+
+    <div>
+      <span class="status-badge ${getWineStatus(cocktail) === "previous" ? "previous" : ""}">${getWineStatusLabel(cocktail)}</span>
+      <span class="type-badge cocktail">Cocktail</span>
+      <h3>${cocktail.name}</h3>
+      <p class="producer">${cocktail.category || cocktail.baseSpirit || "Cocktail"}</p>
+    </div>
+
+    <dl class="meta-list">
+      <div class="meta-row">
+        <dt class="meta-label">Base</dt>
+        <dd>${cocktail.baseSpirit || "N/A"}</dd>
+      </div>
+      <div class="meta-row">
+        <dt class="meta-label">Method</dt>
+        <dd>${cocktail.method || "N/A"}</dd>
+      </div>
+      <div class="meta-row">
+        <dt class="meta-label">Glass</dt>
+        <dd>${cocktail.glassware || "N/A"}</dd>
+      </div>
+      <div class="meta-row">
+        <dt class="meta-label">Garnish</dt>
+        <dd>${cocktail.garnish || "N/A"}</dd>
+      </div>
+      <div class="meta-row">
+        <dt class="meta-label">Price</dt>
+        <dd>${cocktail.price || "N/A"}</dd>
+      </div>
+    </dl>
+
+    <div class="tag-row">
+      ${(cocktail.ingredients || []).map((ingredient) => `<span class="tag cocktail-tag">${ingredient}</span>`).join("")}
+    </div>
+
+    <p class="one-liner">${cocktail.oneLiner}</p>
+
+    <details class="study-notes">
+      <summary>Service notes</summary>
+      <p>${cocktail.details}</p>
+    </details>
+
+    <div class="pairing">
+      <h4>Talking Points</h4>
+      <p>${cocktail.pairing}</p>
+    </div>
+  `;
+}
+
 function clearAllFilters() {
   searchInput.value = "";
+  typeFilter.value = "all";
   statusFilter.value = "current";
   regionFilter.value = "all";
   subregionFilter.value = "all";
@@ -235,7 +320,7 @@ function buildQuestion(wine, questionType) {
 
 function createQuizRound() {
   const questionTypes = ["grape", "region", "producer", "style", "farming", "price"];
-  const possibleQuestions = wines.flatMap((wine) =>
+  const possibleQuestions = getQuizWines().flatMap((wine) =>
     questionTypes.map((questionType) => buildQuestion(wine, questionType))
   );
 
@@ -335,7 +420,7 @@ function showQuizResults() {
   nextQuestion.disabled = true;
 }
 
-[searchInput, statusFilter, regionFilter, subregionFilter, grapeFilter].forEach((element) => {
+[searchInput, typeFilter, statusFilter, regionFilter, subregionFilter, grapeFilter].forEach((element) => {
   element.addEventListener("input", renderWines);
 });
 

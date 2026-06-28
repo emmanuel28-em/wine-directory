@@ -1,13 +1,13 @@
-# Wine Directory
+# Beverage Directory
 
-A beginner-friendly personal project for organizing Italian wine tech sheets.
+A beginner-friendly personal project for organizing beverage tech sheets.
 
 ## What this first version does
 
-- Shows a browseable list of wines
+- Shows a browseable list of wines and cocktails
 - Separates current BTG wines from previous BTG wines
-- Filters by region, subregion, and grape
-- Searches across producer, wine name, grape, region, pricing, and notes
+- Filters by beverage type, region, subregion, and grape
+- Searches across producer, wine name, cocktail name, grape, ingredient, region, pricing, and notes
 - Includes a randomized quiz mode built from the wine data
 - Uses a simple data structure that can later move into a database
 
@@ -47,6 +47,30 @@ In `wine-data.js`, copy one wine object inside the `window.wineDirectoryData` li
   oneLiner: "Short service-friendly summary.",
   details: "Longer 300-level study notes.",
   pairing: "Food pairing notes."
+}
+```
+
+## How to add a cocktail
+
+In `wine-data.js`, copy this cocktail object inside the `window.wineDirectoryData` list and edit the values:
+
+```js
+{
+  type: "cocktail",
+  name: "Cocktail name",
+  status: "current",
+  category: "Signature",
+  baseSpirit: "Gin",
+  ingredients: ["Gin", "Vermouth", "Bitters"],
+  method: "Stirred",
+  glassware: "Coupe",
+  garnish: "Lemon twist",
+  style: "Spirit-forward",
+  image: "images/cocktail-photo.jpg",
+  price: "$18",
+  oneLiner: "Short guest-facing description.",
+  details: "Build specs, service notes, history, or training details.",
+  pairing: "Talking points or menu pairing notes."
 }
 ```
 

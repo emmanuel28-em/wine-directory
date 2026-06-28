@@ -3,33 +3,42 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Wine Directory</title>
+    <title>Beverage Directory</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header class="app-header">
       <div>
-        <p class="eyebrow">Restaurant Wine Study Tool</p>
-        <h1>Wine Directory</h1>
+        <p class="eyebrow">Restaurant Beverage Study Tool</p>
+        <h1>Beverage Directory</h1>
         <p class="intro">
-          Explore wines by region, subregion, grape, producer, and style.
+          Explore wines and cocktails by style, ingredients, producer, region, and service notes.
         </p>
       </div>
     </header>
 
     <main class="page-shell">
-      <aside class="filters" aria-label="Wine filters">
+      <aside class="filters" aria-label="Beverage filters">
         <div class="filter-block">
           <label for="searchInput">Search</label>
-          <input id="searchInput" type="search" placeholder="Producer, grape, wine..." />
+          <input id="searchInput" type="search" placeholder="Wine, cocktail, grape, ingredient..." />
         </div>
 
         <div class="filter-block">
-          <label for="statusFilter">BTG Status</label>
+          <label for="typeFilter">Type</label>
+          <select id="typeFilter">
+            <option value="all">All beverages</option>
+            <option value="wine">Wines</option>
+            <option value="cocktail">Cocktails</option>
+          </select>
+        </div>
+
+        <div class="filter-block">
+          <label for="statusFilter">Menu Status</label>
           <select id="statusFilter">
-            <option value="current">Current BTG</option>
-            <option value="previous">Previous BTG</option>
-            <option value="all">All wines</option>
+            <option value="current">Current</option>
+            <option value="previous">Previous</option>
+            <option value="all">All statuses</option>
           </select>
         </div>
 
@@ -64,7 +73,7 @@
         <div class="toolbar">
           <div>
             <h2>Tech Sheets</h2>
-            <p id="resultCount">Showing 0 wines</p>
+            <p id="resultCount">Showing 0 beverages</p>
           </div>
         </div>
 

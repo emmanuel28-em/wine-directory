@@ -206,6 +206,24 @@ button:hover {
   color: #735c24;
 }
 
+.type-badge {
+  display: inline-flex;
+  width: fit-content;
+  margin: 0 0 8px 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #eef1f7;
+  color: #344054;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.type-badge.cocktail {
+  background: #f6ece8;
+  color: #8a3b22;
+}
+
 .producer {
   margin-bottom: 0;
   color: var(--muted);
@@ -243,6 +261,11 @@ button:hover {
   color: var(--olive);
   font-size: 0.78rem;
   font-weight: 700;
+}
+
+.cocktail-tag {
+  background: #f6ece8;
+  color: #8a3b22;
 }
 
 .one-liner,
