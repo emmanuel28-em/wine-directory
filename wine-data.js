@@ -271,6 +271,25 @@ window.wineDirectoryData = [
     "pairing": "Pair with Costata, Cow Grazing, and guests looking for a polished full-bodied red in a familiar Cabernet-like style."
   },
   {
+    "name": "Vigneti delle Dolomiti Teroldego",
+    "producer": "Foradori",
+    "vintage": "2024",
+    "status": "current",
+    "region": "Trentino-Alto Adige",
+    "subregion": "Mezzolombardo, Campo Rotaliano Plateau",
+    "grapes": [
+      "Teroldego"
+    ],
+    "style": "Red",
+    "body": "Medium",
+    "image": "",
+    "farming": "Biodynamic",
+    "price": "$22 glass / $85 bottle",
+    "oneLiner": "A deliciously drinkable but dazzlingly complex bottle from the Queen of Teroldego, Elizabetta Foradori. Dark fresh fruits, mountain herbs, pronounced minerality, gentle but present tannins, and bright acidity make this an uncommonly food-friendly wine.",
+    "details": "Foradori's wines have long been mainstays on the list, and this Teroldego from her home estate in the Dolomites of Alto Adige may be her most iconic and representative wine. Farmed biodynamically, it is made entirely from Teroldego, a relative of Syrah and Lagrein that was on the verge of obscurity when Elizabetta took over her family's estate in the 1990s. She transformed the estate by converting to organic and later biodynamic farming, changing aging vessels, introducing amphora, altering vine training methods, and turning the estate into a polyculture farm that sells heirloom vegetables and even makes cheese from cows grazing in the hills. In the wine world, Teroldego and Elizabetta are nearly synonymous. Her examples emphasize dark brambly fruit with a mineral-driven, herbaceous, alpine profile. The wine is fermented with indigenous yeasts, aged for about a year in large used foudre and concrete, and bottled with minimal sulfur dioxide in her trademark green bottles with red capsule.",
+    "pairing": "An ideal accompaniment to almost any food, and especially well suited to the bright, umami-rich profile of pomodoro."
+  },
+  {
     "type": "cocktail",
     "name": "Sample Negroni",
     "status": "current",
