@@ -10,6 +10,9 @@ const clearFilters = document.querySelector("#clearFilters");
 const quizMode = document.querySelector("#quizMode");
 const wineGrid = document.querySelector("#wineGrid");
 const resultCount = document.querySelector("#resultCount");
+const sectionTabs = document.querySelectorAll(".section-tab");
+const sectionTitle = document.querySelector("#sectionTitle");
+const sectionDescription = document.querySelector("#sectionDescription");
 const toolbar = document.querySelector(".toolbar");
 const quizPanel = document.querySelector("#quizPanel");
 const quizType = document.querySelector("#quizType");
@@ -25,6 +28,30 @@ let quizQuestions = [];
 let currentQuestionIndex = 0;
 let quizScoreCount = 0;
 let hasAnsweredCurrentQuestion = false;
+let activeSection = "btg";
+
+const sections = {
+  btg: {
+    title: "Current BTG Wines",
+    description: "Current by-the-glass wine tech sheets for service study.",
+    countLabel: "BTG wine"
+  },
+  cocktails: {
+    title: "Cocktails",
+    description: "Current cocktail specs, ingredients, allergies, glassware, and talking points.",
+    countLabel: "cocktail"
+  },
+  pairing: {
+    title: "Wine Pairing Wines",
+    description: "Wines tied to tasting-menu pairings and specific dish conversations.",
+    countLabel: "pairing wine"
+  },
+  food: {
+    title: "Food",
+    description: "A future home for dish notes, allergens, menu language, and training quizzes.",
+    countLabel: "food item"
+  }
+};
 
 function uniqueSorted(items) {
   return [...new Set(items)].sort((a, b) => a.localeCompare(b));
@@ -85,6 +112,10 @@ function getQuizWines() {
 
 function getQuizCocktails() {
   return wines.filter((item) => getBeverageType(item) === "cocktail");
+}
+
+function getMenuSection(item) {
+  return item.menuSection || "btg";
 }
 
 function getUniqueCocktailValues(getValue) {
@@ -148,7 +179,15 @@ function getFilteredWines() {
   const selectedGrape = grapeFilter.value;
   const wineFilterActive = selectedRegion !== "all" || selectedSubregion !== "all" || selectedGrape !== "all";
 
+  if (activeSection === "food") {
+    return [];
+  }
+
   return wines.filter((wine) => {
+    const sectionMatches =
+      (activeSection === "btg" && getBeverageType(wine) === "wine" && getMenuSection(wine) !== "pairing") ||
+      (activeSection === "cocktails" && getBeverageType(wine) === "cocktail") ||
+      (activeSection === "pairing" && getBeverageType(wine) === "wine" && getMenuSection(wine) === "pairing");
     const typeMatches = selectedType === "all" || getBeverageType(wine) === selectedType;
     const statusMatches = selectedStatus === "all" || getWineStatus(wine) === selectedStatus;
     const isCocktail = getBeverageType(wine) === "cocktail";
@@ -158,18 +197,31 @@ function getFilteredWines() {
     const grapeMatches = isCocktail || selectedGrape === "all" || (wine.grapes || []).includes(selectedGrape);
     const searchMatches = !searchTerm || wineMatchesSearch(wine, searchTerm);
 
-    return typeMatches && statusMatches && cocktailMatchesWineFilters && regionMatches && subregionMatches && grapeMatches && searchMatches;
+    return sectionMatches && typeMatches && statusMatches && cocktailMatchesWineFilters && regionMatches && subregionMatches && grapeMatches && searchMatches;
   });
 }
 
 function renderWines() {
   const filteredWines = getFilteredWines();
+  const section = sections[activeSection];
 
-  resultCount.textContent = `Showing ${filteredWines.length} ${filteredWines.length === 1 ? "beverage" : "beverages"}`;
+  sectionTitle.textContent = section.title;
+  sectionDescription.textContent = section.description;
+  resultCount.textContent = `Showing ${filteredWines.length} ${filteredWines.length === 1 ? section.countLabel : `${section.countLabel}s`}`;
   wineGrid.innerHTML = "";
 
+  if (activeSection === "food") {
+    wineGrid.innerHTML = `
+      <div class="empty-state food-state">
+        <h3>Food section coming soon</h3>
+        <p>This area is ready for dish notes, ingredients, allergens, menu language, and food quizzes when you add them.</p>
+      </div>
+    `;
+    return;
+  }
+
   if (filteredWines.length === 0) {
-    wineGrid.innerHTML = `<div class="empty-state">No wines match the current filters.</div>`;
+    wineGrid.innerHTML = `<div class="empty-state">No items match the current filters.</div>`;
     return;
   }
 
@@ -302,6 +354,27 @@ function clearAllFilters() {
   regionFilter.value = "all";
   subregionFilter.value = "all";
   grapeFilter.value = "all";
+  renderWines();
+}
+
+function setActiveSection(sectionName) {
+  activeSection = sectionName;
+  typeFilter.value = "all";
+  statusFilter.value = "current";
+  regionFilter.value = "all";
+  subregionFilter.value = "all";
+  grapeFilter.value = "all";
+
+  sectionTabs.forEach((tab) => {
+    const isActive = tab.dataset.section === sectionName;
+    tab.classList.toggle("active", isActive);
+    tab.setAttribute("aria-current", isActive ? "page" : "false");
+  });
+
+  if (!quizPanel.classList.contains("hidden")) {
+    showDirectoryMode();
+  }
+
   renderWines();
 }
 
@@ -522,6 +595,10 @@ function showQuizResults() {
 });
 
 clearFilters.addEventListener("click", clearAllFilters);
+
+sectionTabs.forEach((tab) => {
+  tab.addEventListener("click", () => setActiveSection(tab.dataset.section));
+});
 
 quizMode.addEventListener("click", () => {
   if (quizPanel.classList.contains("hidden")) {

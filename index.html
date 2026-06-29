@@ -17,6 +17,13 @@
       </div>
     </header>
 
+    <nav class="section-nav" aria-label="Directory sections">
+      <button class="section-tab active" type="button" data-section="btg">Current BTG Wines</button>
+      <button class="section-tab" type="button" data-section="cocktails">Cocktails</button>
+      <button class="section-tab" type="button" data-section="pairing">Wine Pairing Wines</button>
+      <button class="section-tab" type="button" data-section="food">Food</button>
+    </nav>
+
     <main class="page-shell">
       <aside class="filters" aria-label="Beverage filters">
         <div class="filter-block">
@@ -72,7 +79,8 @@
       <section class="content-area">
         <div class="toolbar">
           <div>
-            <h2>Tech Sheets</h2>
+            <h2 id="sectionTitle">Current BTG Wines</h2>
+            <p id="sectionDescription" class="section-description">Current by-the-glass wine tech sheets for service study.</p>
             <p id="resultCount">Showing 0 beverages</p>
           </div>
         </div>

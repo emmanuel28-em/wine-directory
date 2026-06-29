@@ -196,6 +196,7 @@ window.wineDirectoryData = [
     "producer": "Malvira",
     "vintage": "2013",
     "status": "current",
+    "menuSection": "pairing",
     "region": "Piedmont",
     "subregion": "Roero",
     "grapes": [
@@ -215,6 +216,7 @@ window.wineDirectoryData = [
     "producer": "Pra",
     "vintage": "2023",
     "status": "current",
+    "menuSection": "pairing",
     "region": "Veneto",
     "subregion": "Monteforte D'Alpone, Soave Classico",
     "grapes": [
@@ -235,6 +237,7 @@ window.wineDirectoryData = [
     "producer": "Nicolucci",
     "vintage": "2019",
     "status": "current",
+    "menuSection": "pairing",
     "region": "Emilia-Romagna",
     "subregion": "Predappio",
     "grapes": [
@@ -275,6 +278,7 @@ window.wineDirectoryData = [
     "producer": "Foradori",
     "vintage": "2024",
     "status": "current",
+    "menuSection": "pairing",
     "region": "Trentino-Alto Adige",
     "subregion": "Mezzolombardo, Campo Rotaliano Plateau",
     "grapes": [
@@ -294,6 +298,7 @@ window.wineDirectoryData = [
     "producer": "Azienda Agricola Randi",
     "vintage": "2023",
     "status": "current",
+    "menuSection": "pairing",
     "region": "Emilia-Romagna",
     "subregion": "Ravenna",
     "grapes": [
@@ -314,6 +319,7 @@ window.wineDirectoryData = [
     "producer": "Fattoria Moretto",
     "vintage": "2024",
     "status": "current",
+    "menuSection": "pairing",
     "region": "Emilia-Romagna",
     "subregion": "Castelvetro",
     "grapes": [

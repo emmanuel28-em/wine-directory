@@ -61,6 +61,35 @@ h1 {
   font-size: 1.05rem;
 }
 
+.section-nav {
+  display: flex;
+  gap: 8px;
+  width: min(1200px, calc(100% - 40px));
+  margin: 18px auto 0;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.section-tab {
+  width: auto;
+  min-width: max-content;
+  min-height: 40px;
+  padding: 0 14px;
+  background: #fff;
+  border: 1px solid var(--line);
+  color: #344054;
+}
+
+.section-tab:hover {
+  background: #f7f4ed;
+}
+
+.section-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
 .page-shell {
   display: grid;
   grid-template-columns: minmax(230px, 280px) 1fr;
@@ -151,6 +180,13 @@ button:hover {
 #resultCount {
   margin-bottom: 0;
   color: var(--muted);
+}
+
+.section-description {
+  max-width: 680px;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 0.94rem;
 }
 
 .wine-grid {
@@ -322,6 +358,15 @@ button:hover {
   text-align: center;
 }
 
+.empty-state h3 {
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  margin-bottom: 0;
+  line-height: 1.5;
+}
+
 .quiz-panel {
   max-width: 760px;
 }
@@ -418,6 +463,10 @@ button:disabled {
 }
 
 @media (max-width: 760px) {
+  .section-nav {
+    width: min(100% - 28px, 1200px);
+  }
+
   .page-shell {
     grid-template-columns: 1fr;
     width: min(100% - 28px, 1200px);
