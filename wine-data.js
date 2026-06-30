@@ -294,10 +294,30 @@ window.wineDirectoryData = [
     "pairing": "An ideal accompaniment to almost any food, and especially well suited to the bright, umami-rich profile of pomodoro."
   },
   {
+    "name": "Dolcetto d'Alba Superiore",
+    "producer": "Flavio Roddolo",
+    "vintage": "2017",
+    "status": "current",
+    "menuSection": "pairing",
+    "region": "Piedmont",
+    "subregion": "Alba",
+    "grapes": [
+      "Dolcetto"
+    ],
+    "style": "Red",
+    "body": "Full",
+    "image": "",
+    "farming": "Practicing Organic",
+    "price": "$24 glass / $95 bottle",
+    "oneLiner": "A deep, soulful, savory expression of Dolcetto from one of Piemonte's great masters. Flavio Roddolo is an old-fashioned, low-interventionist grower-producer who bucks the trend in Piemonte by holding back his wines until he feels they are ready for release.",
+    "details": "Flavio Roddolo's wines are intensely singular. He releases them with a tremendous amount of age, which is particularly uncommon for Dolcetto, a grape often drunk young. The wines are aged in large, neutral botti for years. They are like the man: a bit wild and somewhat difficult to understand, but intensely captivating and soulful. Importer Jan d'Amore describes the wines as a reflection of the Monforte terroir and of the man who makes them: introverted, brooding, and intense, but rewarding with patience. Visiting Roddolo's vineyards is often described as stepping back in time. The Superiore designation requires a higher minimum alcohol content. This is a full-bodied, textured wine whose heat is offset by dusty florality.",
+    "pairing": "Dark-fruited, rustic, savory, and structured, while still offering freshness and lift. The acidity should pair well with tomato, while the darker, structured elements offset the intensity of the formaggio."
+  },
+  {
     "name": "Blu di Burson Longanesi",
     "producer": "Azienda Agricola Randi",
     "vintage": "2023",
-    "status": "current",
+    "status": "previous",
     "menuSection": "pairing",
     "region": "Emilia-Romagna",
     "subregion": "Ravenna",
