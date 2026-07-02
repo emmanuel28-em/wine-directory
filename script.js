@@ -1,3 +1,5 @@
+// Training content comes from data.js. The old variable name is still "wineDirectoryData"
+// for compatibility, but the list now includes wines, cocktails, and food.
 const wines = window.wineDirectoryData || [];
 
 const searchInput = document.querySelector("#searchInput");
@@ -294,6 +296,8 @@ function getTopicKey(item, questionType) {
 
 function loadMasteryState() {
   try {
+    // localStorage keeps mastery progress on this browser only.
+    // This is not real user tracking yet; it resets if the browser data is cleared.
     return JSON.parse(localStorage.getItem("rezdoraMasteryV1")) || {};
   } catch {
     return {};
@@ -301,6 +305,8 @@ function loadMasteryState() {
 }
 
 function saveMasteryState() {
+  // Save quiz progress locally so the staff member can keep building mastery
+  // without needing a login or database in this static version.
   localStorage.setItem("rezdoraMasteryV1", JSON.stringify(masteryState));
 }
 
@@ -452,7 +458,7 @@ function getQuizKind() {
 function itemMatchesSection(item, sectionName) {
   return (
     (sectionName === "beverage-wine-btg" && getBeverageType(item) === "wine" && getMenuSection(item) !== "pairing" && getMenuSection(item) !== "bottle" && getWineStatus(item) === "current") ||
-    (sectionName === "beverage-wine-pairing" && getBeverageType(item) === "wine" && getMenuSection(item) === "pairing" && getWineStatus(item) === "current") ||
+    (sectionName === "beverage-wine-pairing" && getBeverageType(item) === "wine" && getMenuSection(item) === "pairing") ||
     (sectionName === "beverage-wine-bottle" && getBeverageType(item) === "wine" && getMenuSection(item) === "bottle" && getWineStatus(item) === "current") ||
     (sectionName === "beverage-cocktails" && getBeverageType(item) === "cocktail" && getWineStatus(item) === "current") ||
     (sectionName === "beverage-spirits" && getBeverageType(item) === "spirit" && getWineStatus(item) === "current") ||
@@ -567,6 +573,7 @@ function renderWines() {
     return;
   }
 
+  // Each matching item becomes one card. The card template changes based on item type.
   filteredWines.forEach((wine) => {
     const card = document.createElement("article");
     card.className = "wine-card";
@@ -777,6 +784,8 @@ function setActiveSection(sectionName, options = {}) {
 }
 
 function buildQuestion(wine, questionType) {
+  // Wine quiz questions are generated from the same fields shown on the cards.
+  // If a field is blank or "N/A", the quiz skips that question type.
   const questionTypes = {
     grape: {
       prompt: `Which grape is used in ${formatWineName(wine)}?`,
@@ -822,6 +831,8 @@ function buildQuestion(wine, questionType) {
 }
 
 function buildCocktailQuestion(cocktail, questionType) {
+  // Cocktail questions are generated from ingredients, base spirit, glassware,
+  // garnish, allergies, one-liner, and talking points.
   const questionTypes = {
     ingredient: {
       prompt: `Which ingredient list belongs to ${cocktail.name}?`,
@@ -885,6 +896,8 @@ function getUniqueFoodListValues(getValue) {
 }
 
 function buildFoodQuestion(food, questionType) {
+  // Food questions are generated from allergy, mise, ingredients, one-liner,
+  // and dish details. Missing fields are skipped.
   const questionTypes = {
     allergy: {
       prompt: `Which allergies are listed for ${food.name}?`,
@@ -978,6 +991,8 @@ function buildGenericBeverageQuestion(item, questionType) {
 }
 
 function createQuizRound() {
+  // A quiz round pulls possible questions from the selected section,
+  // prioritizes topics that are not mastered yet, then randomizes the order.
   const questionTypes = getQuestionTypesForCurrentQuiz();
   const possibleQuestions = getQuizItems().flatMap((item) =>
     questionTypes.map((questionType) => {

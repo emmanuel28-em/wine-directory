@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Doc Builder | Rezdora Directory</title>
+    <link rel="stylesheet" href="styles.css?v=10" />
+    <link rel="stylesheet" href="admin.css?v=1" />
+  </head>
+  <body>
+    <header class="app-header admin-header">
+      <div>
+        <p class="eyebrow">Admin Prototype</p>
+        <h1>Manage Library</h1>
+        <p class="intro">
+          Generates JSON only. It does not save changes to the live site yet.
+        </p>
+      </div>
+      <nav class="prototype-links" aria-label="App modes">
+        <a href="index.html">Staff Site</a>
+        <a class="active" href="admin.html">Manage Library</a>
+        <a href="prototypes/platform.html">Prototype Library</a>
+      </nav>
+    </header>
+
+    <main class="admin-shell">
+      <section class="builder-panel" aria-label="Admin doc builder">
+        <div class="builder-section">
+          <h2>1. Choose What You Are Creating</h2>
+          <div class="field-grid">
+            <div>
+              <label for="itemType">Item type</label>
+              <select id="itemType" name="itemType">
+                <option value="wine">Wine</option>
+                <option value="cocktail">Cocktail</option>
+                <option value="food">Food</option>
+                <option value="quiz">Quiz Question</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="staffSection">Staff-site section</label>
+              <select id="staffSection" name="staffSection">
+                <option value="btg">BTG Wines</option>
+                <option value="pairing">Wine Pairing Wines</option>
+                <option value="bottle">Wines by the Bottle</option>
+                <option value="cocktails">Cocktails</option>
+                <option value="food">Food menu item</option>
+                <option value="">Not shown yet</option>
+              </select>
+            </div>
+          </div>
+          <p class="helper-text">
+            This builder creates JSON you can paste into <code>data.js</code>. It does not save to the live site yet.
+          </p>
+        </div>
+
+        <form id="builderForm" class="builder-form">
+          <div class="builder-section">
+            <h2>2. Main Info</h2>
+            <div class="field-grid">
+              <div>
+                <label for="name">Name</label>
+                <input id="name" name="name" type="text" placeholder="Burrata Reale" data-required-for="wine,cocktail,food" />
+              </div>
+
+              <input id="restaurantId" name="restaurantId" type="hidden" value="rezdora" />
+
+              <div>
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                  <option value="current">Current</option>
+                  <option value="previous">Previous</option>
+                  <option value="draft">Draft</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="image">Image path</label>
+                <input id="image" name="image" type="text" placeholder="images/example.jpg" />
+              </div>
+
+              <div>
+                <label for="price">Price</label>
+                <input id="price" name="price" type="text" placeholder="$20 glass / $80 bottle" />
+              </div>
+            </div>
+          </div>
+
+          <div id="wineFields" class="builder-section type-fields">
+            <h2>3. Wine Fields</h2>
+            <div class="field-grid">
+              <div>
+                <label for="producer">Producer</label>
+                <input id="producer" name="producer" type="text" data-required-for="wine" />
+              </div>
+              <div>
+                <label for="vintage">Vintage</label>
+                <input id="vintage" name="vintage" type="text" data-required-for="wine" />
+              </div>
+              <div>
+                <label for="region">Region</label>
+                <input id="region" name="region" type="text" data-required-for="wine" />
+              </div>
+              <div>
+                <label for="subregion">Subregion</label>
+                <input id="subregion" name="subregion" type="text" />
+              </div>
+              <div>
+                <label for="grapes">Grapes</label>
+                <input id="grapes" name="grapes" type="text" placeholder="Nebbiolo, Barbera" data-required-for="wine" />
+              </div>
+              <div>
+                <label for="style">Style</label>
+                <input id="style" name="style" type="text" placeholder="Red, White, Sparkling" data-required-for="wine" />
+              </div>
+              <div>
+                <label for="body">Body</label>
+                <input id="body" name="body" type="text" placeholder="Medium-full" />
+              </div>
+              <div>
+                <label for="farming">Farming</label>
+                <input id="farming" name="farming" type="text" />
+              </div>
+            </div>
+          </div>
+
+          <div id="cocktailFields" class="builder-section type-fields hidden">
+            <h2>3. Cocktail Fields</h2>
+            <div class="field-grid">
+              <div>
+                <label for="baseSpirit">Base spirit</label>
+                <input id="baseSpirit" name="baseSpirit" type="text" data-required-for="cocktail" />
+              </div>
+              <div>
+                <label for="glassware">Glassware</label>
+                <input id="glassware" name="glassware" type="text" data-required-for="cocktail" />
+              </div>
+              <div>
+                <label for="garnish">Garnish</label>
+                <input id="garnish" name="garnish" type="text" />
+              </div>
+              <div>
+                <label for="offMenu">Off menu replacement</label>
+                <input id="offMenu" name="offMenu" type="text" />
+              </div>
+            </div>
+            <label for="ingredients">Ingredients</label>
+            <textarea id="ingredients" name="ingredients" placeholder="One ingredient per line" data-required-for="cocktail"></textarea>
+          </div>
+
+          <div id="foodFields" class="builder-section type-fields hidden">
+            <h2>3. Food Fields</h2>
+            <div class="field-grid">
+              <div>
+                <label for="menu">Menu</label>
+                <select id="menu" name="menu">
+                  <option value="Dinner">Dinner</option>
+                  <option value="Lunch">Lunch</option>
+                  <option value="Brunch">Brunch</option>
+                </select>
+              </div>
+              <div>
+                <label for="course">Course</label>
+                <select id="course" name="course">
+                  <option value="Antipasta">Antipasta</option>
+                  <option value="Primi">Primi</option>
+                  <option value="Secondi">Secondi</option>
+                  <option value="Verdure">Verdure</option>
+                </select>
+              </div>
+              <div>
+                <label for="pronunciation">Pronunciation</label>
+                <input id="pronunciation" name="pronunciation" type="text" />
+              </div>
+              <div>
+                <label for="mise">Mise</label>
+                <input id="mise" name="mise" type="text" placeholder="Small Fork, Butter Knife" />
+              </div>
+            </div>
+            <label for="menuDescription">Menu description</label>
+            <textarea id="menuDescription" name="menuDescription"></textarea>
+            <label for="foodIngredients">Ingredients</label>
+            <textarea id="foodIngredients" name="foodIngredients" placeholder="One ingredient per line" data-required-for="food"></textarea>
+          </div>
+
+          <div id="quizFields" class="builder-section type-fields hidden">
+            <h2>3. Quiz Question Fields</h2>
+            <p class="helper-text">
+              Manual quiz items can be stored in <code>data.js</code> for later. The current staff quiz still generates most questions from wine, cocktail, and food fields.
+            </p>
+            <div class="field-grid">
+              <div>
+                <label for="quizTopicName">Quiz topic</label>
+                <input id="quizTopicName" name="quizTopicName" type="text" placeholder="BTG Wines, Cocktails, Dinner Antipasta" data-required-for="quiz" />
+              </div>
+              <div>
+                <label for="quizLevelName">Level</label>
+                <select id="quizLevelName" name="quizLevelName">
+                  <option value="basic">Basic</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="expert">Expert</option>
+                </select>
+              </div>
+            </div>
+            <label for="quizPrompt">Question</label>
+            <textarea id="quizPrompt" name="quizPrompt" placeholder="What grape is used in this wine?" data-required-for="quiz"></textarea>
+            <label for="quizAnswer">Correct answer</label>
+            <input id="quizAnswer" name="quizAnswer" type="text" data-required-for="quiz" />
+            <label for="quizChoices">Choices</label>
+            <textarea id="quizChoices" name="quizChoices" placeholder="One choice per line. Include the correct answer." data-required-for="quiz"></textarea>
+          </div>
+
+          <div class="builder-section">
+            <h2>4. Study Notes</h2>
+            <label for="oneLiner">One-liner</label>
+            <textarea id="oneLiner" name="oneLiner" data-required-for="wine,cocktail,food"></textarea>
+
+            <label for="allergies">Allergies</label>
+            <input id="allergies" name="allergies" type="text" placeholder="Dairy, Citrus, Alcohol" />
+
+            <label for="details">Details / SOP</label>
+            <textarea id="details" name="details"></textarea>
+          </div>
+
+          <div class="builder-actions">
+            <button id="buildCard" type="submit">Build JSON</button>
+            <button id="clearForm" class="quiet-button" type="button">Clear Form</button>
+          </div>
+        </form>
+      </section>
+
+      <aside class="preview-panel" aria-label="Generated doc data">
+        <div class="builder-section">
+          <h2>Preview</h2>
+          <article id="cardPreview" class="admin-preview-card">
+            <p class="muted">Fill out the form and build the doc to preview it here.</p>
+          </article>
+        </div>
+
+        <div class="builder-section">
+          <h2>Paste Instructions</h2>
+          <ol class="paste-steps">
+            <li>Open <code>data.js</code>.</li>
+            <li>Scroll near the bottom of <code>window.wineDirectoryData = [ ... ]</code>.</li>
+            <li>Paste the copied JSON before the final closing <code>];</code>.</li>
+            <li>Make sure the item before it ends with a comma.</li>
+            <li>Save, then refresh <code>index.html</code>.</li>
+          </ol>
+        </div>
+
+        <div class="builder-section">
+          <div class="output-heading">
+            <h2>Generated JSON</h2>
+            <button id="copyOutput" class="secondary-button" type="button">Copy JSON</button>
+          </div>
+          <textarea id="dataOutput" class="data-output" readonly></textarea>
+          <p class="helper-text">
+            This JSON is formatted with a trailing comma so it can be pasted into the list inside <code>data.js</code>.
+          </p>
+        </div>
+      </aside>
+    </main>
+
+    <script src="admin.js?v=1"></script>
+  </body>
+</html>

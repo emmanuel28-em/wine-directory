@@ -1,153 +1,256 @@
-# Rezdora Directory
+# Rezdora Training Site
 
-A beginner-friendly personal project for organizing beverage tech sheets.
+A beginner-friendly static training site for Rezdora staff.
 
-## What this first version does
+The site currently supports:
 
-- Shows a browseable list of wines and cocktails
-- Separates current BTG wines from previous BTG wines
-- Filters by beverage type, region, subregion, and grape
-- Searches across producer, wine name, cocktail name, grape, ingredient, region, pricing, and notes
-- Includes randomized wine and cocktail quiz modes built from the directory data
-- Uses a simple data structure that can later move into a database
+- Wine tech sheets
+- Cocktail specs
+- Food/menu study cards
+- Search by any word
+- Topic filters
+- Quiz mode
+- Local mastery progress in the browser
 
-## Files
+This is still a static site. There is no real login, database, payment system, or saved admin publishing yet.
 
-- `index.html` is the page structure.
-- `styles.css` controls how the site looks.
-- `script.js` makes the filters, cards, and quiz work.
-- `wine-data.js` stores the wine list used by the directory and quiz.
-- `images/` is where bottle photos can go.
-- `wine-sheet-template.csv` can be imported into Google Sheets as a starter BTG list.
-- `scripts/update-wine-data.mjs` can rebuild `wine-data.js` from a Google Sheet CSV.
-- `.github/workflows/update-wine-data.yml` runs the update on a schedule in GitHub Actions.
+## Current Pages
 
-## How to open it
+### Staff Site
 
-Open `index.html` in a browser.
+`index.html`
 
-## How to add a wine
+This is the page staff should use. It loads the training content from `data.js`, renders cards, and runs quizzes.
 
-In `wine-data.js`, copy one wine object inside the `window.wineDirectoryData` list and edit the values:
+### Admin Prototype
+
+`admin.html`
+
+This is a helper page for creating clean JSON. It does not save changes to the live site yet.
+
+Use it to draft new wine, cocktail, food, SOP, or custom docs, then copy the generated JSON into `data.js` manually.
+
+### Prototype Folder
+
+`prototypes/`
+
+This folder contains experimental future-product screens. These are not the main staff site.
+
+## Important Files
+
+- `index.html` is the staff-facing training page.
+- `data.js` stores wines, cocktails, food items, and quiz source content.
+- `script.js` powers search, filters, cards, quiz mode, and mastery progress.
+- `styles.css` controls the staff site design.
+- `admin.html` is the admin/content builder prototype.
+- `admin.js` generates JSON from the admin form.
+- `admin.css` styles the admin prototype.
+- `images/` stores bottle, cocktail, and food images.
+- `docs/` stores planning and business documents.
+- `scripts/update-wine-data.mjs` is an older Google Sheet importer.
+
+## How Content Works
+
+The staff site loads this file:
+
+```html
+<script src="data.js"></script>
+```
+
+Inside `data.js`, content is stored in:
+
+```js
+window.wineDirectoryData = [
+  // training items live here
+];
+```
+
+The name `wineDirectoryData` is historical. The file now stores more than wine.
+
+## How To Add A Wine Manually
+
+Open `data.js`.
+
+Copy an existing wine object, paste it inside the list, and edit the values.
+
+Basic wine example:
 
 ```js
 {
-  name: "Predappio Sangiovese",
-  producer: "Chiara Condello",
-  vintage: "2023",
+  name: "Wine Name",
+  producer: "Producer Name",
+  vintage: "2024",
   status: "current",
-  region: "Emilia-Romagna",
-  subregion: "Predappio, Romagna",
-  grapes: ["Sangiovese"],
+  menuSection: "btg",
+  region: "Piemonte",
+  subregion: "Alba",
+  grapes: ["Nebbiolo"],
   style: "Red",
   body: "Medium",
-  image: "images/bottle-photo-name.jpg",
+  image: "images/example.jpg",
   farming: "Organic",
-  price: "$20 glass / $70 bottle",
-  oneLiner: "Short service-friendly summary.",
-  details: "Longer 300-level study notes.",
-  pairing: "Food pairing notes."
+  price: "$20 glass / $80 bottle",
+  oneLiner: "Short staff-facing summary.",
+  details: "Longer study notes.",
+  pairing: "Food pairing or service notes."
 }
 ```
 
-## How to add a cocktail
+Use `menuSection: "pairing"` for wine pairing wines.
 
-In `wine-data.js`, copy this cocktail object inside the `window.wineDirectoryData` list and edit the values:
+Use `menuSection: "bottle"` for bottle-list wines.
+
+If it is a current BTG wine, `menuSection` can be left blank or set to `"btg"`.
+
+## How To Add A Cocktail Manually
+
+Open `data.js`.
+
+Copy an existing cocktail object and edit it.
+
+Basic cocktail example:
 
 ```js
 {
   type: "cocktail",
-  name: "Cocktail name",
+  name: "Cocktail Name",
   status: "current",
+  replaces: "Old cocktail name",
   category: "Signature",
   baseSpirit: "Gin",
-  ingredients: ["Gin", "Vermouth", "Bitters"],
-  method: "Stirred",
+  ingredients: ["Gin", "Vermouth", "Lemon"],
+  method: "Shaken",
   glassware: "Coupe",
   garnish: "Lemon twist",
-  style: "Spirit-forward",
-  image: "images/cocktail-photo.jpg",
-  price: "$18",
+  allergies: ["Citrus", "Alcohol"],
+  style: "Bright / citrus",
+  image: "images/example.jpg",
+  price: "$22",
   oneLiner: "Short guest-facing description.",
-  details: "Build specs, service notes, history, or training details.",
-  pairing: "Talking points or menu pairing notes."
+  details: "Build, inspiration, or service notes.",
+  pairing: "Guest-facing talking points."
 }
 ```
 
-If you do not have a bottle photo yet, use an empty value:
+## How To Add A Food Item Manually
+
+Open `data.js`.
+
+Copy an existing food object and edit it.
+
+Basic food example:
 
 ```js
-image: "",
+{
+  type: "food",
+  name: "Dish Name",
+  status: "current",
+  category: "Antipasta",
+  menu: "Dinner",
+  course: "Antipasta",
+  menuDescription: "Menu wording.",
+  pronunciation: "pronunciation guide",
+  mise: "Small Fork",
+  winePairings: [],
+  allergies: ["Dairy", "Gluten"],
+  ingredients: ["Ingredient one", "Ingredient two"],
+  oneLiner: "Short staff-facing summary.",
+  details: "Longer dish details."
+}
 ```
 
-## Manual entry workflow
+## How Quiz Mode Works
 
-1. Copy the tech sheet title into `name`, but remove the producer and vintage if they are already separate fields.
-2. Copy `Producer` into `producer`.
-3. Copy `Varietal` into the `grapes` list.
-4. Copy `Region` and `Sub-Region` into `region` and `subregion`.
-5. Copy `Farming Practices`, `Vintage`, and `Price`.
-6. Save the bottle photo in the `images/` folder and put the filename in `image`.
-7. Put the `One Liner` into `oneLiner`.
-8. Put the `300-level` section into `details`.
-9. Put restaurant pairing advice into `pairing`.
+Quiz questions are generated from `data.js`.
 
-## Good next steps
+Wine questions use fields like:
 
-1. Add fields for soil, elevation, aging, alcohol, and pairing notes.
-2. Add harder quiz questions based on pairings and 300-level notes.
-3. Add a grape profile page for grapes like Nebbiolo and Sangiovese.
-4. Add a map view after the wine data is more complete.
+- Grapes
+- Region
+- Subregion
+- Style
+- One-liner
 
-## Quiz mode
+Cocktail questions use fields like:
 
-The quiz uses entries in `wine-data.js` as the source of truth.
+- Base spirit
+- Ingredients
+- Allergies
+- Glassware
+- Garnish
+- Talking points
 
-Wine quiz rounds create 10 randomized questions from wine entries. Cocktail quiz rounds create 10 randomized questions from cocktail entries. New wines and cocktails automatically become part of future quiz rounds when they include the relevant fields.
+Food questions use fields like:
 
-## Google Sheet automation
+- Allergies
+- Mise
+- Ingredients
+- One-liner
+- Details
 
-The project can be connected to a Google Sheet so the wine list can be updated without editing code.
+Blank fields and `N/A` fields are skipped.
 
-Use these column names in the first row of the sheet:
+Mastery progress is saved in the browser with `localStorage`. This is only local to that browser. It is not real staff account tracking yet.
+
+## How To Test Locally
+
+Simple way:
+
+1. Open `index.html` in your browser.
+2. Use the search bar, tabs, and Quiz Mode.
+3. Open `admin.html` if you want to generate new JSON.
+
+Better local web-server way:
+
+```bash
+python3 -m http.server 8765
+```
+
+Then visit:
 
 ```text
-status
-name
-producer
-vintage
-region
-subregion
-grapes
-style
-body
-image
-farming
-price
-oneLiner
-300Level
-pairing
+http://127.0.0.1:8765/index.html
 ```
 
-Use `current` for wines currently on BTG and `previous` for older BTG wines.
-
-The `grapes` column can use commas or semicolons for more than one grape:
+Admin prototype:
 
 ```text
-Nerello Mascalese, Nerello Cappuccio
+http://127.0.0.1:8765/admin.html
 ```
 
-To connect the sheet:
+## How To Deploy To GitHub Pages
 
-1. In Google Sheets, create a new blank sheet.
-2. Import `wine-sheet-template.csv` to start with the current wine list.
-3. Use the `status` column to enter `current` or `previous`.
-4. Use `File` > `Share` > `Publish to web`.
-5. Publish the sheet as `Comma-separated values (.csv)`.
-6. Copy the published CSV link.
-7. In GitHub, open the repository settings.
-8. Go to `Secrets and variables` > `Actions`.
-9. Add a repository secret named `WINE_CSV_URL`.
-10. Paste the published CSV link as the secret value.
+If editing in the GitHub website:
 
-The workflow runs every day and can also be run manually from the `Actions` tab.
+1. Upload/replace the changed files.
+2. Make sure `index.html`, `data.js`, `script.js`, and `styles.css` are updated together.
+3. Commit the changes to `main`.
+4. Wait for GitHub Pages to rebuild.
+5. Visit the live site.
+6. Hard refresh if old content is cached.
+
+Live site:
+
+```text
+https://emmanuel28-em.github.io/wine-directory/
+```
+
+## Old Google Sheet Importer Warning
+
+`scripts/update-wine-data.mjs` was built for an older wine-only workflow.
+
+It can overwrite `data.js`.
+
+Do not run it unless the Google Sheet contains all current content you want to keep, including food and cocktails.
+
+## Phase 2 Ideas
+
+Phase 2 should stay simple and still avoid full SaaS complexity.
+
+Recommended next steps:
+
+1. Let `admin.html` save draft docs to localStorage.
+2. Add an export button so admin-created docs can be copied into `data.js`.
+3. Split `script.js` into smaller beginner-friendly files later.
+4. Create a safer content template for wine, cocktail, food, and SOP items.
+5. Only after the static workflow is comfortable, plan the real database/admin version.
