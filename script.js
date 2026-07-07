@@ -379,7 +379,20 @@ function getWineStatus(wine) {
 }
 
 function getWineStatusLabel(wine) {
-  return getWineStatus(wine) === "previous" ? "Previous" : "Current";
+  if (getWineStatus(wine) === "previous") {
+    return "Previous";
+  }
+
+  if (getWineStatus(wine) === "off-menu") {
+    return "Off Menu";
+  }
+
+  return "Current";
+}
+
+function getStatusBadgeClass(item) {
+  const status = getWineStatus(item);
+  return status === "current" ? "" : status;
 }
 
 function getBeverageType(item) {
@@ -464,7 +477,7 @@ function itemMatchesSection(item, sectionName) {
     (sectionName === "beverage-spirits" && getBeverageType(item) === "spirit" && getWineStatus(item) === "current") ||
     (sectionName === "beverage-grappa" && getBeverageType(item) === "grappa" && getWineStatus(item) === "current") ||
     (sectionName === "beverage-amari" && getBeverageType(item) === "amaro" && getWineStatus(item) === "current") ||
-    (sectionName.startsWith("food-") && foodMatchesSection(item, sectionName) && getWineStatus(item) === "current")
+    (sectionName.startsWith("food-") && foodMatchesSection(item, sectionName))
   );
 }
 
@@ -610,7 +623,7 @@ function renderWineCard(wine) {
     ${wine.image ? `<img class="bottle-photo" src="${wine.image}" alt="Bottle of ${wine.producer} ${wine.name}" />` : ""}
 
     <div>
-      <span class="status-badge ${getWineStatus(wine) === "previous" ? "previous" : ""}">${getWineStatusLabel(wine)}</span>
+      <span class="status-badge ${getStatusBadgeClass(wine)}">${getWineStatusLabel(wine)}</span>
       <span class="type-badge">Wine</span>
       <h3>${wine.name} ${wine.vintage}</h3>
       <p class="producer">${wine.producer}</p>
@@ -668,7 +681,7 @@ function renderCocktailCard(cocktail) {
     ${cocktail.image ? `<img class="bottle-photo" src="${cocktail.image}" alt="${cocktail.name}" />` : ""}
 
     <div>
-      <span class="status-badge ${getWineStatus(cocktail) === "previous" ? "previous" : ""}">${getWineStatusLabel(cocktail)}</span>
+      <span class="status-badge ${getStatusBadgeClass(cocktail)}">${getWineStatusLabel(cocktail)}</span>
       <span class="type-badge cocktail">Cocktail</span>
       <h3>${cocktail.name}</h3>
       <p class="producer">${cocktail.category || cocktail.baseSpirit || "Cocktail"}</p>
@@ -728,7 +741,7 @@ function renderFoodCard(food) {
     ${food.image ? `<img class="bottle-photo" src="${food.image}" alt="${food.name}" />` : ""}
 
     <div>
-      <span class="status-badge ${getWineStatus(food) === "previous" ? "previous" : ""}">${getWineStatusLabel(food)}</span>
+      <span class="status-badge ${getStatusBadgeClass(food)}">${getWineStatusLabel(food)}</span>
       <span class="type-badge food">Food</span>
       <h3>${food.name}</h3>
       <p class="producer">${food.category || "Food"}</p>

@@ -296,6 +296,11 @@ button:hover {
   color: #735c24;
 }
 
+.status-badge.off-menu {
+  background: #f7ece8;
+  color: #8a3a22;
+}
+
 .type-badge {
   display: inline-flex;
   width: fit-content;

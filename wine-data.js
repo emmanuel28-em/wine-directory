@@ -1,6 +1,6 @@
-// Compatibility copy for older deployed pages that still load wine-data.js.
-// The main source of truth is data.js. Keep this file matched to data.js
-// until the live GitHub Pages site and browser caches are fully using data.js.
+// This is the staff site's source of truth for now.
+// It contains wines, cocktails, food items, and the fields used to build quiz questions.
+// Later, this same kind of data can move into a real database.
 window.wineDirectoryData = [
   {
     "name": "Predappio Sangiovese",
@@ -198,8 +198,9 @@ window.wineDirectoryData = [
     "name": "Mombeltramo Roero Rosso Riserva",
     "producer": "Malvira",
     "vintage": "2013",
-    "status": "current",
+    "status": "previous",
     "menuSection": "pairing",
+    "course": "Previous Course 5",
     "region": "Piedmont",
     "subregion": "Roero",
     "grapes": [
@@ -220,6 +221,7 @@ window.wineDirectoryData = [
     "vintage": "2023",
     "status": "current",
     "menuSection": "pairing",
+    "course": "Course 3",
     "region": "Veneto",
     "subregion": "Monteforte D'Alpone, Soave Classico",
     "grapes": [
@@ -241,6 +243,7 @@ window.wineDirectoryData = [
     "vintage": "2019",
     "status": "current",
     "menuSection": "pairing",
+    "course": "Course 4",
     "region": "Emilia-Romagna",
     "subregion": "Predappio",
     "grapes": [
@@ -281,7 +284,6 @@ window.wineDirectoryData = [
     "producer": "Foradori",
     "vintage": "2024",
     "status": "current",
-    "menuSection": "pairing",
     "region": "Trentino-Alto Adige",
     "subregion": "Mezzolombardo, Campo Rotaliano Plateau",
     "grapes": [
@@ -302,6 +304,7 @@ window.wineDirectoryData = [
     "vintage": "2017",
     "status": "current",
     "menuSection": "pairing",
+    "course": "Course 2",
     "region": "Piedmont",
     "subregion": "Alba",
     "grapes": [
@@ -317,11 +320,33 @@ window.wineDirectoryData = [
     "pairing": "Dark-fruited, rustic, savory, and structured, while still offering freshness and lift. The acidity should pair well with tomato, while the darker, structured elements offset the intensity of the formaggio."
   },
   {
+    "name": "Magnificat Romagna Cabernet Sauvignon",
+    "producer": "Tenuta la Palazza",
+    "vintage": "1998",
+    "status": "current",
+    "menuSection": "pairing",
+    "course": "Course 5",
+    "region": "Emilia-Romagna",
+    "subregion": "Predappio",
+    "grapes": [
+      "Cabernet Sauvignon"
+    ],
+    "style": "Red",
+    "body": "Full",
+    "image": "",
+    "farming": "Certified Organic, Practicing Biodynamic",
+    "price": "$45 glass / $195 bottle",
+    "oneLiner": "Magnificat is a departure for us. For our wine pairings, we often choose to highlight indigenous varietals rather than classic ones. But this Cabernet Sauvignon is enough to veer us off our usual path. This is a rich, dark wine highlighted by blueberry and cherry notes, alongside cocoa and black pepper.",
+    "details": "Claudio Drei Dona bought Tenuta La Palazza in 1985 when the estate mostly grew grapes to sell to other winemakers. He immediately set about replanting vineyards to focus on high quality grapes and biodiversity. He also believed that Predappio's soil could prove good enough to grow international varieties, rather than just the Sangiovese the estate was growing before. When he started, Cabernet Sauvignon was not even a legally allowed grape in Romagna. Against the odds, the wine was well reviewed year after year and is now considered one of Italy's best Cabernet Sauvignons. Fermentation occurs at a controlled temperature in stainless steel, where the wine also goes through malolactic fermentation. After fermentation, 80% of the wine is aged in French oak and 20% in amphora for two years. The wine ages further in bottle at the estate before release.",
+    "pairing": "Built for the final course pairing. Tertiary notes of mushroom, forest floor, and tobacco accompany the developed fruit. The rich savoriness balances the tart sweetness of the balsamico, while the round palate holds up against the richness of the parmigiano crema."
+  },
+  {
     "name": "Blu di Burson Longanesi",
     "producer": "Azienda Agricola Randi",
     "vintage": "2023",
     "status": "previous",
     "menuSection": "pairing",
+    "course": "Previous Course 2",
     "region": "Emilia-Romagna",
     "subregion": "Ravenna",
     "grapes": [
@@ -343,6 +368,7 @@ window.wineDirectoryData = [
     "vintage": "2024",
     "status": "current",
     "menuSection": "pairing",
+    "course": "Course 1",
     "region": "Emilia-Romagna",
     "subregion": "Castelvetro",
     "grapes": [
@@ -786,6 +812,104 @@ window.wineDirectoryData = [
   },
   {
     "type": "food",
+    "name": "Burrata Prosciutto",
+    "status": "current",
+    "category": "Antipasta",
+    "menu": "Dinner",
+    "course": "Antipasta",
+    "menuDescription": "Prosciutto di Parma 24 mesi",
+    "pronunciation": "boo-RRAH-tah pro-SHOOT-toh",
+    "mise": "Small Fork, Knife",
+    "winePairings": [],
+    "allergies": [
+      "Pork",
+      "Dairy"
+    ],
+    "ingredients": [
+      "Burrata",
+      "Prosciutto di Parma 24 month",
+      "Sea salt",
+      "Extra virgin olive oil"
+    ],
+    "oneLiner": "Burrata with thinly sliced 24 month prosciutto.",
+    "details": "Burrata means buttered in Italiano. Our burrata is imported from Puglia on a weekly basis and garnished with sea salt and extra virgin olive oil. A healthy portion of freshly sliced 24 month prosciutto di Parma surrounds the cheese."
+  },
+  {
+    "type": "food",
+    "name": "Affettati Misti",
+    "status": "current",
+    "category": "Antipasta",
+    "menu": "Dinner",
+    "course": "Antipasta",
+    "menuDescription": "Prosciutto di Parma, mortadella, and guanciale",
+    "pronunciation": "ah-FEHT-tee MEES-tee",
+    "mise": "Small Fork, Knife",
+    "winePairings": [],
+    "allergies": [
+      "Pork",
+      "Gluten",
+      "Dairy"
+    ],
+    "ingredients": [
+      "Mortadella",
+      "Prosciutto",
+      "Guanciale",
+      "Capocollo",
+      "Pesto modenese",
+      "Lardo",
+      "Garlic",
+      "Rosemary",
+      "Squacquerone cheese",
+      "Tigelle",
+      "Flour",
+      "Yeast",
+      "Water",
+      "Butter",
+      "Salt",
+      "Parmigiano"
+    ],
+    "oneLiner": "Our affettati misti that can be enjoyed with our tigelle, a traditional bread from Emilia-Romagna.",
+    "details": "The plate includes four pieces of each meat assortment and 24 month aged parmigiano with two tigelle, a traditional bread from Emilia-Romagna. Tigelle are typically made with lardo, but we use butter instead. Pesto modenese is made with lardo, garlic, and rosemary."
+  },
+  {
+    "type": "food",
+    "name": "Insalata Primavera",
+    "status": "previous",
+    "category": "Antipasta",
+    "menu": "Dinner",
+    "course": "Antipasta",
+    "menuDescription": "Peas, mint, spring lettuces, and pecorino sardo",
+    "pronunciation": "een-sah-LAH-tah pree-mah-VEH-rah",
+    "mise": "Small Fork, Butter Knife",
+    "winePairings": [],
+    "allergies": [
+      "Legume",
+      "Vinegar",
+      "Citrus"
+    ],
+    "ingredients": [
+      "Gem lettuce",
+      "Arugula",
+      "Snow peas",
+      "Dandelion greens",
+      "Mint",
+      "Pea vinaigrette",
+      "Lemon juice",
+      "Pea shoots",
+      "Pea shoot oil",
+      "Pecorino sardo",
+      "Olive oil",
+      "Lemon olive oil",
+      "Shallots",
+      "Pea juice",
+      "Agrodolce",
+      "Salt"
+    ],
+    "oneLiner": "Our insalata primavera, with spring lettuces, peas, and mint.",
+    "details": "A mixed green salad with spring flavors: snow peas, pea shoots, gem lettuce, dandelion greens, mint, lemon juice, pea shoot oil, and pecorino sardo. Pea vinaigrette is made with olive oil, lemon olive oil, shallots, pea juice, agrodolce, and salt."
+  },
+  {
+    "type": "food",
     "name": "Stracciatella con Cipolla",
     "status": "current",
     "category": "Antipasta",
@@ -811,5 +935,378 @@ window.wineDirectoryData = [
     ],
     "oneLiner": "Our stracciatella with onions three ways.",
     "details": "Onion puree is made by roasting whole white onions in the oven until caramelized, then blending them with salt and olive oil. Red onion jam is made by cooking down red onions and deglazing with balsamic vinegar. The dish is garnished with sliced green onion tops, onion powder, and chive oil."
+  },
+  {
+    "type": "food",
+    "name": "Anolini di Parma",
+    "status": "current",
+    "category": "Primi",
+    "menu": "Dinner",
+    "course": "Primi",
+    "menuDescription": "Crema di parmigiano and aceto balsamico DOP",
+    "pronunciation": "ah-noh-LEE-nee dee PAR-mah",
+    "mise": "Large Fork",
+    "winePairings": [
+      "2016 Cantalupo 'Collis Carellae', Ghemme"
+    ],
+    "allergies": [
+      "Gluten",
+      "Pork",
+      "Dairy",
+      "Egg",
+      "Vinegar"
+    ],
+    "ingredients": [
+      "Anolini filled pasta",
+      "Meat filling",
+      "Prosciutto",
+      "Mortadella",
+      "Ground pork",
+      "Parmigiano",
+      "Ground pork shoulder",
+      "Nutmeg",
+      "24 month parmigiano fonduta",
+      "12 year aged Pedroni aceto balsamico DOP"
+    ],
+    "oneLiner": "Our Anolini di Parma stuffed with traditional meat filling with parmigiano fonduta and topped off with our 12 year aged DOP balsamic vinegar.",
+    "details": "A circular ridged pasta with traditional meat filling, typically prosciutto, mortadella, parmigiano, ground pork shoulder, and nutmeg, formed with a circular mold and punched out individually. Served with parmigiano fonduta, a creamy 24 month Parmigiano cheese sauce, and a tableside pour of 12 year aged aceto balsamico DOP."
+  },
+  {
+    "type": "food",
+    "name": "Doppio Cappelletti in Primavera",
+    "status": "current",
+    "category": "Primi",
+    "menu": "Dinner",
+    "course": "Primi",
+    "menuDescription": "Rabbit, spring peas, lemon, and crema di pecorino e parmigiano",
+    "pronunciation": "DOHP-pyoh cahp-pel-LET-tee een pree-mah-VEH-rah",
+    "mise": "Large Fork",
+    "winePairings": [],
+    "allergies": [
+      "Citrus",
+      "Dairy",
+      "Legumes",
+      "Gluten",
+      "Egg",
+      "Allium"
+    ],
+    "ingredients": [
+      "Doppio cappelletti",
+      "Rabbit filling",
+      "Rabbit legs",
+      "Soffritto",
+      "Carrots",
+      "Celery",
+      "Onions",
+      "Lemon zest",
+      "Parsley",
+      "Salt",
+      "Apple cider vinegar",
+      "Pecorino parmigiano crema",
+      "Heavy cream",
+      "Parmigiano",
+      "Pecorino cheese",
+      "Yellow pasta dough",
+      "Green spinach dough",
+      "Pea puree",
+      "Peas",
+      "Shallots",
+      "Spinach",
+      "Lemon",
+      "Olive oil",
+      "Rabbit reduction",
+      "Rabbit stock"
+    ],
+    "oneLiner": "Rabbit, spring peas, lemon, and crema di pecorino e parmigiano.",
+    "details": "Doppio cappelletti means two fillings: one filling is rabbit, and the second is pecorino parmigiano crema. Rabbit legs are braised with soffritto, then pulled from the bones and mixed with lemon zest, parsley, salt, and apple cider vinegar. The pecorino parmigiano crema is made with heavy cream, parmigiano, and pecorino cheese. The pasta dough combines house yellow dough with stripes of green spinach dough. For pickup, the pasta is tossed with lemon butter, plated on a bed of spring pea puree and peas, drizzled with rabbit reduction, and garnished with pea shoots."
+  },
+  {
+    "type": "food",
+    "name": "Gramigna Giallo e Verde",
+    "status": "current",
+    "category": "Primi",
+    "menu": "Dinner",
+    "course": "Primi",
+    "menuDescription": "",
+    "pronunciation": "grah-MEEN-yah JAHL-loh eh VEHR-deh",
+    "mise": "Large Fork",
+    "winePairings": [],
+    "allergies": [
+      "Gluten",
+      "Dairy",
+      "Alcohol",
+      "Pork",
+      "Citrus",
+      "Egg",
+      "Allium"
+    ],
+    "ingredients": [
+      "Spinach and egg pasta",
+      "Fennel sausage ragu",
+      "Soffritto bianco",
+      "Brown butter",
+      "Sage",
+      "Parm crema",
+      "Onion",
+      "Celery",
+      "Scallions",
+      "Shallots",
+      "White wine",
+      "Chicken stock",
+      "Lemon juice",
+      "Finishing oil"
+    ],
+    "oneLiner": "The gramigna with egg and spinach pasta and sausage ragu in bianco.",
+    "details": "An extruded pasta whose name means weeds. Half is regular egg-based pasta, and the other half is spinach egg pasta, making it a true Emilia classic. The fennel sausage ragu is made with soffritto bianco of onion, celery, scallions, and shallots. It is deglazed with white wine and cooked with chicken stock for 5 to 6 hours. On pickup, the pasta gets brown butter and sage with parm crema. Lemon juice is added at the end, and the dish is finished on the pass with finishing oil."
+  },
+  {
+    "type": "food",
+    "name": "Grandma Walking Through the Forest in Emilia",
+    "status": "current",
+    "category": "Primi",
+    "menu": "Dinner",
+    "course": "Primi",
+    "menuDescription": "",
+    "pronunciation": "",
+    "mise": "Large Fork",
+    "winePairings": [],
+    "allergies": [
+      "Gluten",
+      "Allium",
+      "Dairy",
+      "Mushroom",
+      "Vinegar",
+      "Egg"
+    ],
+    "ingredients": [
+      "Spinach cappelletti",
+      "Braised leeks",
+      "Mushroom puree",
+      "Butter",
+      "Leek sauce",
+      "Chicken stock",
+      "Garlic",
+      "Thyme",
+      "Apple cider vinegar",
+      "Parmigiano",
+      "Crimini mushrooms",
+      "Portobello mushrooms",
+      "Shallots",
+      "Sage",
+      "Rosemary",
+      "White wine"
+    ],
+    "oneLiner": "The grandma walking through the forest, a spinach cappelletti stuffed with braised leeks over mushroom puree.",
+    "details": "Green spinach cappelletti, a hat-shaped stuffed pasta with a circle top produced by the folding method, is filled with braised leeks. The leeks are braised with chicken stock, garlic, and thyme, then mixed with apple cider vinegar and parmigiano. The pasta sits on a bed of mushroom puree made from sauteed crimini and portobello mushrooms, shallots, garlic, sage, thyme, rosemary, and white wine, with a light butter and leek sauce."
+  },
+  {
+    "type": "food",
+    "name": "Pisarei al Ragu di Anatra",
+    "status": "current",
+    "category": "Primi",
+    "menu": "Dinner",
+    "course": "Primi",
+    "menuDescription": "Duck ragu from Emilia",
+    "pronunciation": "pee-zah-ray al rah-GOO dee ah-NAH-trah",
+    "mise": "Large Fork",
+    "winePairings": [],
+    "allergies": [
+      "Gluten",
+      "Allium",
+      "Nightshade",
+      "Poultry"
+    ],
+    "ingredients": [
+      "Pisarei pasta",
+      "Duck ragu",
+      "Tomato sauce",
+      "Parmigiano crema",
+      "Parsley",
+      "Lemon juice",
+      "Duck thighs",
+      "Soffritto",
+      "Tomato paste",
+      "Thyme",
+      "Bay leaf",
+      "White wine",
+      "Chicken stock",
+      "Doppio soffritto",
+      "Oil"
+    ],
+    "oneLiner": "Our pisarei al ragu di anatra, spinach pasta with duck ragu, parsley, and lemon juice.",
+    "details": "Duck thighs are pan seared and braised with soffritto, tomato paste, thyme, bay leaf, white wine, and chicken stock for about 2 hours and 30 minutes. The braising liquid is reduced and mixed with the meat pulled from the bones, as well as the doppio soffritto. Doppio soffritto is made by cooking soffritto in the oven, adding tomato paste, and cooking it again, making it doppio because it is cooked twice. On pickup, the pasta gets duck ragu with tomato sauce, parm crema, parsley, and lemon juice, then is finished with oil on the pass."
+  },
+  {
+    "type": "food",
+    "name": "Sole In Emilia",
+    "status": "previous",
+    "category": "Primi",
+    "menu": "Dinner",
+    "course": "Primi",
+    "menuDescription": "Ramps, chive, and squacquerone cheese",
+    "pronunciation": "",
+    "mise": "Large Fork and knife",
+    "winePairings": [],
+    "allergies": [
+      "Dairy",
+      "Allium",
+      "Egg",
+      "Nutmeg"
+    ],
+    "ingredients": [
+      "Ramp and squacquerone filled ravolini",
+      "Onion puree",
+      "Chive flowers"
+    ],
+    "oneLiner": "Ramp and squacquerone filled ravolini with onion puree and chive flowers.",
+    "details": "Previous dinner primi item. The tech sheet provided lists ramp and squacquerone filled ravolini with onion puree and chive flowers."
+  },
+  {
+    "type": "food",
+    "name": "Strozzapreti",
+    "status": "current",
+    "category": "Primi",
+    "menu": "Dinner",
+    "course": "Primi",
+    "menuDescription": "Tomato sauce from Emilia with Montauk red shrimp and chives",
+    "pronunciation": "stroh-tsah-PRAY-tee",
+    "mise": "Large Fork",
+    "winePairings": [],
+    "allergies": [
+      "Gluten",
+      "Shellfish",
+      "Citrus",
+      "Nightshade",
+      "Allium",
+      "Alcohol"
+    ],
+    "ingredients": [
+      "Strozzapreti pasta",
+      "Red shrimp",
+      "Garlic",
+      "Tomato sauce",
+      "Scallions",
+      "Lemon",
+      "Bread crumbs",
+      "Shrimp stock",
+      "Celery",
+      "Carrots",
+      "Onions",
+      "Tomato paste",
+      "White wine",
+      "Chives",
+      "Finishing oil",
+      "Mollica",
+      "EVOO",
+      "Lemon zest"
+    ],
+    "oneLiner": "Strozzapreti pasta with red shrimp from Montauk, pomodoro, and chives.",
+    "details": "We make a stock out of the shrimp shells with celery, carrots, onions, tomato paste, and white wine. On pickup, garlic oil with scallions is deglazed with white wine, then shrimp stock is added with a touch of tomato sauce. Chives and lemon juice are added at the end. On the pass, finishing oil and bread crumb are added. The mollica has chive, EVOO, and lemon zest."
+  },
+  {
+    "type": "food",
+    "name": "Tagliatelle ai Sapori della Terra",
+    "status": "off-menu",
+    "category": "Primi",
+    "menu": "Dinner",
+    "course": "Primi",
+    "menuDescription": "Porcini, Perigord black truffle, parmigiano, and parsley",
+    "pronunciation": "",
+    "mise": "Large Fork",
+    "winePairings": [],
+    "allergies": [
+      "Gluten",
+      "Egg",
+      "Dairy",
+      "Mushroom",
+      "Alcohol",
+      "Allium"
+    ],
+    "ingredients": [
+      "Tagliatelle",
+      "Porcini",
+      "Porcini puree",
+      "Perigord black truffle",
+      "Parmigiano",
+      "Parsley",
+      "Butter",
+      "Dry porcini",
+      "Frozen porcini",
+      "Shallots",
+      "White wine",
+      "Thyme"
+    ],
+    "oneLiner": "Our Tagliatelle with porcini mushrooms, parmigiano, and black truffles.",
+    "details": "This is an off-menu item that can be made but is not listed on the menu. SOP: always check if the kitchen can make it; they usually can. Tagliatelle are tossed with cut porcini, porcini puree, and butter. Parmigiano and parsley are added at the end, and the dish gets thinly shaved truffles on the pass. Porcini puree is made with dry porcini, frozen porcini, shallots, white wine, and thyme."
+  },
+  {
+    "type": "food",
+    "name": "Uovo Raviolo di Nino Bergese",
+    "status": "current",
+    "category": "Primi",
+    "menu": "Dinner",
+    "course": "Primi",
+    "menuDescription": "Brown butter, asparagi, and tartufo nero",
+    "pronunciation": "WO-vo rah-VYO-loh dee NEE-noh ber-JEH-zeh",
+    "mise": "Large Fork and knife",
+    "winePairings": [],
+    "allergies": [
+      "Gluten",
+      "Dairy",
+      "Allium",
+      "Truffle",
+      "Egg",
+      "Mushroom"
+    ],
+    "ingredients": [
+      "Uovo raviolo",
+      "Asparagus",
+      "Brown butter",
+      "Truffle butter",
+      "Egg yolk",
+      "Black truffles",
+      "Ricotta",
+      "Parmigiano",
+      "Shallots",
+      "Olive oil",
+      "Salt"
+    ],
+    "oneLiner": "The uovo raviolo stuffed with ricotta, Parmigiano, and an egg yolk, on a bed of asparagus puree and topped with black truffles.",
+    "details": "The uovo is plated on a bed of asparagus puree made with shallots, asparagus, olive oil, and salt. It is finished with truffle butter and topped with shaved black truffles. The dish is dedicated to Nino Bergese, an influential chef in the 1940s who created this raviolo."
+  },
+  {
+    "type": "food",
+    "name": "Tagliolini al Ragu",
+    "status": "current",
+    "category": "Primi",
+    "menu": "Dinner",
+    "course": "Primi",
+    "menuDescription": "With ragu from Modena",
+    "pronunciation": "tahl-yoh-LEE-nee ahl rah-GOO",
+    "mise": "Large Fork",
+    "winePairings": [
+      "2021 Nicolucci 'Vigna del Generale', Romagna Sangiovese"
+    ],
+    "allergies": [
+      "Gluten",
+      "Nightshade",
+      "Allium",
+      "Pork",
+      "Dairy",
+      "Egg"
+    ],
+    "ingredients": [
+      "Tagliolini pasta",
+      "Ragu",
+      "Prosciutto",
+      "Mortadella",
+      "Ground pork",
+      "Pomodoro",
+      "Parmigiano crema",
+      "Soffritto",
+      "Pork sausage"
+    ],
+    "oneLiner": "The fourth course in our pasta tasting, tagliolini in a traditional pork ragu from Modena with pomodoro and parmigiano crema.",
+    "details": "Thinly rolled and thinly cut pasta. An Emilia classic that you rarely see elsewhere because the nonne save the best for their own families. Served with a traditional meat-based ragu sauce from Modena made from soffritto, prosciutto, mortadella, pork sausage, and ground pork."
   }
 ];
