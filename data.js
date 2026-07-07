@@ -198,8 +198,9 @@ window.wineDirectoryData = [
     "name": "Mombeltramo Roero Rosso Riserva",
     "producer": "Malvira",
     "vintage": "2013",
-    "status": "current",
+    "status": "previous",
     "menuSection": "pairing",
+    "course": "Previous Course 5",
     "region": "Piedmont",
     "subregion": "Roero",
     "grapes": [
@@ -220,6 +221,7 @@ window.wineDirectoryData = [
     "vintage": "2023",
     "status": "current",
     "menuSection": "pairing",
+    "course": "Course 3",
     "region": "Veneto",
     "subregion": "Monteforte D'Alpone, Soave Classico",
     "grapes": [
@@ -241,6 +243,7 @@ window.wineDirectoryData = [
     "vintage": "2019",
     "status": "current",
     "menuSection": "pairing",
+    "course": "Course 4",
     "region": "Emilia-Romagna",
     "subregion": "Predappio",
     "grapes": [
@@ -281,7 +284,6 @@ window.wineDirectoryData = [
     "producer": "Foradori",
     "vintage": "2024",
     "status": "current",
-    "menuSection": "pairing",
     "region": "Trentino-Alto Adige",
     "subregion": "Mezzolombardo, Campo Rotaliano Plateau",
     "grapes": [
@@ -302,6 +304,7 @@ window.wineDirectoryData = [
     "vintage": "2017",
     "status": "current",
     "menuSection": "pairing",
+    "course": "Course 2",
     "region": "Piedmont",
     "subregion": "Alba",
     "grapes": [
@@ -317,11 +320,33 @@ window.wineDirectoryData = [
     "pairing": "Dark-fruited, rustic, savory, and structured, while still offering freshness and lift. The acidity should pair well with tomato, while the darker, structured elements offset the intensity of the formaggio."
   },
   {
+    "name": "Magnificat Romagna Cabernet Sauvignon",
+    "producer": "Tenuta la Palazza",
+    "vintage": "1998",
+    "status": "current",
+    "menuSection": "pairing",
+    "course": "Course 5",
+    "region": "Emilia-Romagna",
+    "subregion": "Predappio",
+    "grapes": [
+      "Cabernet Sauvignon"
+    ],
+    "style": "Red",
+    "body": "Full",
+    "image": "",
+    "farming": "Certified Organic, Practicing Biodynamic",
+    "price": "$45 glass / $195 bottle",
+    "oneLiner": "Magnificat is a departure for us. For our wine pairings, we often choose to highlight indigenous varietals rather than classic ones. But this Cabernet Sauvignon is enough to veer us off our usual path. This is a rich, dark wine highlighted by blueberry and cherry notes, alongside cocoa and black pepper.",
+    "details": "Claudio Drei Dona bought Tenuta La Palazza in 1985 when the estate mostly grew grapes to sell to other winemakers. He immediately set about replanting vineyards to focus on high quality grapes and biodiversity. He also believed that Predappio's soil could prove good enough to grow international varieties, rather than just the Sangiovese the estate was growing before. When he started, Cabernet Sauvignon was not even a legally allowed grape in Romagna. Against the odds, the wine was well reviewed year after year and is now considered one of Italy's best Cabernet Sauvignons. Fermentation occurs at a controlled temperature in stainless steel, where the wine also goes through malolactic fermentation. After fermentation, 80% of the wine is aged in French oak and 20% in amphora for two years. The wine ages further in bottle at the estate before release.",
+    "pairing": "Built for the final course pairing. Tertiary notes of mushroom, forest floor, and tobacco accompany the developed fruit. The rich savoriness balances the tart sweetness of the balsamico, while the round palate holds up against the richness of the parmigiano crema."
+  },
+  {
     "name": "Blu di Burson Longanesi",
     "producer": "Azienda Agricola Randi",
     "vintage": "2023",
     "status": "previous",
     "menuSection": "pairing",
+    "course": "Previous Course 2",
     "region": "Emilia-Romagna",
     "subregion": "Ravenna",
     "grapes": [
@@ -343,6 +368,7 @@ window.wineDirectoryData = [
     "vintage": "2024",
     "status": "current",
     "menuSection": "pairing",
+    "course": "Course 1",
     "region": "Emilia-Romagna",
     "subregion": "Castelvetro",
     "grapes": [

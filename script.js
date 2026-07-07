@@ -468,6 +468,11 @@ function itemMatchesSection(item, sectionName) {
   );
 }
 
+function getCourseNumber(item) {
+  const match = String(item.course || "").match(/\d+/);
+  return match ? Number(match[0]) : 999;
+}
+
 function getItemsForSection(sectionName) {
   return wines.filter((item) => itemMatchesSection(item, sectionName));
 }
@@ -551,12 +556,22 @@ function wineMatchesSearch(wine, searchTerm) {
 function getFilteredWines() {
   const searchTerm = searchInput.value.trim().toLowerCase();
 
-  return wines.filter((wine) => {
+  const filteredItems = wines.filter((wine) => {
     const sectionMatches = itemMatchesSection(wine, activeSection);
     const searchMatches = !searchTerm || wineMatchesSearch(wine, searchTerm);
 
     return sectionMatches && searchMatches;
   });
+
+  // Wine pairings are tied to the tasting menu, so we sort them by course number.
+  if (activeSection === "beverage-wine-pairing") {
+    return filteredItems.sort((a, b) => {
+      const statusSort = getWineStatus(a) === getWineStatus(b) ? 0 : getWineStatus(a) === "current" ? -1 : 1;
+      return statusSort || getCourseNumber(a) - getCourseNumber(b) || a.name.localeCompare(b.name);
+    });
+  }
+
+  return filteredItems;
 }
 
 function renderWines() {
@@ -602,6 +617,12 @@ function renderWineCard(wine) {
     </div>
 
     <dl class="meta-list">
+      ${wine.course ? `
+      <div class="meta-row">
+        <dt class="meta-label">Course</dt>
+        <dd>${wine.course}</dd>
+      </div>
+      ` : ""}
       <div class="meta-row">
         <dt class="meta-label">Region</dt>
         <dd>${wine.region}</dd>
