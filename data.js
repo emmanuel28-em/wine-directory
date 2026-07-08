@@ -82,7 +82,7 @@ window.wineDirectoryData = [
     "name": "Kye Langhe Freisa",
     "producer": "G.D. Vajra",
     "vintage": "2022",
-    "status": "current",
+    "status": "previous",
     "region": "Piedmont",
     "subregion": "Barolo commune",
     "grapes": [
@@ -1308,5 +1308,449 @@ window.wineDirectoryData = [
     ],
     "oneLiner": "The fourth course in our pasta tasting, tagliolini in a traditional pork ragu from Modena with pomodoro and parmigiano crema.",
     "details": "Thinly rolled and thinly cut pasta. An Emilia classic that you rarely see elsewhere because the nonne save the best for their own families. Served with a traditional meat-based ragu sauce from Modena made from soffritto, prosciutto, mortadella, pork sausage, and ground pork."
+  },
+  {
+    "type": "food",
+    "name": "Cow Grazing in Emilia Romagna",
+    "status": "current",
+    "category": "Secondi",
+    "menu": "Dinner",
+    "course": "Secondi",
+    "menuDescription": "Sirloin steak, sauces from Emilia-Romagna, and herb salad",
+    "pronunciation": "",
+    "mise": "Large Fork, Steak Knife",
+    "winePairings": [],
+    "allergies": [
+      "Dairy",
+      "Beef",
+      "Citrus",
+      "Nightshade"
+    ],
+    "ingredients": [
+      "Sirloin steak",
+      "Crema di Parmigiano",
+      "Red pepper puree",
+      "Herb salad",
+      "Lemon and olive oil dressing",
+      "Dried porcini",
+      "Salt",
+      "Salsa verde",
+      "Parsley",
+      "Celery leaves",
+      "Chives"
+    ],
+    "oneLiner": "The cow grazing is a sirloin steak with salsa verde, red pepper puree, and parmigiano crema.",
+    "details": "Sirloin steak with dried porcini and salt rub. Served on top of seasonal sauces from Emilia-Romagna: salsa verde, crema di Parmigiano, and red pepper puree. A simple herb salad of parsley, celery leaves, and chives is dressed lightly with lemon and olive oil to cut through the fattiness of the steak and accompanying sauces."
+  },
+  {
+    "type": "food",
+    "name": "Involtino di Agnello",
+    "status": "current",
+    "category": "Secondi",
+    "menu": "Dinner",
+    "course": "Secondi",
+    "menuDescription": "Mushroom and leeks",
+    "pronunciation": "een-vohl-TEE-noh dee ah-NYEHL-loh",
+    "mise": "Large Fork, Steak Knife",
+    "winePairings": [],
+    "allergies": [
+      "Citrus",
+      "Allium",
+      "Mustard",
+      "Vinegar",
+      "Butter"
+    ],
+    "ingredients": [
+      "Lamb",
+      "Lamb loin",
+      "Lamb belly",
+      "Baby zucchini",
+      "Micro mint salad",
+      "Orange",
+      "Orange zest",
+      "Mint",
+      "Honey",
+      "Butter",
+      "Rosemary",
+      "Pickled zucchini",
+      "Orange juice",
+      "Orange mostarda",
+      "Orange supremes",
+      "Lamb jus",
+      "Soffritto",
+      "Orange peels",
+      "Zucchini puree",
+      "Shallots",
+      "Spinach",
+      "Pear mostarda"
+    ],
+    "oneLiner": "Lamb involtino with orange and zucchini.",
+    "details": "We cure lamb loin in salt, orange zest, mint, and honey for 5 hours. After curing, the lamb is rinsed and wrapped in lamb belly to increase fat content and richness. The involtino is cooked sous vide to an internal temperature of 132 degrees Fahrenheit for 2 hours, then seared until dark. Baby zucchini is cut in half, scored, seared in olive oil, then basted with butter and rosemary until tender. It is topped with pickled zucchini in orange juice, honey, mint, and salt, along with orange mostarda and orange supremes. For the lamb jus, bones are roasted until deeply dark, then simmered with ice water, soffritto, and orange peels for at least 6 hours before being reduced to jus consistency. Burnt oranges are added during the final 5 minutes for bitterness and depth. The dish is finished with a light micro mint salad. Zucchini puree is made with shallots, zucchini, and spinach. Orange mostarda is made with pear mostarda and orange zest. Involtino means little bundles or little rolls, referring to thin slices of meat, fish, or vegetables wrapped around a savory filling."
+  },
+  {
+    "type": "food",
+    "name": "Ippoglosso con Polenta e Verdure di Primavera",
+    "status": "current",
+    "category": "Secondi",
+    "menu": "Dinner",
+    "course": "Secondi",
+    "menuDescription": "Grilled halibut, grilled polenta, spring vegetables gremolata",
+    "pronunciation": "ip-poh-GLOHS-soh",
+    "mise": "Large Fork, Steak Knife",
+    "winePairings": [],
+    "allergies": [
+      "Fish",
+      "Citrus",
+      "Allium",
+      "Seed oil",
+      "Corn"
+    ],
+    "ingredients": [
+      "Halibut",
+      "EVOO",
+      "Salt",
+      "Lemon",
+      "Asparagus",
+      "Asparagus puree",
+      "Shallots",
+      "Spinach",
+      "English pea gremolata",
+      "English peas",
+      "Chives",
+      "Parsley",
+      "Lemon olive oil from Italia",
+      "Chive gremolata",
+      "Grilled polenta",
+      "Polenta",
+      "Water",
+      "Chive oil",
+      "Canola oil",
+      "Pea tendrils",
+      "Chive blossoms"
+    ],
+    "oneLiner": "Halibut with polenta, asparagus, English peas, and chives.",
+    "details": "The halibut is grilled, finished with salt, lemon juice, and EVOO, then topped with chive gremolata. On the plate: asparagus puree, blanched asparagus, and grilled yellow polenta topped with pea gremolata. The plate is finished with chive oil, pea tendrils, and chive blossoms. In Veneto, directly north of Emilia-Romagna along the Adriatic Sea, a classic dish is polenta grigliata, or grilled polenta, served with grilled fish. This is our take on that. The polenta is cooked with water, salt, and EVOO, then set in a dish overnight. Once cooled and firm, it is sliced and grilled, adding a nice grilled flavor to classic polenta."
+  },
+  {
+    "type": "food",
+    "name": "Asparagus e Morel",
+    "status": "current",
+    "category": "Verdure",
+    "menu": "Dinner",
+    "course": "Verdure",
+    "menuDescription": "Asparagus three ways with morels",
+    "pronunciation": "",
+    "mise": "Large Fork",
+    "winePairings": [],
+    "allergies": [
+      "Citrus",
+      "Allium",
+      "Mushroom",
+      "Alcohol"
+    ],
+    "ingredients": [
+      "Asparagus puree",
+      "Portobellos",
+      "Shallots",
+      "Garlic",
+      "Morel mushrooms",
+      "Olive oil",
+      "Lemon",
+      "Salt",
+      "White wine",
+      "Thyme",
+      "Parsley",
+      "Cremini",
+      "Spinach",
+      "Butter",
+      "Asparagus ribbons",
+      "Micro parsley"
+    ],
+    "oneLiner": "Asparagus three ways with roasted morels.",
+    "details": "Asparagus puree is made with blanched asparagus, shallots, spinach, salt, and olive oil. Morel puree is made with cremini, morel, portobello, garlic, thyme, white wine, olive oil, and salt. Blanched asparagus is grilled on pickup and seasoned with olive oil, lemon, and salt. Morels are sauteed in lemon butter and salt. Garnished with asparagus ribbons and micro parsley."
+  },
+  {
+    "type": "food",
+    "name": "Cipollini",
+    "status": "current",
+    "category": "Verdure",
+    "menu": "Dinner",
+    "course": "Verdure",
+    "menuDescription": "Sweet and sour baby onions roasted with balsamic vinegar",
+    "pronunciation": "chee-pohl-LEE-nee",
+    "mise": "Large Fork",
+    "winePairings": [],
+    "allergies": [
+      "Citrus",
+      "Alcohol",
+      "Vinegar"
+    ],
+    "ingredients": [
+      "Baby onions",
+      "Balsamic",
+      "Sherry vinegar",
+      "Sea salt",
+      "Butter",
+      "Olive oil"
+    ],
+    "oneLiner": "The braised baby onions with aceto balsamico.",
+    "details": "Sweet and sour baby onions cooked until super tender with balsamic and sherry vinegar. Finished with sea salt, butter, and olive oil."
+  },
+  {
+    "type": "food",
+    "name": "Funghi Reali Trifolati",
+    "status": "current",
+    "category": "Verdure",
+    "menu": "Dinner",
+    "course": "Verdure",
+    "menuDescription": "Roasted maitake, parsley, and garlic",
+    "pronunciation": "FOON-gee reh-AH-lee tree-foh-LAH-tee",
+    "mise": "Large Fork, Butter Knife",
+    "winePairings": [],
+    "allergies": [
+      "Dairy",
+      "Mushroom",
+      "Allium",
+      "Vinegar"
+    ],
+    "ingredients": [
+      "Roasted maitake",
+      "Maitake puree",
+      "Parsley puree",
+      "Garlic puree",
+      "EVOO",
+      "Salt",
+      "Mushroom stock",
+      "Butter",
+      "Maitake scraps",
+      "Shallot",
+      "White wine",
+      "Red wine vinegar",
+      "Blanched parsley",
+      "Water",
+      "Milk",
+      "Garlic",
+      "Cremini",
+      "Dry porcini",
+      "Onion"
+    ],
+    "oneLiner": "Our funghi reali trifolati, with roasted maitake, parsley puree, and garlic puree.",
+    "details": "Maitake is roasted in the oven with EVOO and salt. On pickup, it gets pan seared and deglazed with mushroom stock and butter. It is plated on a bed of maitake puree and garnished with parsley puree and garlic puree. Maitake puree is made with maitake scraps, shallot, white wine, red wine vinegar, mushroom stock, EVOO, and salt. Parsley puree is made with blanched parsley, water, and salt. Garlic puree is made with milk, garlic, and salt. Mushroom stock is made with cremini, dry porcini, white wine, and onion."
+  },
+  {
+    "type": "food",
+    "name": "Warm Seasonal Greens",
+    "status": "current",
+    "category": "Verdure",
+    "menu": "Dinner",
+    "course": "Verdure",
+    "menuDescription": "Warm seasonal greens with garlic and olive oil",
+    "pronunciation": "",
+    "mise": "Large Fork",
+    "winePairings": [],
+    "allergies": [
+      "Citrus",
+      "Allium"
+    ],
+    "ingredients": [
+      "Broccoli rabe",
+      "Swiss chard",
+      "Tuscan kale",
+      "Spigarello",
+      "Pepper flakes",
+      "Lemon",
+      "Garlic oil",
+      "Olive oil"
+    ],
+    "oneLiner": "The seasonal greens with garlic, olive oil, and chili.",
+    "details": "We serve greens with a small amount of pepper flakes, lemon, and garlic oil. Currently: broccoli rabe, swiss chard, spigarello, and tuscan kale."
+  },
+  {
+    "type": "food",
+    "name": "Vignarola",
+    "status": "previous",
+    "category": "Verdure",
+    "menu": "Dinner",
+    "course": "Verdure",
+    "menuDescription": "Spring vegetables with pancetta",
+    "pronunciation": "",
+    "mise": "Large Fork, Butter Knife",
+    "winePairings": [],
+    "allergies": [
+      "Legumes",
+      "Citrus",
+      "Allium",
+      "Seed oil",
+      "Alcohol",
+      "Pork"
+    ],
+    "ingredients": [
+      "Peas",
+      "Artichoke",
+      "Gem lettuce",
+      "Asparagus",
+      "Shallots",
+      "Pancetta",
+      "Mint",
+      "Olive oil",
+      "Salt",
+      "White wine",
+      "Lemon",
+      "Spinach",
+      "Pea puree",
+      "Mint oil",
+      "Parsley",
+      "Canola oil"
+    ],
+    "oneLiner": "Peas, artichoke, asparagus, gem lettuce, mint, and pancetta.",
+    "details": "La vignarola is a classic spring dish in Italia when spring produce is in season. It is a simple recipe that showcases vegetables at their peak. Peas and asparagus are blanched to cook through. On pickup, pancetta fat is rendered and all the vegetables are sauteed in that fat with a little olive oil. The medley is deglazed with white wine. At the end, pieces of pancetta, chiffonade gem lettuce, and chiffonade mint are added. On the pass, the dish is finished with lemon juice, finishing olive oil, and salt, then topped with dots of pea puree and mint oil. Vegetable medley: EVOO, salt, white wine, lemon, mint, peas, asparagus, artichoke, gem lettuce, pancetta. Pea puree: shallots, peas, spinach, EVOO, salt. Mint oil: mint, parsley, canola oil."
+  },
+  {
+    "type": "pastaTasting",
+    "name": "Tortellini in Brodo",
+    "status": "current",
+    "course": "Course 1",
+    "menuDescription": "Traditional filling with brodo di capone",
+    "pronunciation": "",
+    "mise": "Brodo Spoon",
+    "winePairings": [
+      "2023 Fattoria Moretto 'Monovitigno', Lambrusco Grasparossa di Castelvetro"
+    ],
+    "allergies": [
+      "Gluten",
+      "Dairy",
+      "Pork",
+      "Egg"
+    ],
+    "ingredients": [
+      "Small tortellini",
+      "Prosciutto",
+      "Mortadella",
+      "Ground pork",
+      "24 month aged parmigiano",
+      "Capone broth"
+    ],
+    "oneLiner": "The first course in our pasta tasting experience, the tortellini in brodo, which features tortellini on a bed of freshly grated parmigiano. Capone broth is poured tableside.",
+    "details": "Typically, tortellini are no bigger than a pinky nail. The capone broth, broth of a castrated rooster, has been cooked for 10 hours. The roosters are castrated to tenderize the meat."
+  },
+  {
+    "type": "pastaTasting",
+    "name": "Garganelli",
+    "status": "current",
+    "course": "Course 2",
+    "menuDescription": "",
+    "pronunciation": "",
+    "mise": "Large Fork",
+    "winePairings": [
+      "2022 ArPePe Rosso di Valtellina"
+    ],
+    "allergies": [
+      "Gluten",
+      "Nightshade",
+      "Egg",
+      "Allium"
+    ],
+    "ingredients": [
+      "Garganelli pasta",
+      "Sungold tomato puree",
+      "Garlic oil",
+      "Micro basil",
+      "Sungolds",
+      "EVOO",
+      "Salt"
+    ],
+    "oneLiner": "The second course in our pasta tasting, garganelli with sungold tomato puree, garlic oil, and micro basil.",
+    "details": "Garganelli is named after a chicken's throat due to its shape. It is a flat square rolled with a tool to become tubular with ridges. The pasta is tossed in sungold puree made with sungolds, EVOO, and salt, finished with garlic oil, and garnished with micro basil."
+  },
+  {
+    "type": "pastaTasting",
+    "name": "Gnudi",
+    "status": "current",
+    "course": "Course 3",
+    "menuDescription": "Brown butter and black truffle",
+    "pronunciation": "",
+    "mise": "Large Fork",
+    "winePairings": [
+      "2022 Pra Monte Grande, Soave Classico"
+    ],
+    "allergies": [
+      "Gluten",
+      "Dairy",
+      "Truffle"
+    ],
+    "ingredients": [
+      "Parmigiano",
+      "Ricotta",
+      "Semolina flour",
+      "Brown butter",
+      "Black truffles"
+    ],
+    "oneLiner": "The third course in our pasta tasting, our gnudi: parmigiano and ricotta rolled in semolina flour and dried for two days, in brown butter with black truffle.",
+    "details": "Gnudi means nude. This is our pasta-less pasta, as there is no pasta, just flour to hold the shape. It is cooked for 30 to 45 seconds and designed to be warm, not piping hot, to retain the shape. The parmigiano-ricotta mixture is rolled in semolina flour and left to dry for two days, then tossed with brown butter and topped with black truffles."
+  },
+  {
+    "type": "pastaTasting",
+    "name": "Tagliolini al Ragu",
+    "status": "current",
+    "course": "Course 4",
+    "menuDescription": "With ragu from Modena",
+    "pronunciation": "tahl-yoh-LEE-nee ahl rah-GOO",
+    "mise": "Large Fork",
+    "winePairings": [
+      "2021 Nicolucci 'Vigna del Generale', Romagna Sangiovese"
+    ],
+    "allergies": [
+      "Gluten",
+      "Nightshade",
+      "Allium",
+      "Pork",
+      "Dairy",
+      "Egg"
+    ],
+    "ingredients": [
+      "Tagliolini pasta",
+      "Ragu",
+      "Prosciutto",
+      "Mortadella",
+      "Ground pork",
+      "Pomodoro",
+      "Parmigiano crema",
+      "Soffritto",
+      "Pork sausage"
+    ],
+    "oneLiner": "The fourth course in our pasta tasting, tagliolini in a traditional pork ragu from Modena with pomodoro and parmigiano crema.",
+    "details": "Thinly rolled and thinly cut pasta. An Emilia classic that you never see anywhere else because the nonne save the best for their own family. Served with a traditional meat-based ragu sauce from Modena made from soffritto, prosciutto, mortadella, pork sausage, and ground pork."
+  },
+  {
+    "type": "pastaTasting",
+    "name": "Anolini di Parma",
+    "status": "current",
+    "course": "Course 5",
+    "menuDescription": "Crema di parmigiano and aceto balsamico DOP",
+    "pronunciation": "ah-noh-LEE-nee dee PAR-mah",
+    "mise": "Large Fork",
+    "winePairings": [
+      "2016 Cantalupo 'Collis Carellae', Ghemme"
+    ],
+    "allergies": [
+      "Gluten",
+      "Pork",
+      "Dairy",
+      "Egg",
+      "Vinegar"
+    ],
+    "ingredients": [
+      "Anolini filled pasta",
+      "Meat filling",
+      "Prosciutto",
+      "Mortadella",
+      "Ground pork",
+      "24 month parmigiano fonduta",
+      "12 year aged Pedroni aceto balsamico DOP",
+      "Ground pork shoulder",
+      "Nutmeg"
+    ],
+    "oneLiner": "Our Anolini di Parma stuffed with traditional meat filling with parmigiano fonduta and topped off with our 12 year aged DOP balsamic vinegar.",
+    "details": "A circular ridged pasta with traditional meat filling, typically prosciutto, mortadella, parmigiano, ground pork shoulder, and nutmeg, formed with a circular mold and punched out individually. Served with parmigiano fonduta, a creamy 24 month Parmigiano cheese sauce, and a tableside pour of 12 year aged aceto balsamico DOP."
   }
 ];
