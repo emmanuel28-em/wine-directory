@@ -773,6 +773,7 @@ function renderTastingCourseCard(courseCard) {
       <section class="tasting-panel">
         <p class="panel-label">Pasta</p>
         ${pasta ? `
+          ${pasta.image ? `<img class="tasting-photo food-photo" src="${pasta.image}" alt="${pasta.name}" />` : `<div class="tasting-photo-placeholder">Pasta photo coming soon</div>`}
           <h4>${pasta.name}</h4>
           <p class="menu-description">${pasta.menuDescription || ""}</p>
           <dl class="meta-list">
@@ -803,6 +804,7 @@ function renderTastingCourseCard(courseCard) {
       <section class="tasting-panel">
         <p class="panel-label">Wine</p>
         ${wine ? `
+          ${wine.image ? `<img class="tasting-photo wine-photo" src="${wine.image}" alt="Bottle of ${wine.producer} ${wine.name}" />` : `<div class="tasting-photo-placeholder">Wine photo coming soon</div>`}
           <h4>${wine.name} ${wine.vintage}</h4>
           <p class="producer">${wine.producer}</p>
           <dl class="meta-list">
