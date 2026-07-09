@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
+import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
+import { createManagedSetupRequest, uploadFileAsset } from "../lib/fileAssets.js";
 
 const materialOptions = [
   "Google Docs",
@@ -39,8 +42,13 @@ function toggleListValue(list, value) {
 }
 
 export default function ManagedSetupPage() {
+  const authSession = useAuthSession();
+  const workspace = useCurrentWorkspace();
   const [inquiry, setInquiry] = useState(emptyInquiry);
   const [submittedInquiry, setSubmittedInquiry] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [isWorking, setIsWorking] = useState(false);
+  const [message, setMessage] = useState("");
 
   function updateInquiry(event) {
     const { name, value } = event.target;
@@ -64,14 +72,50 @@ export default function ManagedSetupPage() {
     }));
   }
 
-  function submitInquiry(event) {
+  async function submitInquiry(event) {
     event.preventDefault();
+    setIsWorking(true);
+    setMessage("");
 
-    // This is intentionally lightweight for now.
-    // Later, this can save inquiries or send email notifications.
-    console.log("Managed setup inquiry", inquiry);
-    setSubmittedInquiry(inquiry);
-    setInquiry(emptyInquiry);
+    if (authSession.status !== "authenticated" || workspace.status !== "ready") {
+      setSubmittedInquiry({
+        ...inquiry,
+        publicOnly: true
+      });
+      setMessage("File uploads are available after creating a restaurant workspace. Start a free trial when you are ready to send source materials.");
+      setInquiry(emptyInquiry);
+      setSelectedFiles([]);
+      setIsWorking(false);
+      return;
+    }
+
+    try {
+      const request = await createManagedSetupRequest({
+        workspace,
+        inquiry
+      });
+
+      for (const file of selectedFiles) {
+        await uploadFileAsset({
+          restaurantId: workspace.restaurant.id,
+          managedSetupRequestId: request.id,
+          file,
+          uploadedBy: workspace.userProfile.id
+        });
+      }
+
+      setSubmittedInquiry({
+        ...inquiry,
+        uploadedCount: selectedFiles.length
+      });
+      setInquiry(emptyInquiry);
+      setSelectedFiles([]);
+      setMessage("Thanks. We received your setup request. We’ll review your materials and follow up.");
+    } catch (error) {
+      setMessage(error.message || "Could not submit this managed setup request.");
+    } finally {
+      setIsWorking(false);
+    }
   }
 
   return (
@@ -86,12 +130,22 @@ export default function ManagedSetupPage() {
 
       {submittedInquiry ? (
         <div className="success-panel">
-          <h2>Request received</h2>
-          <p>
-            We have your managed setup request for <strong>{submittedInquiry.restaurantName}</strong>. We will follow up with next steps.
-          </p>
+          <h2>{submittedInquiry.publicOnly ? "Account needed for uploads" : "Request received"}</h2>
+          {submittedInquiry.publicOnly ? (
+            <p>
+              Your request details are ready, but secure file upload requires a restaurant workspace first. Start a free trial,
+              then return here to upload menus, SOPs, wine lists, and source files.
+            </p>
+          ) : (
+            <p>
+              We received your managed setup request for <strong>{submittedInquiry.restaurantName}</strong>
+              {submittedInquiry.uploadedCount ? ` with ${submittedInquiry.uploadedCount} file(s)` : ""}. We will follow up with next steps.
+            </p>
+          )}
         </div>
       ) : null}
+
+      {message ? <p className="form-message page-message">{message}</p> : null}
 
       <form className="form-card" onSubmit={submitInquiry}>
         <label>
@@ -172,8 +226,32 @@ export default function ManagedSetupPage() {
           />
         </label>
 
-        <button className="primary-button full-width" type="submit">
-          Request Done-For-You Setup
+        <label>
+          File uploads
+          <span className="helper-text">
+            Uploads are available for signed-in restaurant workspaces. Public uploads are disabled for safety.
+          </span>
+          <input
+            type="file"
+            multiple
+            accept=".pdf,image/*,.doc,.docx,.txt,.csv,.xls,.xlsx"
+            onChange={(event) => setSelectedFiles([...event.target.files])}
+            disabled={authSession.status !== "authenticated" || workspace.status !== "ready"}
+          />
+        </label>
+
+        {selectedFiles.length > 0 ? (
+          <div className="attachment-list">
+            {selectedFiles.map((file) => (
+              <span className="type-pill" key={`${file.name}-${file.size}`}>
+                {file.name}
+              </span>
+            ))}
+          </div>
+        ) : null}
+
+        <button className="primary-button full-width" type="submit" disabled={isWorking}>
+          {isWorking ? "Submitting..." : "Request Done-For-You Setup"}
         </button>
       </form>
     </section>

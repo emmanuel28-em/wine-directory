@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import { listCollectionsForRestaurant } from "../lib/collections.js";
+import { getFileAssetUrl, listFileAssetsForRestaurant } from "../lib/fileAssets.js";
 import { listTrainingDocsForRestaurant, parseContentJson } from "../lib/trainingDocs.js";
 
 const typeLabels = {
@@ -55,6 +56,7 @@ export default function StaffLibrary() {
   const workspace = useCurrentWorkspace();
   const [collections, setCollections] = useState([]);
   const [docs, setDocs] = useState([]);
+  const [fileAssets, setFileAssets] = useState([]);
   const [message, setMessage] = useState("");
 
   async function loadStaffLibrary() {
@@ -65,13 +67,15 @@ export default function StaffLibrary() {
     setMessage("");
 
     try {
-      const [restaurantCollections, restaurantDocs] = await Promise.all([
+      const [restaurantCollections, restaurantDocs, restaurantFiles] = await Promise.all([
         listCollectionsForRestaurant(workspace.restaurant.id),
-        listTrainingDocsForRestaurant(workspace.restaurant.id)
+        listTrainingDocsForRestaurant(workspace.restaurant.id),
+        listFileAssetsForRestaurant(workspace.restaurant.id)
       ]);
 
       setCollections(restaurantCollections);
       setDocs(restaurantDocs.filter((doc) => doc.status === "published"));
+      setFileAssets(restaurantFiles);
     } catch (error) {
       setMessage(error.message || "Could not load the staff library.");
     }
@@ -85,10 +89,23 @@ export default function StaffLibrary() {
     if (workspace.status === "empty" || workspace.status === "error") {
       setCollections([]);
       setDocs([]);
+      setFileAssets([]);
     }
   }, [workspace.status, workspace.restaurant?.id]);
 
   const groupedContent = groupDocsByCollectionAndType(docs, collections);
+
+  async function openAttachedResource(fileAsset) {
+    try {
+      const url = await getFileAssetUrl({
+        fileAsset,
+        restaurantId: workspace.restaurant.id
+      });
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      setMessage(error.message || "Could not open this resource.");
+    }
+  }
 
   return (
     <section className="page-section">
@@ -142,6 +159,7 @@ export default function StaffLibrary() {
                   <div className="library-preview">
                     {typeGroup.docs.map((doc) => {
                       const content = parseContentJson(doc.contentJson);
+                      const attachedFiles = fileAssets.filter((fileAsset) => fileAsset.trainingDocId === doc.id);
 
                       return (
                         <article className="training-card" key={doc.id}>
@@ -189,6 +207,19 @@ export default function StaffLibrary() {
                             <div className="info-block">
                               <h3>Service Notes</h3>
                               <p>{content.serviceNotes}</p>
+                            </div>
+                          ) : null}
+
+                          {attachedFiles.length > 0 ? (
+                            <div className="info-block">
+                              <h3>Attached Resources</h3>
+                              <div className="attachment-list">
+                                {attachedFiles.map((fileAsset) => (
+                                  <button className="secondary-button" type="button" key={fileAsset.id} onClick={() => openAttachedResource(fileAsset)}>
+                                    View {fileAsset.fileName}
+                                  </button>
+                                ))}
+                              </div>
                             </div>
                           ) : null}
                         </article>

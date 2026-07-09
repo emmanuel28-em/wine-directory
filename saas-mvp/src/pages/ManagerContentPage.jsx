@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import { archiveCollection, listCollectionsForRestaurant, saveCollection } from "../lib/collections.js";
+import { deleteFileAsset, getFileAssetUrl, listFileAssetsForRestaurant, uploadFileAsset } from "../lib/fileAssets.js";
 import { importExistingRestaurantContent } from "../lib/importExistingRestaurantContent.js";
 import {
   deleteTrainingDoc,
@@ -103,20 +104,24 @@ export default function ManagerContentPage() {
   const [categoryForm, setCategoryForm] = useState(emptyCategoryForm);
   const [editingCategoryId, setEditingCategoryId] = useState(null);
   const [docs, setDocs] = useState([]);
+  const [fileAssets, setFileAssets] = useState([]);
   const [form, setForm] = useState(emptyTrainingDocForm);
   const [knowledgeItems, setKnowledgeItems] = useState([makeEmptyKnowledgeItem()]);
   const [editingDocId, setEditingDocId] = useState(null);
+  const [selectedSourceFile, setSelectedSourceFile] = useState(null);
   const [isWorking, setIsWorking] = useState(false);
   const [message, setMessage] = useState("");
 
   async function refreshRestaurantContent(restaurantId) {
-    const [nextCategories, nextDocs] = await Promise.all([
+    const [nextCategories, nextDocs, nextFiles] = await Promise.all([
       listCollectionsForRestaurant(restaurantId, { includeArchived: true }),
-      listTrainingDocsForRestaurant(restaurantId)
+      listTrainingDocsForRestaurant(restaurantId),
+      listFileAssetsForRestaurant(restaurantId)
     ]);
 
     setCategories(nextCategories);
     setDocs(nextDocs);
+    setFileAssets(nextFiles);
   }
 
   async function loadContentPage() {
@@ -186,6 +191,7 @@ export default function ManagerContentPage() {
     setForm(emptyTrainingDocForm);
     setKnowledgeItems([makeEmptyKnowledgeItem()]);
     setEditingDocId(null);
+    setSelectedSourceFile(null);
     setMessage("");
   }
 
@@ -343,6 +349,75 @@ export default function ManagerContentPage() {
     }
   }
 
+  async function attachSourceFile(event) {
+    event.preventDefault();
+
+    if (!editingDocId) {
+      setMessage("Save the Training Page first, then attach source files.");
+      return;
+    }
+
+    if (!selectedSourceFile) {
+      setMessage("Choose a file before uploading.");
+      return;
+    }
+
+    setIsWorking(true);
+    setMessage("");
+
+    try {
+      await uploadFileAsset({
+        restaurantId: workspace.restaurant.id,
+        trainingDocId: editingDocId,
+        file: selectedSourceFile,
+        uploadedBy: workspace.userProfile.id
+      });
+      setSelectedSourceFile(null);
+      await refreshRestaurantContent(workspace.restaurant.id);
+      setMessage("Source file attached.");
+    } catch (error) {
+      setMessage(error.message || "Could not attach this source file.");
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
+  async function openFile(fileAsset) {
+    try {
+      const url = await getFileAssetUrl({
+        fileAsset,
+        restaurantId: workspace.restaurant.id
+      });
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      setMessage(error.message || "Could not open this file.");
+    }
+  }
+
+  async function removeFile(fileAsset) {
+    const shouldDelete = window.confirm(`Remove "${fileAsset.fileName}"?`);
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    setIsWorking(true);
+    setMessage("");
+
+    try {
+      await deleteFileAsset({
+        fileAsset,
+        restaurantId: workspace.restaurant.id
+      });
+      await refreshRestaurantContent(workspace.restaurant.id);
+      setMessage("Attached file removed.");
+    } catch (error) {
+      setMessage(error.message || "Could not remove this file.");
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
   async function importExistingContent() {
     if (workspace.status !== "ready") {
       setMessage("No restaurant workspace found for this account.");
@@ -376,6 +451,7 @@ export default function ManagerContentPage() {
 
   const groupedPages = groupPagesByCategory(docs, categories);
   const canImportOriginalContent = workspace.status === "ready" && isOriginalRezdoraWorkspace(workspace.restaurant);
+  const editingDocFiles = fileAssets.filter((fileAsset) => fileAsset.trainingDocId === editingDocId);
 
   return (
     <section className="page-section">
@@ -739,6 +815,58 @@ export default function ManagerContentPage() {
                 ))}
               </section>
 
+              <section className="knowledge-section">
+                <div className="operator-section-heading compact-operator-heading">
+                  <div>
+                    <p className="eyebrow">Source Files</p>
+                    <h2>Attach Source File</h2>
+                    <p>Upload the original menu, tech sheet, SOP, image, or document this training page came from.</p>
+                  </div>
+                </div>
+
+                {!editingDocId ? (
+                  <p className="helper-text">Save this Training Page first. Then edit it to attach PDFs, images, menus, or source docs.</p>
+                ) : (
+                  <>
+                    <label>
+                      Choose file
+                      <input
+                        type="file"
+                        accept=".pdf,image/*,.doc,.docx,.txt,.csv,.xls,.xlsx"
+                        onChange={(event) => setSelectedSourceFile(event.target.files?.[0] || null)}
+                      />
+                    </label>
+
+                    <button className="secondary-button" type="button" onClick={attachSourceFile} disabled={isWorking || !selectedSourceFile}>
+                      Attach Source File
+                    </button>
+
+                    {editingDocFiles.length === 0 ? (
+                      <p className="helper-text">No attached source files yet.</p>
+                    ) : (
+                      <div className="operator-card-list">
+                        {editingDocFiles.map((fileAsset) => (
+                          <article className="operator-list-card" key={fileAsset.id}>
+                            <div>
+                              <h4>{fileAsset.fileName}</h4>
+                              <p>{fileAsset.fileType || "File"} · {Math.round((fileAsset.fileSize || 0) / 1024)} KB</p>
+                            </div>
+                            <div className="card-actions">
+                              <button className="secondary-button" type="button" onClick={() => openFile(fileAsset)}>
+                                View
+                              </button>
+                              <button className="quiet-danger-button" type="button" onClick={() => removeFile(fileAsset)}>
+                                Remove
+                              </button>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </section>
+
               <div className="form-button-row">
                 <button className="primary-button" type="submit" disabled={isWorking}>
                   {editingDocId ? "Save Training Page" : "Create Training Page"}
@@ -773,12 +901,13 @@ export default function ManagerContentPage() {
                       {group.pages.map((doc) => {
                         const content = parseContentJson(doc.contentJson);
                         const displayType = contentTypeLabels[content.contentType] || contentTypeLabels[doc.type] || doc.type;
+                        const attachmentCount = fileAssets.filter((fileAsset) => fileAsset.trainingDocId === doc.id).length;
 
                         return (
                           <article className="operator-table-row" key={doc.id}>
                             <div>
                               <h4>{doc.title}</h4>
-                              <p>{displayType} — {doc.status || "draft"}</p>
+                              <p>{displayType} — {doc.status || "draft"} — {attachmentCount} attached file{attachmentCount === 1 ? "" : "s"}</p>
                             </div>
                             <div className="card-actions">
                               <button className="secondary-button" type="button" onClick={() => editPage(doc)}>

@@ -85,6 +85,39 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.authenticated()]),
 
+  // A FileAsset stores metadata for a file uploaded to S3.
+  // The actual file lives in Storage; this model ties it to a restaurant and optionally a Training Page.
+  FileAsset: a
+    .model({
+      restaurantId: a.id().required(),
+      trainingDocId: a.id(),
+      managedSetupRequestId: a.id(),
+      name: a.string().required(),
+      fileName: a.string().required(),
+      fileType: a.string(),
+      fileSize: a.integer(),
+      storageKey: a.string().required(),
+      uploadedBy: a.id()
+    })
+    .authorization((allow) => [allow.authenticated()]),
+
+  // A ManagedSetupRequest is a done-for-you setup request.
+  // Public file uploads are not enabled yet, so saved requests currently require authentication.
+  ManagedSetupRequest: a
+    .model({
+      restaurantId: a.id(),
+      restaurantName: a.string().required(),
+      contactFirstName: a.string(),
+      contactLastName: a.string(),
+      email: a.email().required(),
+      title: a.string(),
+      materialsJson: a.string(),
+      priorityJson: a.string(),
+      notes: a.string(),
+      status: a.enum(["new", "reviewing", "inProgress", "completed"])
+    })
+    .authorization((allow) => [allow.authenticated()]),
+
   // A Quiz groups questions together for one doc, one topic, or one training area.
   Quiz: a
     .model({

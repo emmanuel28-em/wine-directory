@@ -1027,6 +1027,12 @@ code {
   margin: 4px 0 0;
 }
 
+.attachment-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .draft-question-list {
   display: grid;
   gap: 14px;

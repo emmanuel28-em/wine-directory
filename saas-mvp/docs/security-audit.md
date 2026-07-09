@@ -14,6 +14,7 @@ Files inspected:
 - `src/lib/trainingDocs.js`
 - `src/lib/invites.js`
 - `src/lib/quizzes.js`
+- `src/lib/fileAssets.js`
 - `src/lib/importExistingRestaurantContent.js`
 - `src/pages/ManagerContentPage.jsx`
 - `src/pages/InviteTeamPage.jsx`
@@ -37,6 +38,8 @@ Tenant-owned records:
 - `Quiz`
 - `QuizQuestion`
 - `QuizAttempt`
+- `FileAsset`
+- `ManagedSetupRequest`
 
 User-owned or identity-related records:
 
@@ -94,7 +97,9 @@ Data helper protections:
 - Quizzes list by `restaurantId`.
 - Quiz Questions list by `restaurantId`.
 - Quiz Attempts list by `restaurantId`.
+- File Assets list by `restaurantId`.
 - Updates/deletes for Training Categories, Training Pages, Quizzes, and Quiz Questions verify the record belongs to the active restaurant before changing it.
+- File deletes verify the file belongs to the active restaurant before deleting metadata and the Storage object.
 - Staff quiz attempt saving verifies the quiz and questions belong to the same active restaurant.
 - Staff personal progress filters by both `restaurantId` and `userProfileId`.
 - Invite creation checks the inviter role.
@@ -110,6 +115,7 @@ Remaining risks:
 
 - A malicious authenticated user could potentially call the GraphQL API directly unless backend auth rules are tightened.
 - `Invite` lookup by token must remain carefully controlled when email sending is added.
+- Storage access is currently broadly authenticated by path pattern, while app helpers enforce tenant checks before upload/list/delete.
 - Account Owner/Admin/Manager roles are not yet enforced by backend resolvers.
 - Development role switching exists locally for testing, though it is hidden outside `import.meta.env.DEV`.
 

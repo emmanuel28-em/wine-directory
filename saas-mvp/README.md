@@ -19,12 +19,14 @@ The app currently includes:
 - published staff Training Library
 - Rezdora existing-content import for the Rezdora workspace
 - Managed Setup request page
+- authenticated Managed Setup request saving and source file upload
 - manual team invites with copyable invite links
 - quiz builder
 - staff quiz taking
 - staff and manager quiz progress
+- Training Page source file attachments
 
-It does **not** include file uploads, billing, automatic invite emails, generated quizzes, or production-grade backend tenant authorization yet.
+It does **not** include billing, automatic invite emails, public unauthenticated file uploads, AI-generated quizzes, or production-grade backend tenant authorization yet.
 
 ## Why This Folder Exists
 
@@ -486,6 +488,73 @@ Restaurant A vs Restaurant B quiz safety:
 5. Visit `/quizzes` and `/manager/staff-progress` in Restaurant B.
 6. Confirm Restaurant B cannot see Restaurant A quizzes or quiz results.
 
+## Testing File Uploads And Attached Resources
+
+This checkpoint adds Amplify Storage/S3 plus two data models:
+
+- `FileAsset`
+- `ManagedSetupRequest`
+
+After pulling these changes, restart the Amplify sandbox so AWS can create the Storage bucket and new model tables:
+
+```bash
+npm run sandbox
+```
+
+Then start the app in another terminal:
+
+```bash
+npm run dev
+```
+
+Manager Training Page attachments:
+
+1. Log in as Account Owner, Admin, or Manager.
+2. Go to `/manager/content`.
+3. Create a Training Page if needed.
+4. Click `Edit` on that Training Page.
+5. Use `Attach Source File`.
+6. Upload a PDF, image, menu, Word doc, text file, CSV, or spreadsheet.
+7. Confirm the file appears under that Training Page.
+8. Click `View` to open a temporary signed file URL.
+9. Click `Remove` to delete a test attachment.
+
+Staff attached resources:
+
+1. Publish the Training Page with an attachment.
+2. Log in as Staff.
+3. Go to `/training-library`.
+4. Confirm the published Training Page shows `Attached Resources`.
+5. Click the attached resource and confirm it opens.
+6. Confirm Staff cannot upload or remove files.
+
+Restaurant A vs Restaurant B file safety:
+
+1. Attach a file to a Restaurant A Training Page.
+2. Create or log into Restaurant B.
+3. Go to `/training-library` and `/manager/content`.
+4. Confirm Restaurant B does not show Restaurant A attached files.
+
+Managed Setup request:
+
+1. Log in as an owner/admin/manager with a restaurant workspace.
+2. Go to `/managed-setup`.
+3. Fill out the managed setup form.
+4. Attach one or more source files.
+5. Submit.
+6. Confirm the success message says the request was received.
+
+Public Managed Setup visitor:
+
+- Public visitors can fill out the form, but file upload is disabled until they create/sign into a restaurant workspace.
+- This is intentional for now so the app does not accept unauthenticated public uploads into S3.
+
+How uploads are stored:
+
+- Storage keys are scoped by path, such as `restaurants/{restaurantId}/training-docs/{trainingDocId}/...`.
+- `FileAsset` records store the file metadata and connect files to a restaurant and optional Training Page.
+- Staff only sees attached files when the Training Page is published.
+
 ## Why restaurantId Matters
 
 This is the most important tenant-separation rule:
@@ -493,6 +562,7 @@ This is the most important tenant-separation rule:
 Every restaurant-owned record has a `restaurantId`.
 
 That includes the user's role connection, Training Categories, Training Pages, quizzes, quiz questions, and quiz attempts.
+It also includes File Assets and Managed Setup Requests.
 
 The frontend now loads the current user's active role connection first, then uses that restaurant's `restaurantId` for Training Category and Training Page queries.
 
@@ -519,6 +589,7 @@ What is hardened now:
 - filtering Quizzes, Quiz Questions, and Quiz Attempts by the current restaurant's `restaurantId`
 - showing only published pages in the staff Training Library
 - showing only published quizzes on the staff quiz page
+- showing attached resources only on published staff Training Pages
 - verifying Training Category ownership before archive/update
 - verifying Training Page ownership before update/archive/delete
 - verifying Quiz ownership before publish/unpublish
@@ -533,12 +604,14 @@ What is still mostly frontend/app-layer enforced:
 - Staff vs manager permissions.
 - Published-only staff content visibility.
 - Staff seeing only their own quiz attempts.
+- Storage path access is still broadly authenticated at the S3 access-rule level, with app-layer tenant checks before upload/list/delete.
 
 What must be done before real paid customers:
 
 - Add backend-enforced tenant authorization so database access does not rely on frontend filters.
 - Consider a server-side Function/API layer for sensitive writes like content publishing, invite creation, quiz publishing, and staff progress reporting.
 - Add audit logs for role changes, invites, content publishing, and quiz attempts.
+- Add stricter backend Storage authorization or a server-side file service before real paid customers.
 - Remove or hard-disable development role switching outside local development.
 
 Testing Restaurant A vs Restaurant B isolation:
@@ -563,7 +636,7 @@ Testing dev/test leakage:
 After this production-hardening pass is stable, the next build should be one of these:
 
 - automatic invite emails
-- file/image uploads for Training Pages
+- stricter backend file authorization
 - better quiz editing and question management
 - manager reports by team member and training category
 - Stripe billing and trial conversion
