@@ -1,0 +1,212 @@
+.platform-header {
+  display: flex;
+  gap: 18px;
+  align-items: end;
+  justify-content: space-between;
+}
+
+.prototype-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.prototype-links a {
+  min-height: 40px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: #344054;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.prototype-links a.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.platform-shell {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 18px;
+  width: min(1200px, calc(100% - 40px));
+  margin: 22px auto 48px;
+}
+
+.library-sidebar,
+.library-content {
+  align-self: start;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.library-sidebar {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.library-content {
+  padding: 18px;
+}
+
+.library-control {
+  display: grid;
+  gap: 7px;
+}
+
+.tree-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.tree-panel h2,
+.library-toolbar h2 {
+  margin-bottom: 0;
+  font-size: 1.15rem;
+}
+
+.library-tree {
+  display: grid;
+  gap: 6px;
+}
+
+.tree-button {
+  display: flex;
+  width: 100%;
+  min-height: 38px;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: #344054;
+  text-align: left;
+}
+
+.tree-button:hover,
+.tree-button.active {
+  background: #f7f4ed;
+  color: var(--accent);
+}
+
+.tree-button.active {
+  border-color: var(--accent);
+}
+
+.tree-button span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tree-count {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.tree-depth-1 {
+  margin-left: 14px;
+}
+
+.tree-depth-2 {
+  margin-left: 28px;
+}
+
+.active-path {
+  margin-bottom: 4px;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.library-toolbar {
+  margin-bottom: 16px;
+}
+
+#libraryCount {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.doc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.doc-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.doc-card img {
+  width: 100%;
+  height: 220px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: #f7f4ed;
+}
+
+.doc-card h3 {
+  margin-bottom: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.3rem;
+}
+
+.doc-path {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.doc-summary {
+  margin-bottom: 0;
+}
+
+.doc-meta {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 8px 10px;
+  margin: 0;
+}
+
+.doc-meta dt {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.doc-meta dd {
+  margin: 0;
+}
+
+.empty-state {
+  padding: 22px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  background: #fff;
+}
+
+@media (max-width: 880px) {
+  .platform-header,
+  .platform-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .platform-header {
+    display: grid;
+  }
+}

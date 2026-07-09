@@ -61,12 +61,79 @@ h1 {
   font-size: 1.05rem;
 }
 
-.page-shell {
+.directory-controls {
   display: grid;
-  grid-template-columns: minmax(230px, 280px) 1fr;
-  gap: 28px;
+  gap: 14px;
   width: min(1200px, calc(100% - 40px));
-  margin: 28px auto 48px;
+  margin: 18px auto 0;
+  padding: 16px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.top-search {
+  display: grid;
+  gap: 7px;
+}
+
+.main-tabs,
+.topic-panel,
+.filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.topic-groups {
+  display: grid;
+  gap: 10px;
+}
+
+.topic-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.topic-row span {
+  flex: 0 0 72px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.main-tab,
+.section-tab {
+  flex: 0 1 auto;
+  width: auto;
+  min-height: 40px;
+  padding: 0 14px;
+}
+
+.main-tab {
+  background: #fff;
+  border: 1px solid var(--line);
+  color: #344054;
+}
+
+.main-tab:hover,
+.section-tab:hover {
+  background: #f7f4ed;
+}
+
+.main-tab.active,
+.section-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.page-shell {
+  width: min(1200px, calc(100% - 40px));
+  margin: 22px auto 48px;
 }
 
 .filters {
@@ -119,8 +186,14 @@ button:hover {
 }
 
 .filter-actions {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
+}
+
+.filter-actions button {
+  width: auto;
+  padding: 0 14px;
 }
 
 .secondary-button {
@@ -129,6 +202,16 @@ button:hover {
 
 .secondary-button:hover {
   background: #3f4f32;
+}
+
+.quiet-button {
+  background: #fff;
+  border: 1px solid var(--line);
+  color: #344054;
+}
+
+.quiet-button:hover {
+  background: #f7f4ed;
 }
 
 .content-area {
@@ -151,6 +234,13 @@ button:hover {
 #resultCount {
   margin-bottom: 0;
   color: var(--muted);
+}
+
+.section-description {
+  max-width: 680px;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 0.94rem;
 }
 
 .wine-grid {
@@ -206,6 +296,11 @@ button:hover {
   color: #735c24;
 }
 
+.status-badge.off-menu {
+  background: #f7ece8;
+  color: #8a3a22;
+}
+
 .type-badge {
   display: inline-flex;
   width: fit-content;
@@ -224,10 +319,27 @@ button:hover {
   color: #8a3b22;
 }
 
+.type-badge.food {
+  background: #edf4f2;
+  color: #276255;
+}
+
 .producer {
   margin-bottom: 0;
   color: var(--muted);
   font-size: 0.92rem;
+}
+
+.pronunciation,
+.menu-description {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.menu-description {
+  color: #344054;
+  font-weight: 700;
 }
 
 .meta-list {
@@ -266,6 +378,11 @@ button:hover {
 .cocktail-tag {
   background: #f6ece8;
   color: #8a3b22;
+}
+
+.food-tag {
+  background: #edf4f2;
+  color: #276255;
 }
 
 .one-liner,
@@ -313,6 +430,87 @@ button:hover {
   text-transform: uppercase;
 }
 
+.tasting-card {
+  grid-column: 1 / -1;
+}
+
+.tasting-course-header {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 12px;
+}
+
+.tasting-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.tasting-panel {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffdfa;
+}
+
+.tasting-panel h4 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.tasting-photo,
+.tasting-photo-placeholder {
+  width: 100%;
+  height: 220px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f7f4ed;
+}
+
+.tasting-photo {
+  object-fit: cover;
+}
+
+.wine-photo {
+  object-fit: contain;
+}
+
+.tasting-photo-placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.panel-label {
+  margin: 0;
+  color: var(--olive);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.empty-panel-note,
+.history-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.history-note {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f3f0e8;
+  color: #735c24;
+  font-weight: 800;
+}
+
 .empty-state {
   padding: 32px;
   background: var(--panel);
@@ -320,6 +518,21 @@ button:hover {
   border-radius: 8px;
   color: var(--muted);
   text-align: center;
+}
+
+@media (max-width: 760px) {
+  .tasting-pair {
+    grid-template-columns: 1fr;
+  }
+}
+
+.empty-state h3 {
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  margin-bottom: 0;
+  line-height: 1.5;
 }
 
 .quiz-panel {
@@ -338,6 +551,12 @@ button:hover {
 
 .quiz-selector {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.quiz-selector div {
+  display: grid;
   gap: 7px;
 }
 
@@ -354,6 +573,45 @@ button:hover {
   color: var(--muted);
   font-size: 0.9rem;
   font-weight: 700;
+}
+
+.mastery-panel {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  background: #f7f4ed;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.mastery-label {
+  margin-bottom: 2px;
+  color: var(--olive);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+#masterySummary {
+  margin-bottom: 0;
+  color: #344054;
+  font-weight: 800;
+}
+
+.mastery-meter {
+  height: 10px;
+  overflow: hidden;
+  background: #e2ded4;
+  border-radius: 999px;
+}
+
+.mastery-meter span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--accent);
+  border-radius: inherit;
+  transition: width 180ms ease;
 }
 
 .quiz-card h2 {
@@ -374,6 +632,7 @@ button:hover {
   border: 1px solid var(--line);
   color: var(--ink);
   font-weight: 700;
+  line-height: 1.35;
   text-align: left;
 }
 
@@ -418,8 +677,20 @@ button:disabled {
 }
 
 @media (max-width: 760px) {
+  .directory-controls {
+    width: min(100% - 28px, 1200px);
+  }
+
+  .main-tab,
+  .section-tab {
+    flex: 1 1 calc(50% - 8px);
+  }
+
+  .topic-row span {
+    flex-basis: 100%;
+  }
+
   .page-shell {
-    grid-template-columns: 1fr;
     width: min(100% - 28px, 1200px);
   }
 
@@ -428,8 +699,10 @@ button:disabled {
   }
 
   .quiz-topline,
-  .quiz-actions {
+  .quiz-actions,
+  .quiz-selector {
     align-items: stretch;
+    grid-template-columns: 1fr;
     flex-direction: column;
   }
 

@@ -1,5 +1,14 @@
 import fs from "node:fs";
 
+// Warning: this importer only understands the older wine spreadsheet format.
+// Running it can overwrite data.js and remove newer food/cocktail/manual content
+// if the Google Sheet does not include that content too.
+if (process.env.ALLOW_WINE_IMPORT !== "yes") {
+  throw new Error(
+    "Wine import is disabled to protect data.js. Set repository variable ALLOW_WINE_IMPORT to yes only when the sheet contains all content you want to keep."
+  );
+}
+
 const sourceUrl = process.env.WINE_CSV_URL;
 
 if (!sourceUrl) {
@@ -28,11 +37,11 @@ if (wines.length === 0) {
 }
 
 fs.writeFileSync(
-  "wine-data.js",
+  "data.js",
   `window.wineDirectoryData = ${JSON.stringify(wines, null, 2)};\n`
 );
 
-console.log(`Updated wine-data.js with ${wines.length} wines.`);
+console.log(`Updated data.js with ${wines.length} wines.`);
 
 function rowToWine(record, headers) {
   const row = Object.fromEntries(headers.map((header, index) => [header, record[index] || ""]));

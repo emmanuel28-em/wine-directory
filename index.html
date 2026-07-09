@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Rezdora Directory</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=13" />
   </head>
   <body>
     <header class="app-header">
@@ -17,62 +17,65 @@
       </div>
     </header>
 
+    <section class="directory-controls" aria-label="Directory filters">
+      <div class="top-search">
+        <label for="searchInput">Search</label>
+        <input id="searchInput" type="search" placeholder="Search any word: truffle, nebbiolo, dairy, balsamic..." />
+      </div>
+
+      <div class="main-tabs" aria-label="Main directory areas">
+        <button class="main-tab" type="button" data-group="food">Food</button>
+        <button class="main-tab active" type="button" data-group="beverage">Beverage</button>
+      </div>
+
+      <div class="topic-groups">
+        <div id="foodTopics" class="topic-panel hidden" aria-label="Food topics">
+          <div class="topic-row">
+            <span>Brunch</span>
+            <button class="section-tab" type="button" data-section="food-brunch-antipasta">Antipasta</button>
+            <button class="section-tab" type="button" data-section="food-brunch-primi">Primi</button>
+            <button class="section-tab" type="button" data-section="food-brunch-secondi">Secondi</button>
+            <button class="section-tab" type="button" data-section="food-brunch-verdure">Verdure</button>
+          </div>
+          <div class="topic-row">
+            <span>Lunch</span>
+            <button class="section-tab" type="button" data-section="food-lunch-antipasta">Antipasta</button>
+            <button class="section-tab" type="button" data-section="food-lunch-primi">Primi</button>
+            <button class="section-tab" type="button" data-section="food-lunch-secondi">Secondi</button>
+            <button class="section-tab" type="button" data-section="food-lunch-verdure">Verdure</button>
+          </div>
+          <div class="topic-row">
+            <span>Dinner</span>
+            <button class="section-tab" type="button" data-section="food-dinner-antipasta">Antipasta</button>
+            <button class="section-tab" type="button" data-section="food-dinner-primi">Primi</button>
+            <button class="section-tab" type="button" data-section="food-dinner-secondi">Secondi</button>
+            <button class="section-tab" type="button" data-section="food-dinner-verdure">Verdure</button>
+          </div>
+        </div>
+
+        <div id="beverageTopics" class="topic-panel" aria-label="Beverage topics">
+          <button class="section-tab active" type="button" data-section="beverage-wine-btg">BTG Wines</button>
+          <button class="section-tab" type="button" data-section="beverage-wine-pairing">Wine/Pasta Tasting</button>
+          <button class="section-tab" type="button" data-section="beverage-wine-bottle">Wines by the Bottle</button>
+          <button class="section-tab" type="button" data-section="beverage-cocktails">Cocktails</button>
+          <button class="section-tab" type="button" data-section="beverage-spirits">Spirits</button>
+          <button class="section-tab" type="button" data-section="beverage-grappa">Grappa</button>
+          <button class="section-tab" type="button" data-section="beverage-amari">Amari</button>
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <button id="clearFilters" class="quiet-button" type="button">Clear search</button>
+        <button id="quizMode" class="secondary-button" type="button">Quiz Mode</button>
+      </div>
+    </section>
+
     <main class="page-shell">
-      <aside class="filters" aria-label="Beverage filters">
-        <div class="filter-block">
-          <label for="searchInput">Search</label>
-          <input id="searchInput" type="search" placeholder="Wine, cocktail, grape, ingredient..." />
-        </div>
-
-        <div class="filter-block">
-          <label for="typeFilter">Type</label>
-          <select id="typeFilter">
-            <option value="all">All beverages</option>
-            <option value="wine">Wines</option>
-            <option value="cocktail">Cocktails</option>
-          </select>
-        </div>
-
-        <div class="filter-block">
-          <label for="statusFilter">Menu Status</label>
-          <select id="statusFilter">
-            <option value="current">Current</option>
-            <option value="previous">Previous</option>
-            <option value="all">All statuses</option>
-          </select>
-        </div>
-
-        <div class="filter-block">
-          <label for="regionFilter">Region</label>
-          <select id="regionFilter">
-            <option value="all">All regions</option>
-          </select>
-        </div>
-
-        <div class="filter-block">
-          <label for="subregionFilter">Subregion</label>
-          <select id="subregionFilter">
-            <option value="all">All subregions</option>
-          </select>
-        </div>
-
-        <div class="filter-block">
-          <label for="grapeFilter">Grape</label>
-          <select id="grapeFilter">
-            <option value="all">All grapes</option>
-          </select>
-        </div>
-
-        <div class="filter-actions">
-          <button id="clearFilters" type="button">Clear filters</button>
-          <button id="quizMode" class="secondary-button" type="button">Quiz Mode</button>
-        </div>
-      </aside>
-
       <section class="content-area">
         <div class="toolbar">
           <div>
-            <h2>Tech Sheets</h2>
+            <h2 id="sectionTitle">BTG Wines</h2>
+            <p id="sectionDescription" class="section-description">Current by-the-glass wine tech sheets for service study.</p>
             <p id="resultCount">Showing 0 beverages</p>
           </div>
         </div>
@@ -82,16 +85,34 @@
         <section id="quizPanel" class="quiz-panel hidden" aria-live="polite">
           <div class="quiz-card">
             <div class="quiz-selector">
-              <label for="quizType">Quiz Type</label>
-              <select id="quizType">
-                <option value="wine">Wine Quiz</option>
-                <option value="cocktail">Cocktail Quiz</option>
-              </select>
+              <div>
+                <label for="quizTopic">Quiz Topic</label>
+                <select id="quizTopic"></select>
+              </div>
+
+              <div>
+                <label for="quizLevel">Mode / Level</label>
+                <select id="quizLevel">
+                  <option value="basic">Basic</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="expert">Expert</option>
+                </select>
+              </div>
             </div>
 
             <div class="quiz-topline">
               <p id="quizProgress">Question 1 of 10</p>
               <p id="quizScore">Score: 0</p>
+            </div>
+
+            <div class="mastery-panel">
+              <div>
+                <p class="mastery-label">Mastery Progress</p>
+                <p id="masterySummary">0 of 0 topics mastered</p>
+              </div>
+              <div class="mastery-meter" aria-hidden="true">
+                <span id="masteryFill"></span>
+              </div>
             </div>
 
             <h2 id="quizQuestion">Quiz question</h2>
@@ -103,13 +124,14 @@
             <div class="quiz-actions">
               <button id="nextQuestion" type="button" disabled>Next question</button>
               <button id="restartQuiz" class="secondary-button" type="button">Restart quiz</button>
+              <button id="resetMastery" class="quiet-button" type="button">Reset mastery</button>
             </div>
           </div>
         </section>
       </section>
     </main>
 
-    <script src="wine-data.js"></script>
-    <script src="script.js"></script>
+    <script src="data.js?v=23"></script>
+    <script src="script.js?v=18"></script>
   </body>
 </html>

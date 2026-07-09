@@ -1,18 +1,22 @@
+// Training content comes from data.js. The old variable name is still "wineDirectoryData"
+// for compatibility, but the list now includes wines, cocktails, and food.
 const wines = window.wineDirectoryData || [];
 
 const searchInput = document.querySelector("#searchInput");
-const typeFilter = document.querySelector("#typeFilter");
-const statusFilter = document.querySelector("#statusFilter");
-const regionFilter = document.querySelector("#regionFilter");
-const subregionFilter = document.querySelector("#subregionFilter");
-const grapeFilter = document.querySelector("#grapeFilter");
 const clearFilters = document.querySelector("#clearFilters");
 const quizMode = document.querySelector("#quizMode");
 const wineGrid = document.querySelector("#wineGrid");
 const resultCount = document.querySelector("#resultCount");
+const mainTabs = document.querySelectorAll(".main-tab");
+const sectionTabs = document.querySelectorAll(".section-tab");
+const foodTopics = document.querySelector("#foodTopics");
+const beverageTopics = document.querySelector("#beverageTopics");
+const sectionTitle = document.querySelector("#sectionTitle");
+const sectionDescription = document.querySelector("#sectionDescription");
 const toolbar = document.querySelector(".toolbar");
 const quizPanel = document.querySelector("#quizPanel");
-const quizType = document.querySelector("#quizType");
+const quizTopic = document.querySelector("#quizTopic");
+const quizLevel = document.querySelector("#quizLevel");
 const quizProgress = document.querySelector("#quizProgress");
 const quizScore = document.querySelector("#quizScore");
 const quizQuestion = document.querySelector("#quizQuestion");
@@ -20,11 +24,200 @@ const quizChoices = document.querySelector("#quizChoices");
 const quizFeedback = document.querySelector("#quizFeedback");
 const nextQuestion = document.querySelector("#nextQuestion");
 const restartQuiz = document.querySelector("#restartQuiz");
+const resetMastery = document.querySelector("#resetMastery");
+const masterySummary = document.querySelector("#masterySummary");
+const masteryFill = document.querySelector("#masteryFill");
 
 let quizQuestions = [];
 let currentQuestionIndex = 0;
 let quizScoreCount = 0;
 let hasAnsweredCurrentQuestion = false;
+let activeGroup = "beverage";
+let activeSection = "beverage-wine-btg";
+let masteryState = loadMasteryState();
+
+const quizLevels = {
+  wine: {
+    basic: {
+      label: "Basic",
+      goal: 2,
+      questionTypes: ["grape", "region", "style"]
+    },
+    intermediate: {
+      label: "Intermediate",
+      goal: 2,
+      questionTypes: ["grape", "region", "subregion", "style"]
+    },
+    expert: {
+      label: "Expert",
+      goal: 3,
+      questionTypes: ["grape", "region", "subregion", "style", "oneLiner"]
+    }
+  },
+  cocktail: {
+    basic: {
+      label: "Basic",
+      goal: 2,
+      questionTypes: ["baseSpirit", "glassware", "garnish"]
+    },
+    intermediate: {
+      label: "Intermediate",
+      goal: 2,
+      questionTypes: ["baseSpirit", "ingredient", "allergy", "glassware", "garnish"]
+    },
+    expert: {
+      label: "Expert",
+      goal: 3,
+      questionTypes: ["baseSpirit", "ingredient", "allergy", "glassware", "garnish", "oneLiner", "talkingPoints"]
+    }
+  },
+  food: {
+    oneLiners: {
+      label: "One Liners",
+      goal: 2,
+      questionTypes: ["oneLiner"]
+    },
+    allergies: {
+      label: "Allergies",
+      goal: 2,
+      questionTypes: ["allergy"]
+    }
+  },
+  beverage: {
+    basic: {
+      label: "Basic",
+      goal: 2,
+      questionTypes: ["category", "oneLiner"]
+    },
+    intermediate: {
+      label: "Intermediate",
+      goal: 2,
+      questionTypes: ["category", "ingredient", "oneLiner"]
+    },
+    expert: {
+      label: "Expert",
+      goal: 3,
+      questionTypes: ["category", "ingredient", "oneLiner", "details"]
+    }
+  }
+};
+
+const sections = {
+  "beverage-wine-btg": {
+    title: "BTG Wines",
+    shortLabel: "BTG Wines",
+    description: "Current by-the-glass wine tech sheets for service study.",
+    countLabel: "BTG wine"
+  },
+  "beverage-wine-pairing": {
+    title: "Wine/Pasta Tasting",
+    shortLabel: "Wine/Pasta Tasting",
+    description: "Pasta tasting courses paired with the current wine pairing, plus previous course changes.",
+    countLabel: "tasting card"
+  },
+  "beverage-wine-bottle": {
+    title: "Wines by the Bottle",
+    shortLabel: "Bottles",
+    description: "Bottle-list study notes will live here when you are ready to add them.",
+    countLabel: "bottle wine"
+  },
+  "beverage-cocktails": {
+    title: "Cocktails",
+    shortLabel: "Cocktails",
+    description: "Current cocktail specs, ingredients, allergies, glassware, and talking points.",
+    countLabel: "cocktail"
+  },
+  "beverage-spirits": {
+    title: "Spirits",
+    shortLabel: "Spirits",
+    description: "Spirit study notes will live here when you are ready to add them.",
+    countLabel: "spirit"
+  },
+  "beverage-grappa": {
+    title: "Grappa",
+    shortLabel: "Grappa",
+    description: "Grappa study notes will live here when you are ready to add them.",
+    countLabel: "grappa"
+  },
+  "beverage-amari": {
+    title: "Amari",
+    shortLabel: "Amari",
+    description: "Amari study notes will live here when you are ready to add them.",
+    countLabel: "amaro"
+  },
+  "food-brunch-antipasta": {
+    title: "Brunch Antipasta",
+    shortLabel: "Antipasta",
+    description: "Brunch antipasta dish notes will live here when you add them.",
+    countLabel: "food item"
+  },
+  "food-brunch-primi": {
+    title: "Brunch Primi",
+    shortLabel: "Primi",
+    description: "Brunch primi dish notes will live here when you add them.",
+    countLabel: "food item"
+  },
+  "food-brunch-secondi": {
+    title: "Brunch Secondi",
+    shortLabel: "Secondi",
+    description: "Brunch secondi dish notes will live here when you add them.",
+    countLabel: "food item"
+  },
+  "food-brunch-verdure": {
+    title: "Brunch Verdure",
+    shortLabel: "Verdure",
+    description: "Brunch vegetable dish notes will live here when you add them.",
+    countLabel: "food item"
+  },
+  "food-lunch-antipasta": {
+    title: "Lunch Antipasta",
+    shortLabel: "Antipasta",
+    description: "Lunch antipasta dish notes will live here when you add them.",
+    countLabel: "food item"
+  },
+  "food-lunch-primi": {
+    title: "Lunch Primi",
+    shortLabel: "Primi",
+    description: "Lunch primi dish notes will live here when you add them.",
+    countLabel: "food item"
+  },
+  "food-lunch-secondi": {
+    title: "Lunch Secondi",
+    shortLabel: "Secondi",
+    description: "Lunch secondi dish notes will live here when you add them.",
+    countLabel: "food item"
+  },
+  "food-lunch-verdure": {
+    title: "Lunch Verdure",
+    shortLabel: "Verdure",
+    description: "Lunch vegetable dish notes will live here when you add them.",
+    countLabel: "food item"
+  },
+  "food-dinner-antipasta": {
+    title: "Dinner Antipasta",
+    shortLabel: "Antipasta",
+    description: "Dinner antipasta dish notes, allergens, mise, ingredients, pronunciation, and menu language.",
+    countLabel: "food item"
+  },
+  "food-dinner-primi": {
+    title: "Dinner Primi",
+    shortLabel: "Primi",
+    description: "Dinner primi dish notes will live here when you add them.",
+    countLabel: "food item"
+  },
+  "food-dinner-secondi": {
+    title: "Dinner Secondi",
+    shortLabel: "Secondi",
+    description: "Dinner secondi dish notes will live here when you add them.",
+    countLabel: "food item"
+  },
+  "food-dinner-verdure": {
+    title: "Dinner Verdure",
+    shortLabel: "Verdure",
+    description: "Dinner vegetable dish notes will live here when you add them.",
+    countLabel: "food item"
+  }
+};
 
 function uniqueSorted(items) {
   return [...new Set(items)].sort((a, b) => a.localeCompare(b));
@@ -48,27 +241,181 @@ function formatWineName(wine) {
 }
 
 function getUniqueWineValues(getValue) {
-  return uniqueSorted(getQuizWines().map(getValue).filter(Boolean));
+  return uniqueSorted(getQuizWines().map(getValue).filter(isQuizAnswerUsable));
 }
 
 function getUniqueGrapes() {
-  return uniqueSorted(getQuizWines().flatMap((wine) => wine.grapes || []));
+  return uniqueSorted(getQuizWines().flatMap((wine) => wine.grapes || []).filter(isQuizAnswerUsable));
+}
+
+function getUniqueWineListValues(getValue) {
+  return uniqueSorted(getQuizWines().map((wine) => normalizeAnswer(getValue(wine))).filter(isQuizAnswerUsable));
 }
 
 function getWrongAnswers(correctAnswer, possibleAnswers) {
-  if (!correctAnswer) {
+  if (!isQuizAnswerUsable(correctAnswer)) {
     return [];
   }
 
-  return shuffle(possibleAnswers.filter((answer) => answer && answer !== correctAnswer)).slice(0, 3);
+  return shuffle(possibleAnswers.filter((answer) => isQuizAnswerUsable(answer) && answer !== correctAnswer)).slice(0, 3);
+}
+
+function normalizeAnswer(answer) {
+  return Array.isArray(answer) ? answer.filter(isQuizAnswerUsable).join(", ") : answer;
+}
+
+function isQuizAnswerUsable(answer) {
+  if (answer === null || answer === undefined) {
+    return false;
+  }
+
+  const text = String(answer).trim();
+  return text !== "" && text.toLowerCase() !== "n/a";
+}
+
+function getItemId(item) {
+  return [getBeverageType(item), item.producer, item.name, item.vintage].filter(Boolean).join("|");
+}
+
+function getCurrentLevelConfig() {
+  return quizLevels[getQuizKind()][quizLevel.value];
+}
+
+function getCurrentMasteryGoal() {
+  return getCurrentLevelConfig().goal;
+}
+
+function getTopicKey(item, questionType) {
+  return `${quizTopic.value}::${quizLevel.value}::${getItemId(item)}::${questionType}`;
+}
+
+function loadMasteryState() {
+  try {
+    // localStorage keeps mastery progress on this browser only.
+    // This is not real user tracking yet; it resets if the browser data is cleared.
+    return JSON.parse(localStorage.getItem("rezdoraMasteryV1")) || {};
+  } catch {
+    return {};
+  }
+}
+
+function saveMasteryState() {
+  // Save quiz progress locally so the staff member can keep building mastery
+  // without needing a login or database in this static version.
+  localStorage.setItem("rezdoraMasteryV1", JSON.stringify(masteryState));
+}
+
+function getTopicProgress(item, questionType) {
+  return masteryState[getTopicKey(item, questionType)] || { correct: 0, attempts: 0, streak: 0, mastered: false };
+}
+
+function getQuizItems() {
+  if (quizTopic.value === "beverage-wine-pairing") {
+    return wines.filter((item) => getBeverageType(item) === "wine" && getMenuSection(item) === "pairing" && isCurrentItem(item));
+  }
+
+  return getItemsForSection(quizTopic.value).filter(isCurrentItem);
+}
+
+function getQuestionTypesForCurrentQuiz() {
+  return getCurrentLevelConfig().questionTypes;
+}
+
+function syncQuizLevelOptions() {
+  const quizKind = getQuizKind();
+  const availableLevels = quizLevels[quizKind] || quizLevels.wine;
+  const currentValue = quizLevel.value;
+
+  quizLevel.innerHTML = "";
+  Object.entries(availableLevels).forEach(([value, config]) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = config.label;
+    quizLevel.append(option);
+  });
+
+  quizLevel.value = availableLevels[currentValue] ? currentValue : Object.keys(availableLevels)[0];
+}
+
+function getMasteryStats() {
+  const items = getQuizItems();
+  const questionTypes = getQuestionTypesForCurrentQuiz();
+  const masteryGoal = getCurrentMasteryGoal();
+  const total = items.length * questionTypes.length;
+  let mastered = 0;
+  let progressSteps = 0;
+
+  items.forEach((item) => {
+    questionTypes.forEach((questionType) => {
+      const progress = getTopicProgress(item, questionType);
+      if (progress.mastered) {
+        mastered += 1;
+      }
+      progressSteps += Math.min(progress.streak, masteryGoal);
+    });
+  });
+
+  return {
+    mastered,
+    total,
+    progressSteps,
+    totalSteps: total * masteryGoal
+  };
+}
+
+function updateMasteryDisplay() {
+  const { mastered, total, progressSteps, totalSteps } = getMasteryStats();
+  const percent = totalSteps ? Math.round((progressSteps / totalSteps) * 100) : 0;
+  const level = getCurrentLevelConfig();
+
+  masterySummary.textContent = `${level.label}: ${progressSteps} of ${totalSteps} mastery steps complete. ${mastered} of ${total} topics mastered.`;
+  masteryFill.style.width = `${percent}%`;
+}
+
+function updateTopicMastery(question, isCorrect) {
+  const progress = getTopicProgress(question.item, question.type);
+
+  progress.attempts += 1;
+  if (isCorrect) {
+    progress.correct += 1;
+    progress.streak += 1;
+  } else {
+    progress.streak = 0;
+  }
+
+  progress.mastered = progress.streak >= getCurrentMasteryGoal();
+  masteryState[getTopicKey(question.item, question.type)] = progress;
+  saveMasteryState();
+  updateMasteryDisplay();
 }
 
 function getWineStatus(wine) {
   return wine.status || "current";
 }
 
+function isCurrentItem(item) {
+  return getWineStatus(item) === "current";
+}
+
 function getWineStatusLabel(wine) {
-  return getWineStatus(wine) === "previous" ? "Previous" : "Current";
+  if (getWineStatus(wine) === "previous") {
+    return "Previous";
+  }
+
+  if (getWineStatus(wine) === "off-menu") {
+    return "Off Menu";
+  }
+
+  return "Current";
+}
+
+function getStatusBadgeClass(item) {
+  const status = getWineStatus(item);
+  return status === "current" ? "" : status;
+}
+
+function getCourseForNote(item) {
+  return String(item.course || "this course").replace(/^Previous\s+/i, "");
 }
 
 function getBeverageType(item) {
@@ -76,35 +423,186 @@ function getBeverageType(item) {
 }
 
 function getTypeLabel(item) {
-  return getBeverageType(item) === "cocktail" ? "Cocktail" : "Wine";
+  if (getBeverageType(item) === "cocktail") {
+    return "Cocktail";
+  }
+
+  if (getBeverageType(item) === "food") {
+    return "Food";
+  }
+
+  if (getBeverageType(item) === "pastaTasting") {
+    return "Pasta Tasting";
+  }
+
+  if (getBeverageType(item) === "spirit") {
+    return "Spirit";
+  }
+
+  if (getBeverageType(item) === "grappa") {
+    return "Grappa";
+  }
+
+  if (getBeverageType(item) === "amaro") {
+    return "Amaro";
+  }
+
+  return "Wine";
 }
 
 function getQuizWines() {
-  return wines.filter((item) => getBeverageType(item) === "wine");
+  return wines.filter((item) => getBeverageType(item) === "wine" && isCurrentItem(item));
 }
 
 function getQuizCocktails() {
-  return wines.filter((item) => getBeverageType(item) === "cocktail");
+  return wines.filter((item) => getBeverageType(item) === "cocktail" && isCurrentItem(item));
+}
+
+function getMenuSection(item) {
+  return item.menuSection || "btg";
+}
+
+function getFoodMenu(item) {
+  return (item.menu || "dinner").toLowerCase();
+}
+
+function getFoodCourse(item) {
+  return (item.course || item.category || "").toLowerCase();
+}
+
+function foodMatchesSection(item, sectionName = activeSection) {
+  const [, menu, course] = sectionName.split("-");
+  return getBeverageType(item) === "food" && getFoodMenu(item) === menu && getFoodCourse(item) === course;
+}
+
+function getSectionKind(sectionName) {
+  if (sectionName.startsWith("food-")) {
+    return "food";
+  }
+
+  if (sectionName === "beverage-cocktails") {
+    return "cocktail";
+  }
+
+  if (["beverage-spirits", "beverage-grappa", "beverage-amari"].includes(sectionName)) {
+    return "beverage";
+  }
+
+  return "wine";
+}
+
+function getQuizKind() {
+  return getSectionKind(quizTopic.value);
+}
+
+function itemMatchesSection(item, sectionName) {
+  return (
+    (sectionName === "beverage-wine-btg" && getBeverageType(item) === "wine" && getMenuSection(item) !== "pairing" && getMenuSection(item) !== "bottle" && getWineStatus(item) === "current") ||
+    (sectionName === "beverage-wine-pairing" && getBeverageType(item) === "wine" && getMenuSection(item) === "pairing") ||
+    (sectionName === "beverage-wine-bottle" && getBeverageType(item) === "wine" && getMenuSection(item) === "bottle" && getWineStatus(item) === "current") ||
+    (sectionName === "beverage-cocktails" && getBeverageType(item) === "cocktail" && getWineStatus(item) === "current") ||
+    (sectionName === "beverage-spirits" && getBeverageType(item) === "spirit" && getWineStatus(item) === "current") ||
+    (sectionName === "beverage-grappa" && getBeverageType(item) === "grappa" && getWineStatus(item) === "current") ||
+    (sectionName === "beverage-amari" && getBeverageType(item) === "amaro" && getWineStatus(item) === "current") ||
+    (sectionName.startsWith("food-") && foodMatchesSection(item, sectionName))
+  );
+}
+
+function getCourseNumber(item) {
+  const match = String(item.course || "").match(/\d+/);
+  return match ? Number(match[0]) : 999;
+}
+
+function getWinePairingItems() {
+  return wines.filter((item) => getBeverageType(item) === "wine" && getMenuSection(item) === "pairing");
+}
+
+function getPastaTastingItems() {
+  return wines.filter((item) => item.type === "pastaTasting");
+}
+
+function buildTastingCards(searchTerm = "") {
+  const currentWines = getWinePairingItems().filter((item) => getWineStatus(item) === "current");
+  const currentPastas = getPastaTastingItems().filter((item) => getWineStatus(item) === "current");
+  const previousItems = [...getWinePairingItems(), ...getPastaTastingItems()]
+    .filter((item) => getWineStatus(item) !== "current")
+    .sort((a, b) => getCourseNumber(a) - getCourseNumber(b) || a.name.localeCompare(b.name));
+
+  const courseNumbers = [...new Set([...currentWines, ...currentPastas].map(getCourseNumber).filter((number) => number !== 999))]
+    .sort((a, b) => a - b);
+  const currentCourseCards = courseNumbers.map((courseNumber) => ({
+    type: "tastingCourse",
+    status: "current",
+    course: `Course ${courseNumber}`,
+    name: `Course ${courseNumber}`,
+    wine: currentWines.find((wine) => getCourseNumber(wine) === courseNumber),
+    pasta: currentPastas.find((pasta) => getCourseNumber(pasta) === courseNumber)
+  }));
+
+  const cards = [...currentCourseCards, ...previousItems];
+
+  if (!searchTerm) {
+    return cards;
+  }
+
+  return cards.filter((card) => tastingCardMatchesSearch(card, searchTerm));
+}
+
+function tastingCardMatchesSearch(card, searchTerm) {
+  if (card.type === "tastingCourse") {
+    return [card.course, card.name].join(" ").toLowerCase().includes(searchTerm) ||
+      (card.wine && wineMatchesSearch(card.wine, searchTerm)) ||
+      (card.pasta && wineMatchesSearch(card.pasta, searchTerm));
+  }
+
+  return wineMatchesSearch(card, searchTerm);
+}
+
+function getItemsForSection(sectionName) {
+  if (sectionName === "beverage-wine-pairing") {
+    return buildTastingCards();
+  }
+
+  return wines.filter((item) => itemMatchesSection(item, sectionName));
 }
 
 function getUniqueCocktailValues(getValue) {
-  return uniqueSorted(getQuizCocktails().map(getValue).filter(Boolean));
+  return uniqueSorted(getQuizCocktails().map(getValue).filter(isQuizAnswerUsable));
 }
 
 function getUniqueIngredients() {
-  return uniqueSorted(getQuizCocktails().flatMap((cocktail) => cocktail.ingredients || []));
+  return uniqueSorted(getQuizCocktails().flatMap((cocktail) => cocktail.ingredients || []).filter(isQuizAnswerUsable));
 }
 
 function getUniqueAllergies() {
-  return uniqueSorted(getQuizCocktails().flatMap((cocktail) => cocktail.allergies || []));
+  return uniqueSorted(getQuizCocktails().flatMap((cocktail) => cocktail.allergies || []).filter(isQuizAnswerUsable));
+}
+
+function getUniqueCocktailListValues(getValue) {
+  return uniqueSorted(getQuizCocktails().map((cocktail) => normalizeAnswer(getValue(cocktail))).filter(isQuizAnswerUsable));
 }
 
 function buildFilters() {
-  const wineEntries = wines.filter((item) => getBeverageType(item) === "wine");
+  sectionTabs.forEach((tab) => {
+    const section = sections[tab.dataset.section];
+    if (!section) {
+      return;
+    }
 
-  addOptions(regionFilter, uniqueSorted(wineEntries.map((wine) => wine.region)));
-  addOptions(subregionFilter, uniqueSorted(wineEntries.map((wine) => wine.subregion)));
-  addOptions(grapeFilter, uniqueSorted(wineEntries.flatMap((wine) => wine.grapes || [])));
+    const count = getItemsForSection(tab.dataset.section).length;
+    tab.textContent = count ? `${section.shortLabel || section.title} (${count})` : section.shortLabel || section.title;
+  });
+
+  quizTopic.innerHTML = "";
+  Object.entries(sections).forEach(([sectionName, section]) => {
+    const option = document.createElement("option");
+    option.value = sectionName;
+    option.textContent = section.title;
+    quizTopic.append(option);
+  });
+
+  quizTopic.value = activeSection;
+  syncQuizLevelOptions();
 }
 
 function wineMatchesSearch(wine, searchTerm) {
@@ -126,10 +624,16 @@ function wineMatchesSearch(wine, searchTerm) {
     wine.method,
     wine.glassware,
     wine.garnish,
+    wine.menuDescription,
+    wine.menu,
+    wine.course,
+    wine.pronunciation,
+    wine.mise,
     ...(wine.allergies || []),
     wine.oneLiner,
     wine.details,
     wine.pairing,
+    ...(wine.winePairings || []),
     ...(wine.grapes || []),
     ...(wine.ingredients || [])
   ]
@@ -141,43 +645,52 @@ function wineMatchesSearch(wine, searchTerm) {
 
 function getFilteredWines() {
   const searchTerm = searchInput.value.trim().toLowerCase();
-  const selectedType = typeFilter.value;
-  const selectedStatus = statusFilter.value;
-  const selectedRegion = regionFilter.value;
-  const selectedSubregion = subregionFilter.value;
-  const selectedGrape = grapeFilter.value;
-  const wineFilterActive = selectedRegion !== "all" || selectedSubregion !== "all" || selectedGrape !== "all";
 
-  return wines.filter((wine) => {
-    const typeMatches = selectedType === "all" || getBeverageType(wine) === selectedType;
-    const statusMatches = selectedStatus === "all" || getWineStatus(wine) === selectedStatus;
-    const isCocktail = getBeverageType(wine) === "cocktail";
-    const cocktailMatchesWineFilters = !isCocktail || selectedType === "cocktail" || !wineFilterActive;
-    const regionMatches = isCocktail || selectedRegion === "all" || wine.region === selectedRegion;
-    const subregionMatches = isCocktail || selectedSubregion === "all" || wine.subregion === selectedSubregion;
-    const grapeMatches = isCocktail || selectedGrape === "all" || (wine.grapes || []).includes(selectedGrape);
+  if (activeSection === "beverage-wine-pairing") {
+    return buildTastingCards(searchTerm);
+  }
+
+  const filteredItems = wines.filter((wine) => {
+    const sectionMatches = itemMatchesSection(wine, activeSection);
     const searchMatches = !searchTerm || wineMatchesSearch(wine, searchTerm);
 
-    return typeMatches && statusMatches && cocktailMatchesWineFilters && regionMatches && subregionMatches && grapeMatches && searchMatches;
+    return sectionMatches && searchMatches;
   });
+
+  return filteredItems;
 }
 
 function renderWines() {
   const filteredWines = getFilteredWines();
+  const section = sections[activeSection];
 
-  resultCount.textContent = `Showing ${filteredWines.length} ${filteredWines.length === 1 ? "beverage" : "beverages"}`;
+  sectionTitle.textContent = section.title;
+  sectionDescription.textContent = section.description;
+  resultCount.textContent = `Showing ${filteredWines.length} ${filteredWines.length === 1 ? section.countLabel : `${section.countLabel}s`}`;
   wineGrid.innerHTML = "";
 
   if (filteredWines.length === 0) {
-    wineGrid.innerHTML = `<div class="empty-state">No wines match the current filters.</div>`;
+    wineGrid.innerHTML = `<div class="empty-state">No items match the current filters.</div>`;
     return;
   }
 
+  // Each matching item becomes one card. The card template changes based on item type.
   filteredWines.forEach((wine) => {
     const card = document.createElement("article");
     card.className = "wine-card";
 
-    card.innerHTML = getBeverageType(wine) === "cocktail" ? renderCocktailCard(wine) : renderWineCard(wine);
+    if (wine.type === "tastingCourse") {
+      card.classList.add("tasting-card");
+      card.innerHTML = renderTastingCourseCard(wine);
+    } else if (wine.type === "pastaTasting") {
+      card.innerHTML = renderPastaTastingCard(wine);
+    } else if (getBeverageType(wine) === "cocktail") {
+      card.innerHTML = renderCocktailCard(wine);
+    } else if (getBeverageType(wine) === "food") {
+      card.innerHTML = renderFoodCard(wine);
+    } else {
+      card.innerHTML = renderWineCard(wine);
+    }
 
     wineGrid.append(card);
   });
@@ -188,13 +701,19 @@ function renderWineCard(wine) {
     ${wine.image ? `<img class="bottle-photo" src="${wine.image}" alt="Bottle of ${wine.producer} ${wine.name}" />` : ""}
 
     <div>
-      <span class="status-badge ${getWineStatus(wine) === "previous" ? "previous" : ""}">${getWineStatusLabel(wine)}</span>
+      <span class="status-badge ${getStatusBadgeClass(wine)}">${getWineStatusLabel(wine)}</span>
       <span class="type-badge">Wine</span>
       <h3>${wine.name} ${wine.vintage}</h3>
       <p class="producer">${wine.producer}</p>
     </div>
 
     <dl class="meta-list">
+      ${wine.course ? `
+      <div class="meta-row">
+        <dt class="meta-label">Course</dt>
+        <dd>${wine.course}</dd>
+      </div>
+      ` : ""}
       <div class="meta-row">
         <dt class="meta-label">Region</dt>
         <dd>${wine.region}</dd>
@@ -232,6 +751,139 @@ function renderWineCard(wine) {
       <h4>Pairing</h4>
       <p>${wine.pairing}</p>
     </div>
+
+    ${activeSection === "beverage-wine-pairing" && getWineStatus(wine) === "previous" ? `
+    <div class="history-note">Previous wine pairing for ${getCourseForNote(wine)}.</div>
+    ` : ""}
+  `;
+}
+
+function renderTastingCourseCard(courseCard) {
+  const { wine, pasta } = courseCard;
+
+  return `
+    <div class="tasting-course-header">
+      <span class="status-badge">Current</span>
+      <span class="type-badge">Pasta Tasting</span>
+      <h3>${courseCard.course}</h3>
+      <p class="producer">Current wine pairing and pasta course together.</p>
+    </div>
+
+    <div class="tasting-pair">
+      <section class="tasting-panel">
+        <p class="panel-label">Pasta</p>
+        ${pasta ? `
+          ${pasta.image ? `<img class="tasting-photo food-photo" src="${pasta.image}" alt="${pasta.name}" />` : `<div class="tasting-photo-placeholder">Pasta photo coming soon</div>`}
+          <h4>${pasta.name}</h4>
+          <p class="menu-description">${pasta.menuDescription || ""}</p>
+          <dl class="meta-list">
+            <div class="meta-row">
+              <dt class="meta-label">Mise</dt>
+              <dd>${pasta.mise || "N/A"}</dd>
+            </div>
+            <div class="meta-row">
+              <dt class="meta-label">Pairing</dt>
+              <dd>${(pasta.winePairings || []).join(", ") || "N/A"}</dd>
+            </div>
+            <div class="meta-row">
+              <dt class="meta-label">Allergies</dt>
+              <dd>${(pasta.allergies || []).join(", ") || "N/A"}</dd>
+            </div>
+          </dl>
+          <div class="tag-row">
+            ${(pasta.ingredients || []).map((ingredient) => `<span class="tag food-tag">${ingredient}</span>`).join("")}
+          </div>
+          <p class="one-liner">${pasta.oneLiner}</p>
+          <details class="study-notes">
+            <summary>Pasta details</summary>
+            <p>${pasta.details}</p>
+          </details>
+        ` : `<p class="empty-panel-note">No pasta course has been added yet.</p>`}
+      </section>
+
+      <section class="tasting-panel">
+        <p class="panel-label">Wine</p>
+        ${wine ? `
+          ${wine.image ? `<img class="tasting-photo wine-photo" src="${wine.image}" alt="Bottle of ${wine.producer} ${wine.name}" />` : `<div class="tasting-photo-placeholder">Wine photo coming soon</div>`}
+          <h4>${wine.name} ${wine.vintage}</h4>
+          <p class="producer">${wine.producer}</p>
+          <dl class="meta-list">
+            <div class="meta-row">
+              <dt class="meta-label">Region</dt>
+              <dd>${wine.region}</dd>
+            </div>
+            <div class="meta-row">
+              <dt class="meta-label">Style</dt>
+              <dd>${wine.style} / ${wine.body}</dd>
+            </div>
+            <div class="meta-row">
+              <dt class="meta-label">Farming</dt>
+              <dd>${wine.farming}</dd>
+            </div>
+          </dl>
+          <div class="tag-row">
+            ${(wine.grapes || []).map((grape) => `<span class="tag">${grape}</span>`).join("")}
+          </div>
+          <p class="one-liner">${wine.oneLiner}</p>
+          <details class="study-notes">
+            <summary>Wine notes</summary>
+            <p>${wine.details}</p>
+          </details>
+          <div class="pairing">
+            <h4>Why It Works</h4>
+            <p>${wine.pairing}</p>
+          </div>
+        ` : `<p class="empty-panel-note">No current wine pairing has been added yet.</p>`}
+      </section>
+    </div>
+  `;
+}
+
+function renderPastaTastingCard(pasta) {
+  return `
+    <div>
+      <span class="status-badge ${getStatusBadgeClass(pasta)}">${getWineStatusLabel(pasta)}</span>
+      <span class="type-badge food">Pasta Tasting</span>
+      <h3>${pasta.name}</h3>
+      <p class="producer">${pasta.note || `${getCourseForNote(pasta)} pasta tasting`}</p>
+      ${pasta.pronunciation ? `<p class="pronunciation">${pasta.pronunciation}</p>` : ""}
+    </div>
+
+    <p class="menu-description">${pasta.menuDescription}</p>
+
+    <dl class="meta-list">
+      <div class="meta-row">
+        <dt class="meta-label">Course</dt>
+        <dd>${pasta.course || "N/A"}</dd>
+      </div>
+      <div class="meta-row">
+        <dt class="meta-label">Mise</dt>
+        <dd>${pasta.mise || "N/A"}</dd>
+      </div>
+      <div class="meta-row">
+        <dt class="meta-label">Pairings</dt>
+        <dd>${(pasta.winePairings || []).join(", ") || "N/A"}</dd>
+      </div>
+      <div class="meta-row">
+        <dt class="meta-label">Allergies</dt>
+        <dd>${(pasta.allergies || []).join(", ") || "N/A"}</dd>
+      </div>
+    </dl>
+
+    <div class="tag-row">
+      ${(pasta.ingredients || []).map((ingredient) => `<span class="tag food-tag">${ingredient}</span>`).join("")}
+    </div>
+
+    <p class="one-liner">${pasta.oneLiner}</p>
+
+    <details class="study-notes">
+      <summary>Pasta details</summary>
+      <p>${pasta.details}</p>
+    </details>
+
+    ${getWineStatus(pasta) === "previous" ? `
+    <div class="history-note">Previous pasta tasting for ${getCourseForNote(pasta)}.</div>
+    ` : ""}
   `;
 }
 
@@ -240,7 +892,7 @@ function renderCocktailCard(cocktail) {
     ${cocktail.image ? `<img class="bottle-photo" src="${cocktail.image}" alt="${cocktail.name}" />` : ""}
 
     <div>
-      <span class="status-badge ${getWineStatus(cocktail) === "previous" ? "previous" : ""}">${getWineStatusLabel(cocktail)}</span>
+      <span class="status-badge ${getStatusBadgeClass(cocktail)}">${getWineStatusLabel(cocktail)}</span>
       <span class="type-badge cocktail">Cocktail</span>
       <h3>${cocktail.name}</h3>
       <p class="producer">${cocktail.category || cocktail.baseSpirit || "Cocktail"}</p>
@@ -295,52 +947,121 @@ function renderCocktailCard(cocktail) {
   `;
 }
 
+function renderFoodCard(food) {
+  return `
+    ${food.image ? `<img class="bottle-photo" src="${food.image}" alt="${food.name}" />` : ""}
+
+    <div>
+      <span class="status-badge ${getStatusBadgeClass(food)}">${getWineStatusLabel(food)}</span>
+      <span class="type-badge food">Food</span>
+      <h3>${food.name}</h3>
+      <p class="producer">${food.category || "Food"}</p>
+      ${food.pronunciation ? `<p class="pronunciation">${food.pronunciation}</p>` : ""}
+    </div>
+
+    <p class="menu-description">${food.menuDescription}</p>
+
+    <dl class="meta-list">
+      <div class="meta-row">
+        <dt class="meta-label">Mise</dt>
+        <dd>${food.mise || "N/A"}</dd>
+      </div>
+      <div class="meta-row">
+        <dt class="meta-label">Pairings</dt>
+        <dd>${(food.winePairings || []).join(", ") || "N/A"}</dd>
+      </div>
+      <div class="meta-row">
+        <dt class="meta-label">Allergies</dt>
+        <dd>${(food.allergies || []).join(", ") || "N/A"}</dd>
+      </div>
+    </dl>
+
+    <div class="tag-row">
+      ${(food.ingredients || []).map((ingredient) => `<span class="tag food-tag">${ingredient}</span>`).join("")}
+    </div>
+
+    <p class="one-liner">${food.oneLiner}</p>
+
+    <details class="study-notes">
+      <summary>Dish details</summary>
+      <p>${food.details}</p>
+    </details>
+  `;
+}
+
 function clearAllFilters() {
   searchInput.value = "";
-  typeFilter.value = "all";
-  statusFilter.value = "current";
-  regionFilter.value = "all";
-  subregionFilter.value = "all";
-  grapeFilter.value = "all";
+  renderWines();
+}
+
+function setActiveGroup(groupName, options = {}) {
+  activeGroup = groupName;
+
+  mainTabs.forEach((tab) => {
+    const isActive = tab.dataset.group === groupName;
+    tab.classList.toggle("active", isActive);
+    tab.setAttribute("aria-current", isActive ? "page" : "false");
+  });
+
+  foodTopics.classList.toggle("hidden", groupName !== "food");
+  beverageTopics.classList.toggle("hidden", groupName !== "beverage");
+
+  const nextSection = groupName === "food" ? "food-dinner-antipasta" : "beverage-wine-btg";
+  setActiveSection(nextSection, options);
+}
+
+function setActiveSection(sectionName, options = {}) {
+  const shouldExitQuiz = options.exitQuiz !== false;
+  activeSection = sectionName;
+  quizTopic.value = sectionName;
+  syncQuizLevelOptions();
+
+  sectionTabs.forEach((tab) => {
+    const isActive = tab.dataset.section === sectionName;
+    tab.classList.toggle("active", isActive);
+    tab.setAttribute("aria-current", isActive ? "page" : "false");
+  });
+
+  if (shouldExitQuiz && !quizPanel.classList.contains("hidden")) {
+    showDirectoryMode();
+  }
+
   renderWines();
 }
 
 function buildQuestion(wine, questionType) {
+  // Wine quiz questions are generated from the same fields shown on the cards.
+  // If a field is blank or "N/A", the quiz skips that question type.
   const questionTypes = {
     grape: {
       prompt: `Which grape is used in ${formatWineName(wine)}?`,
-      answer: wine.grapes[0],
-      possibleAnswers: getUniqueGrapes()
+      answer: normalizeAnswer(wine.grapes),
+      possibleAnswers: getUniqueWineListValues((item) => item.grapes)
     },
     region: {
       prompt: `Which region is ${formatWineName(wine)} from?`,
       answer: wine.region,
       possibleAnswers: getUniqueWineValues((item) => item.region)
     },
-    producer: {
-      prompt: `Who produces ${wine.name} ${wine.vintage}?`,
-      answer: wine.producer,
-      possibleAnswers: getUniqueWineValues((item) => item.producer)
+    subregion: {
+      prompt: `Which subregion is listed for ${formatWineName(wine)}?`,
+      answer: wine.subregion,
+      possibleAnswers: getUniqueWineValues((item) => item.subregion)
     },
     style: {
       prompt: `What style is ${formatWineName(wine)}?`,
       answer: wine.style,
       possibleAnswers: getUniqueWineValues((item) => item.style)
     },
-    farming: {
-      prompt: `What farming practice is listed for ${formatWineName(wine)}?`,
-      answer: wine.farming,
-      possibleAnswers: getUniqueWineValues((item) => item.farming)
-    },
-    price: {
-      prompt: `What is the listed price for ${formatWineName(wine)}?`,
-      answer: wine.price,
-      possibleAnswers: getUniqueWineValues((item) => item.price)
+    oneLiner: {
+      prompt: `Which one-liner belongs to ${formatWineName(wine)}?`,
+      answer: wine.oneLiner,
+      possibleAnswers: getUniqueWineValues((item) => item.oneLiner)
     }
   };
 
   const selectedType = questionTypes[questionType];
-  if (!selectedType.answer) {
+  if (!isQuizAnswerUsable(selectedType.answer)) {
     return null;
   }
 
@@ -349,16 +1070,20 @@ function buildQuestion(wine, questionType) {
   return {
     prompt: selectedType.prompt,
     answer: selectedType.answer,
-    choices: shuffle([selectedType.answer, ...wrongAnswers])
+    choices: shuffle([selectedType.answer, ...wrongAnswers]),
+    item: wine,
+    type: questionType
   };
 }
 
 function buildCocktailQuestion(cocktail, questionType) {
+  // Cocktail questions are generated from ingredients, base spirit, glassware,
+  // garnish, allergies, one-liner, and talking points.
   const questionTypes = {
     ingredient: {
-      prompt: `Which ingredient is used in ${cocktail.name}?`,
-      answer: (cocktail.ingredients || [])[0],
-      possibleAnswers: getUniqueIngredients()
+      prompt: `Which ingredient list belongs to ${cocktail.name}?`,
+      answer: normalizeAnswer(cocktail.ingredients),
+      possibleAnswers: getUniqueCocktailListValues((item) => item.ingredients)
     },
     baseSpirit: {
       prompt: `What is the base spirit for ${cocktail.name}?`,
@@ -376,24 +1101,24 @@ function buildCocktailQuestion(cocktail, questionType) {
       possibleAnswers: getUniqueCocktailValues((item) => item.garnish)
     },
     allergy: {
-      prompt: `Which allergy is listed for ${cocktail.name}?`,
-      answer: (cocktail.allergies || [])[0],
-      possibleAnswers: getUniqueAllergies()
+      prompt: `Which allergies are listed for ${cocktail.name}?`,
+      answer: normalizeAnswer(cocktail.allergies),
+      possibleAnswers: getUniqueCocktailListValues((item) => item.allergies)
     },
-    price: {
-      prompt: `What is the listed price for ${cocktail.name}?`,
-      answer: cocktail.price,
-      possibleAnswers: getUniqueCocktailValues((item) => item.price)
+    oneLiner: {
+      prompt: `Which one-liner belongs to ${cocktail.name}?`,
+      answer: cocktail.oneLiner,
+      possibleAnswers: getUniqueCocktailValues((item) => item.oneLiner)
     },
-    replaces: {
-      prompt: `Which cocktail did ${cocktail.name} replace?`,
-      answer: cocktail.replaces,
-      possibleAnswers: getUniqueCocktailValues((item) => item.replaces)
+    talkingPoints: {
+      prompt: `Which guest-facing talking points belong to ${cocktail.name}?`,
+      answer: cocktail.pairing,
+      possibleAnswers: getUniqueCocktailValues((item) => item.pairing)
     }
   };
 
   const selectedType = questionTypes[questionType];
-  if (!selectedType.answer) {
+  if (!isQuizAnswerUsable(selectedType.answer)) {
     return null;
   }
 
@@ -402,26 +1127,203 @@ function buildCocktailQuestion(cocktail, questionType) {
   return {
     prompt: selectedType.prompt,
     answer: selectedType.answer,
-    choices: shuffle([selectedType.answer, ...wrongAnswers])
+    choices: shuffle([selectedType.answer, ...wrongAnswers]),
+    item: cocktail,
+    type: questionType
+  };
+}
+
+function getUniqueFoodValues(getValue) {
+  return uniqueSorted(wines.filter((item) => getBeverageType(item) === "food" && isCurrentItem(item)).map(getValue).filter(isQuizAnswerUsable));
+}
+
+function getUniqueFoodListValues(getValue) {
+  return uniqueSorted(wines.filter((item) => getBeverageType(item) === "food" && isCurrentItem(item)).map((food) => normalizeAnswer(getValue(food))).filter(isQuizAnswerUsable));
+}
+
+function getFoodFunnyAnswer(questionType) {
+  if (questionType === "allergy") {
+    return "Mostly allergic to vague menu descriptions and surprise substitutions";
+  }
+
+  return "A mysterious plate that tastes like confidence and pre-shift espresso";
+}
+
+function escapeRegExp(text) {
+  return String(text).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function getUsefulFoodIngredients(food) {
+  return (food.ingredients || [])
+    .map((ingredient) => String(ingredient).trim())
+    .filter((ingredient) => ingredient.length >= 4)
+    .filter((ingredient) => !["salt", "water", "evoo", "oo", "oil", "olive oil"].includes(ingredient.toLowerCase()));
+}
+
+function swapOneLinerIngredient(oneLiner, oldIngredient, newIngredient) {
+  const pattern = new RegExp(escapeRegExp(oldIngredient), "i");
+
+  if (!pattern.test(oneLiner)) {
+    return "";
+  }
+
+  return oneLiner.replace(pattern, newIngredient.toLowerCase());
+}
+
+function getSimilarOneLinerDistractors(food, correctAnswer) {
+  const currentIngredients = getUsefulFoodIngredients(food);
+  const replacementIngredients = uniqueSorted(
+    wines
+      .filter((item) => getBeverageType(item) === "food" && item.name !== food.name && isCurrentItem(item))
+      .flatMap((item) => getUsefulFoodIngredients(item))
+      .filter((ingredient) => !currentIngredients.map((current) => current.toLowerCase()).includes(ingredient.toLowerCase()))
+  );
+
+  const visibleIngredients = currentIngredients.filter((ingredient) =>
+    new RegExp(escapeRegExp(ingredient), "i").test(correctAnswer)
+  );
+
+  const candidates = [];
+  const ingredientsToSwap = visibleIngredients.length ? visibleIngredients : currentIngredients;
+
+  ingredientsToSwap.forEach((oldIngredient) => {
+    shuffle(replacementIngredients).slice(0, 4).forEach((newIngredient) => {
+      const candidate = swapOneLinerIngredient(correctAnswer, oldIngredient, newIngredient);
+      if (candidate && candidate !== correctAnswer) {
+        candidates.push(candidate);
+      }
+    });
+  });
+
+  if (candidates.length < 2) {
+    const baseAnswer = correctAnswer.replace(/\.$/, "");
+    shuffle(replacementIngredients).slice(0, 4).forEach((newIngredient) => {
+      candidates.push(`${baseAnswer}, with ${newIngredient.toLowerCase()}.`);
+    });
+  }
+
+  return uniqueSorted(candidates).slice(0, 2);
+}
+
+function getFoodAnswerChoices(correctAnswer, possibleAnswers, questionType, food) {
+  const funnyAnswer = getFoodFunnyAnswer(questionType);
+  const similarDistractors = questionType === "oneLiner" ? getSimilarOneLinerDistractors(food, correctAnswer) : [];
+  const distractors = shuffle(
+    possibleAnswers.filter((answer) =>
+      isQuizAnswerUsable(answer) &&
+      answer !== correctAnswer &&
+      answer !== funnyAnswer &&
+      !similarDistractors.includes(answer)
+    )
+  ).slice(0, 2 - similarDistractors.length);
+
+  return shuffle([correctAnswer, ...similarDistractors, ...distractors, funnyAnswer]);
+}
+
+function buildFoodQuestion(food, questionType) {
+  // Food quiz practice has two modes: one-liners and allergies.
+  // The prompt only names the dish, then the answers do the testing.
+  const questionTypes = {
+    allergy: {
+      prompt: `Which allergy list belongs to ${food.name}?`,
+      answer: normalizeAnswer(food.allergies),
+      possibleAnswers: getUniqueFoodListValues((item) => item.allergies)
+    },
+    oneLiner: {
+      prompt: `Which one-liner belongs to ${food.name}?`,
+      answer: food.oneLiner,
+      possibleAnswers: getUniqueFoodValues((item) => item.oneLiner)
+    }
+  };
+
+  const selectedType = questionTypes[questionType];
+  if (!isQuizAnswerUsable(selectedType.answer)) {
+    return null;
+  }
+
+  return {
+    prompt: selectedType.prompt,
+    answer: selectedType.answer,
+    choices: getFoodAnswerChoices(selectedType.answer, selectedType.possibleAnswers, questionType, food),
+    item: food,
+    type: questionType
+  };
+}
+
+function getUniqueGenericBeverageValues(getValue) {
+  return uniqueSorted(wines.filter((item) => ["spirit", "grappa", "amaro"].includes(getBeverageType(item)) && isCurrentItem(item)).map(getValue).filter(isQuizAnswerUsable));
+}
+
+function getUniqueGenericBeverageListValues(getValue) {
+  return uniqueSorted(wines.filter((item) => ["spirit", "grappa", "amaro"].includes(getBeverageType(item)) && isCurrentItem(item)).map((item) => normalizeAnswer(getValue(item))).filter(isQuizAnswerUsable));
+}
+
+function buildGenericBeverageQuestion(item, questionType) {
+  const questionTypes = {
+    category: {
+      prompt: `What category is ${item.name}?`,
+      answer: item.category || getTypeLabel(item),
+      possibleAnswers: getUniqueGenericBeverageValues((beverage) => beverage.category || getTypeLabel(beverage))
+    },
+    ingredient: {
+      prompt: `Which ingredient list belongs to ${item.name}?`,
+      answer: normalizeAnswer(item.ingredients),
+      possibleAnswers: getUniqueGenericBeverageListValues((beverage) => beverage.ingredients)
+    },
+    oneLiner: {
+      prompt: `Which one-liner belongs to ${item.name}?`,
+      answer: item.oneLiner,
+      possibleAnswers: getUniqueGenericBeverageValues((beverage) => beverage.oneLiner)
+    },
+    details: {
+      prompt: `Which detail belongs to ${item.name}?`,
+      answer: item.details,
+      possibleAnswers: getUniqueGenericBeverageValues((beverage) => beverage.details)
+    }
+  };
+
+  const selectedType = questionTypes[questionType];
+  if (!isQuizAnswerUsable(selectedType.answer)) {
+    return null;
+  }
+
+  const wrongAnswers = getWrongAnswers(selectedType.answer, selectedType.possibleAnswers);
+
+  return {
+    prompt: selectedType.prompt,
+    answer: selectedType.answer,
+    choices: shuffle([selectedType.answer, ...wrongAnswers]),
+    item,
+    type: questionType
   };
 }
 
 function createQuizRound() {
-  if (quizType.value === "cocktail") {
-    const questionTypes = ["ingredient", "baseSpirit", "glassware", "garnish", "allergy", "price", "replaces"];
-    const possibleQuestions = getQuizCocktails().flatMap((cocktail) =>
-      questionTypes.map((questionType) => buildCocktailQuestion(cocktail, questionType))
-    ).filter(Boolean);
+  // A quiz round pulls possible questions from the selected section,
+  // prioritizes topics that are not mastered yet, then randomizes the order.
+  const questionTypes = getQuestionTypesForCurrentQuiz();
+  const possibleQuestions = getQuizItems().flatMap((item) =>
+    questionTypes.map((questionType) => {
+      const quizKind = getQuizKind();
+      if (quizKind === "cocktail") {
+        return buildCocktailQuestion(item, questionType);
+      }
+      if (quizKind === "food") {
+        return buildFoodQuestion(item, questionType);
+      }
+      if (quizKind === "beverage") {
+        return buildGenericBeverageQuestion(item, questionType);
+      }
+      return buildQuestion(item, questionType);
+    })
+  ).filter((question) => question && question.choices.length >= 2);
 
-    return shuffle(possibleQuestions).slice(0, 10);
-  }
+  const unmastered = possibleQuestions.filter((question) => !getTopicProgress(question.item, question.type).mastered);
+  const mastered = possibleQuestions.filter((question) => getTopicProgress(question.item, question.type).mastered);
+  const inProgress = unmastered.filter((question) => getTopicProgress(question.item, question.type).streak > 0);
+  const notStarted = unmastered.filter((question) => getTopicProgress(question.item, question.type).streak === 0);
 
-  const questionTypes = ["grape", "region", "producer", "style", "farming", "price"];
-  const possibleQuestions = getQuizWines().flatMap((wine) =>
-    questionTypes.map((questionType) => buildQuestion(wine, questionType))
-  ).filter(Boolean);
-
-  return shuffle(possibleQuestions).slice(0, 10);
+  return [...shuffle(inProgress), ...shuffle(notStarted), ...shuffle(mastered)].slice(0, 10);
 }
 
 function showDirectoryMode() {
@@ -436,6 +1338,7 @@ function showQuizMode() {
   wineGrid.classList.add("hidden");
   quizPanel.classList.remove("hidden");
   quizMode.textContent = "Directory Mode";
+  updateMasteryDisplay();
   startQuiz();
 }
 
@@ -443,12 +1346,23 @@ function startQuiz() {
   quizQuestions = createQuizRound();
   currentQuestionIndex = 0;
   quizScoreCount = 0;
+  updateMasteryDisplay();
   renderQuizQuestion();
 }
 
 function renderQuizQuestion() {
   const currentQuestion = quizQuestions[currentQuestionIndex];
   hasAnsweredCurrentQuestion = false;
+
+  if (!currentQuestion) {
+    quizProgress.textContent = "No quiz available";
+    quizScore.textContent = "Score: 0";
+    quizQuestion.textContent = "There are not enough entries yet to build this quiz.";
+    quizFeedback.textContent = "";
+    quizChoices.innerHTML = "";
+    nextQuestion.disabled = true;
+    return;
+  }
 
   quizProgress.textContent = `Question ${currentQuestionIndex + 1} of ${quizQuestions.length}`;
   quizScore.textContent = `Score: ${quizScoreCount}`;
@@ -478,14 +1392,20 @@ function handleQuizAnswer(selectedAnswer, selectedButton) {
   hasAnsweredCurrentQuestion = true;
 
   if (isCorrect) {
+    const masteryGoal = getCurrentMasteryGoal();
+    const nextStreak = getTopicProgress(currentQuestion.item, currentQuestion.type).streak + 1;
+
     quizScoreCount += 1;
     selectedButton.classList.add("correct");
-    quizFeedback.textContent = "Correct.";
+    quizFeedback.textContent = nextStreak >= masteryGoal
+      ? "Correct. This topic is now mastered."
+      : `Correct. ${masteryGoal - nextStreak} more correct ${masteryGoal - nextStreak === 1 ? "answer" : "answers"} in a row will master this topic.`;
   } else {
     selectedButton.classList.add("incorrect");
-    quizFeedback.textContent = `Not quite. Correct answer: ${currentQuestion.answer}`;
+    quizFeedback.textContent = `Not quite. Correct answer: ${currentQuestion.answer}. The mastery streak for this topic resets.`;
   }
 
+  updateTopicMastery(currentQuestion, isCorrect);
   quizScore.textContent = `Score: ${quizScoreCount}`;
   nextQuestion.disabled = false;
 
@@ -509,19 +1429,48 @@ function moveToNextQuestion() {
 }
 
 function showQuizResults() {
+  const { mastered, total } = getMasteryStats();
+  const isFullyMastered = total > 0 && mastered === total;
+  const level = getCurrentLevelConfig();
+
   quizProgress.textContent = "Quiz complete";
   quizScore.textContent = `Final score: ${quizScoreCount} / ${quizQuestions.length}`;
-  quizQuestion.textContent = `You scored ${quizScoreCount} out of ${quizQuestions.length}.`;
+  quizQuestion.textContent = isFullyMastered
+    ? `${level.label} badge earned: up to date on current service knowledge.`
+    : `You scored ${quizScoreCount} out of ${quizQuestions.length}.`;
   quizChoices.innerHTML = "";
-  quizFeedback.textContent = "Start a new round to get a fresh set of randomized questions.";
+  quizFeedback.textContent = isFullyMastered
+    ? `Every required ${level.label.toLowerCase()} topic has met its mastery streak.`
+    : "Start a new round to keep building mastery. Unmastered topics will keep showing up first.";
   nextQuestion.disabled = true;
 }
 
-[searchInput, typeFilter, statusFilter, regionFilter, subregionFilter, grapeFilter].forEach((element) => {
-  element.addEventListener("input", renderWines);
-});
+function resetCurrentMastery() {
+  const items = getQuizItems();
+  const questionTypes = getQuestionTypesForCurrentQuiz();
+
+  items.forEach((item) => {
+    questionTypes.forEach((questionType) => {
+      delete masteryState[getTopicKey(item, questionType)];
+    });
+  });
+
+  saveMasteryState();
+  updateMasteryDisplay();
+  startQuiz();
+}
+
+searchInput.addEventListener("input", renderWines);
 
 clearFilters.addEventListener("click", clearAllFilters);
+
+mainTabs.forEach((tab) => {
+  tab.addEventListener("click", () => setActiveGroup(tab.dataset.group));
+});
+
+sectionTabs.forEach((tab) => {
+  tab.addEventListener("click", () => setActiveSection(tab.dataset.section));
+});
 
 quizMode.addEventListener("click", () => {
   if (quizPanel.classList.contains("hidden")) {
@@ -533,6 +1482,18 @@ quizMode.addEventListener("click", () => {
 
 nextQuestion.addEventListener("click", moveToNextQuestion);
 restartQuiz.addEventListener("click", startQuiz);
+resetMastery.addEventListener("click", resetCurrentMastery);
+quizTopic.addEventListener("input", () => {
+  const selectedSection = quizTopic.value;
+  if (selectedSection.startsWith("food-") && activeGroup !== "food") {
+    setActiveGroup("food", { exitQuiz: false });
+  } else if (selectedSection.startsWith("beverage-") && activeGroup !== "beverage") {
+    setActiveGroup("beverage", { exitQuiz: false });
+  }
+  setActiveSection(selectedSection, { exitQuiz: false });
+  startQuiz();
+});
+quizLevel.addEventListener("input", startQuiz);
 
 buildFilters();
 renderWines();

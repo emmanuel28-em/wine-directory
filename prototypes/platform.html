@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Training Platform Prototype</title>
+    <link rel="stylesheet" href="../styles.css?v=10" />
+    <link rel="stylesheet" href="platform.css?v=1" />
+  </head>
+  <body>
+    <header class="app-header platform-header">
+      <div>
+        <p class="eyebrow">Training Platform Prototype</p>
+        <h1>Restaurant Training Library</h1>
+        <p class="intro">
+          Study the docs, folders, and role-based training library for each restaurant.
+        </p>
+      </div>
+      <nav class="prototype-links" aria-label="App modes">
+        <a class="active" href="platform.html">Prototype Library</a>
+        <a href="../admin.html" data-admin-link>Manage Library</a>
+        <a href="../index.html">Staff Site</a>
+      </nav>
+    </header>
+
+    <main class="platform-shell">
+      <aside class="library-sidebar" aria-label="Training library controls">
+        <div class="library-control">
+          <label for="restaurantSelect">Restaurant</label>
+          <select id="restaurantSelect"></select>
+        </div>
+
+        <div class="library-control">
+          <label for="roleSelect">Preview role</label>
+          <select id="roleSelect">
+            <option value="owner">Owner</option>
+            <option value="admin">Admin</option>
+            <option value="manager">Manager</option>
+            <option value="staff" selected>Staff</option>
+          </select>
+        </div>
+
+        <div class="library-control">
+          <label for="librarySearch">Search docs</label>
+          <input id="librarySearch" type="search" placeholder="Search wine, allergies, SOPs..." />
+        </div>
+
+        <section class="tree-panel" aria-label="Library tree">
+          <h2>Library</h2>
+          <div id="libraryTree" class="library-tree"></div>
+        </section>
+      </aside>
+
+      <section class="library-content">
+        <div class="library-toolbar">
+          <div>
+            <p id="activePath" class="active-path">All docs</p>
+            <h2 id="libraryTitle">Training Docs</h2>
+            <p id="libraryCount">Showing 0 docs</p>
+          </div>
+        </div>
+
+        <div id="docGrid" class="doc-grid" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <script src="../data.js?v=11"></script>
+    <script src="platform.js?v=1"></script>
+  </body>
+</html>
