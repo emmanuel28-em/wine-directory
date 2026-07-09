@@ -106,7 +106,7 @@ export default function ManagerDashboard() {
               <article className="stat-card" id="invite-team">
                 <span>Invite Team</span>
                 <h2>Invite your team</h2>
-                <p>Create invite links for staff, managers, chefs, bartenders, cooks, and anyone who needs access.</p>
+                <p>Send invite emails to staff, managers, chefs, bartenders, cooks, and anyone who needs access.</p>
                 <Link className="secondary-button card-action" to="/manager/invite-team">
                   Invite Team
                 </Link>

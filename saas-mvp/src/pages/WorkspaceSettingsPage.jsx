@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { formatRole, useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
-import { listInvitesForRestaurant, makeInviteLink } from "../lib/invites.js";
+import { listInvitesForRestaurant, makeInviteLink, sendInviteEmailForInvite } from "../lib/invites.js";
 import { canInviteRole, isAdminOrManager, isOwner } from "../lib/permissions.js";
 import {
   canChangeMemberRole,
@@ -17,6 +17,12 @@ import {
 } from "../lib/settings.js";
 
 const roleOptions = ["admin", "manager", "staff"];
+
+const emailStatusLabels = {
+  notSent: "Not sent",
+  sent: "Sent",
+  failed: "Failed"
+};
 
 const emptyRestaurantForm = {
   name: "",
@@ -226,6 +232,28 @@ export default function WorkspaceSettingsPage() {
     }
   }
 
+  async function resendInviteEmail(invite) {
+    setIsWorking(true);
+    setMessage("");
+
+    try {
+      const emailResult = await sendInviteEmailForInvite({
+        invite,
+        restaurantName: workspace.restaurant.name
+      });
+      await loadSettings();
+      setMessage(
+        emailResult.success
+          ? `Invite resent to ${invite.email}.`
+          : "Invite email could not be sent. Copy the invite link manually."
+      );
+    } catch (error) {
+      setMessage(error.message || "Could not resend invite email.");
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
   async function saveDisplayName(event) {
     event.preventDefault();
     setIsWorking(true);
@@ -408,7 +436,7 @@ export default function WorkspaceSettingsPage() {
               <div>
                 <p className="eyebrow">Pending Invites</p>
                 <h2>Invites</h2>
-                <p>Manual invite links remain active until accepted, expired, or revoked.</p>
+                <p>Email invites use the same secure invite links. Manual copy-link backup stays available.</p>
               </div>
               {isAdminOrManager(workspace.role) ? (
                 <Link className="secondary-button" to="/manager/invite-team">
@@ -425,10 +453,17 @@ export default function WorkspaceSettingsPage() {
                   <article className="operator-list-card" key={invite.id}>
                     <div>
                       <span className="type-pill">{formatRole(invite.role)}</span>
+                      <span className={`status-badge status-${invite.emailSendStatus || "notSent"}`}>
+                        Email: {emailStatusLabels[invite.emailSendStatus] || invite.emailSendStatus || "Not sent"}
+                      </span>
                       <h4>{invite.email}</h4>
                       <p>Status: {invite.status} · Expires: {formatDate(invite.expiresAt)}</p>
+                      {invite.emailSendError ? <p>Email note: {invite.emailSendError}</p> : null}
                     </div>
                     <div className="card-actions">
+                      <button className="secondary-button" type="button" onClick={() => resendInviteEmail(invite)} disabled={isWorking}>
+                        Resend Email
+                      </button>
                       <button className="secondary-button" type="button" onClick={() => copyInviteLink(invite)}>
                         Copy Link
                       </button>

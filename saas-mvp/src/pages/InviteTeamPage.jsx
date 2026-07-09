@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
-import { createInvite, listInvitesForRestaurant, makeInviteLink } from "../lib/invites.js";
+import { createInvite, listInvitesForRestaurant, makeInviteLink, sendInviteEmailForInvite } from "../lib/invites.js";
 import { canInviteRole } from "../lib/permissions.js";
+import { revokeInvite } from "../lib/settings.js";
 
 const emptyInvite = {
   firstName: "",
@@ -15,6 +16,12 @@ const roleLabels = {
   admin: "Admin",
   manager: "Manager",
   staff: "Staff"
+};
+
+const emailStatusLabels = {
+  notSent: "Not sent",
+  sent: "Sent",
+  failed: "Failed"
 };
 
 function getAllowedRoles(currentRole) {
@@ -73,14 +80,22 @@ export default function InviteTeamPage() {
         invitedBy: workspace.userProfile.id,
         currentRole: workspace.role
       });
+      const emailResult = await sendInviteEmailForInvite({
+        invite: nextInvite,
+        restaurantName: workspace.restaurant.name
+      });
 
-      setCreatedInvite(nextInvite);
+      setCreatedInvite(emailResult.invite);
       setInvite({
         ...emptyInvite,
         role: allowedRoles[0] || "staff"
       });
       await loadInvites();
-      setMessage("Invite created. Copy the invite link and send it manually.");
+      setMessage(
+        emailResult.success
+          ? `Invite sent to ${nextInvite.email}.`
+          : "Invite was created, but email could not be sent. Copy the invite link manually."
+      );
     } catch (error) {
       setMessage(error.message || "Could not create invite.");
     } finally {
@@ -92,6 +107,46 @@ export default function InviteTeamPage() {
     const link = makeInviteLink(inviteRecord.inviteToken);
     await navigator.clipboard.writeText(link);
     setMessage("Invite link copied.");
+  }
+
+  async function resendInvite(inviteRecord) {
+    setIsWorking(true);
+    setMessage("");
+
+    try {
+      const emailResult = await sendInviteEmailForInvite({
+        invite: inviteRecord,
+        restaurantName: workspace.restaurant.name
+      });
+      await loadInvites();
+      setMessage(
+        emailResult.success
+          ? `Invite resent to ${inviteRecord.email}.`
+          : "Invite email could not be sent. Copy the invite link manually."
+      );
+    } catch (error) {
+      setMessage(error.message || "Could not resend invite email.");
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
+  async function revokePendingInvite(inviteRecord) {
+    setIsWorking(true);
+    setMessage("");
+
+    try {
+      await revokeInvite({
+        restaurantId: workspace.restaurant.id,
+        invite: inviteRecord
+      });
+      await loadInvites();
+      setMessage("Invite revoked.");
+    } catch (error) {
+      setMessage(error.message || "Could not revoke invite.");
+    } finally {
+      setIsWorking(false);
+    }
   }
 
   useEffect(() => {
@@ -170,14 +225,14 @@ export default function InviteTeamPage() {
           </label>
 
           <button className="primary-button full-width" type="submit" disabled={isWorking || allowedRoles.length === 0}>
-            {isWorking ? "Creating invite..." : "Create Invite Link"}
+            {isWorking ? "Sending invite..." : "Send Invite Email"}
           </button>
         </form>
 
         <section className="data-list-panel">
           <div className="form-card invite-link-panel">
-            <h2>Invite Link</h2>
-            <p>Email sending is coming soon. For now, copy this invite link and send it manually.</p>
+            <h2>Manual Fallback</h2>
+            <p>If email is not configured or sending fails, copy this invite link and send it manually.</p>
 
             {createdInvite ? (
               <>
@@ -208,15 +263,28 @@ export default function InviteTeamPage() {
                     <div>
                       <span className="type-pill">{roleLabels[item.role] || item.role}</span>
                       <span className={`status-badge status-${item.status || "pending"}`}>{item.status || "pending"}</span>
+                      <span className={`status-badge status-${item.emailSendStatus || "notSent"}`}>
+                        Email: {emailStatusLabels[item.emailSendStatus] || item.emailSendStatus || "Not sent"}
+                      </span>
                       <h4>{`${item.firstName || ""} ${item.lastName || ""}`.trim() || item.email}</h4>
                       <p>{item.email}</p>
+                      <p>Created: {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "Not set"}</p>
                       <p>Expires: {item.expiresAt ? new Date(item.expiresAt).toLocaleDateString() : "Not set"}</p>
+                      {item.emailSendError ? <p>Email note: {item.emailSendError}</p> : null}
                     </div>
                     <div className="card-actions">
                       {item.status === "pending" ? (
-                        <button className="secondary-button" type="button" onClick={() => copyInviteLink(item)}>
-                          Copy Link
-                        </button>
+                        <>
+                          <button className="secondary-button" type="button" onClick={() => resendInvite(item)} disabled={isWorking}>
+                            Resend Invite Email
+                          </button>
+                          <button className="secondary-button" type="button" onClick={() => copyInviteLink(item)}>
+                            Copy Link
+                          </button>
+                          <button className="quiet-danger-button" type="button" onClick={() => revokePendingInvite(item)} disabled={isWorking}>
+                            Revoke
+                          </button>
+                        </>
                       ) : null}
                     </div>
                   </article>

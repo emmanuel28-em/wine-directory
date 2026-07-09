@@ -20,7 +20,7 @@ The app currently includes:
 - Rezdora existing-content import for the Rezdora workspace
 - Managed Setup request page
 - authenticated Managed Setup request saving and source file upload
-- manual team invites with copyable invite links
+- team invites by email with copyable invite link fallback
 - Workspace Settings
 - Team Management
 - restaurant logo upload
@@ -29,7 +29,7 @@ The app currently includes:
 - staff and manager quiz progress
 - Training Page source file attachments
 
-It does **not** include billing, automatic invite emails, public unauthenticated file uploads, AI-generated quizzes, or production-grade backend tenant authorization yet.
+It does **not** include billing, public unauthenticated file uploads, AI-generated quizzes, or production-grade backend tenant authorization yet.
 
 ## Why This Folder Exists
 
@@ -290,7 +290,7 @@ To test tenant separation:
 - `/manager/content` protected content management page for Account Owners, Admins, and Managers
 - `/manager/quizzes` protected quiz builder for Account Owners, Admins, and Managers
 - `/manager/staff-progress` protected quiz results page for Account Owners, Admins, and Managers
-- `/manager/settings` protected settings placeholder
+- `/manager/settings` protected Workspace Settings and Team Management page
 - `/manager/invite-team` protected invite team page
 - `/training-library` protected staff-facing Training Library for all active members
 - `/staff` same staff-facing Training Library
@@ -361,21 +361,22 @@ Owner invites Staff:
 
 1. Sign in as an Account Owner.
 2. Go to `/manager/invite-team`.
-3. Enter first name, last name, email, choose `Staff`, and create the invite.
-4. Copy the generated invite link.
-5. Log out.
-6. Open the invite link.
-7. Create an account or sign in using the same email address that was invited.
-8. Accept the invite.
-9. Confirm the staff user lands in `/training-library`.
-10. Confirm the staff user cannot access `/manager` or `/manager/content`.
+3. Enter first name, last name, email, choose `Staff`, and send the invite.
+4. If email is configured, confirm the page says `Invite sent to [email]`.
+5. If email is not configured locally, copy the generated invite link from the fallback panel.
+6. Log out.
+7. Open the invite link from the email or copied fallback link.
+8. Create an account or sign in using the same email address that was invited.
+9. Accept the invite.
+10. Confirm the staff user lands in `/training-library`.
+11. Confirm the staff user cannot access `/manager` or `/manager/content`.
 
 Owner invites Admin/Manager:
 
 1. Sign in as an Account Owner.
 2. Go to `/manager/invite-team`.
 3. Choose `Admin` or `Manager`.
-4. Copy the invite link.
+4. Send the invite email, or copy the invite link if email is not configured.
 5. Log out.
 6. Open the invite link.
 7. Create an account or sign in using the invited email.
@@ -390,11 +391,38 @@ Admin/Manager invites Staff:
 3. Confirm only `Staff` is available as the invite role.
 4. Create a staff invite and accept it with the invited email.
 
-Manual email note:
+Email invite setup:
 
-- Email sending is not built yet.
-- For now, copy the invite link and send it manually.
-- Later, this should connect to an email service so Line Up sends invites automatically.
+- Invite acceptance still uses the secure token link at `/accept-invite?token=...`.
+- Line Up sends invite emails from an Amplify Function using Amazon SES.
+- The frontend never stores or uses SES credentials.
+- For local development, email may be unconfigured. In that case the invite is still created and the page shows the copy-link fallback.
+
+Required environment variables for deployed email:
+
+```text
+LINE_UP_FROM_EMAIL=verified-sender@example.com
+LINE_UP_APP_BASE_URL=https://your-line-up-domain.com
+VITE_APP_BASE_URL=https://your-line-up-domain.com
+```
+
+Amazon SES setup needed in AWS:
+
+1. Verify the sender email address or domain in Amazon SES.
+2. If your AWS account is still in the SES sandbox, verify recipient emails too or request production access.
+3. Set `LINE_UP_FROM_EMAIL` to the verified sender.
+4. Set the app base URL so invite links point to the deployed site instead of localhost.
+5. Redeploy the Amplify backend.
+
+Testing resend/revoke:
+
+1. Create a pending invite.
+2. Confirm it appears in Recent Invites with email send status.
+3. Click `Resend Invite Email`.
+4. If email is configured, the status should become `Sent`.
+5. If email is not configured, the invite remains usable and you can copy the link manually.
+6. Revoke the invite.
+7. Confirm revoked, accepted, or expired invites cannot be resent from the pending invite controls.
 
 ## Testing Workspace Settings And Team Management
 
@@ -447,10 +475,11 @@ Role behavior:
 Pending Invites:
 
 1. Create a pending invite.
-2. Confirm it appears with email, role, status, and expiration.
-3. Copy the manual invite link.
-4. Revoke it.
-5. Confirm it no longer appears in the pending list.
+2. Confirm it appears with email, role, status, email send status, and expiration.
+3. Resend the invite email if email is configured.
+4. Copy the manual invite link if email is not configured.
+5. Revoke it.
+6. Confirm it no longer appears in the pending list.
 
 Restaurant A vs Restaurant B settings safety:
 
@@ -663,6 +692,7 @@ What is hardened now:
 - verifying Quiz Question ownership before edit/delete
 - verifying a quiz and its questions belong to the staff user's restaurant before saving an attempt
 - checking invite role permissions before creating invites
+- sending invite emails from a backend function instead of the browser
 - rechecking invite status, expiration, and invited email before acceptance
 
 What is still mostly frontend/app-layer enforced:
@@ -671,12 +701,14 @@ What is still mostly frontend/app-layer enforced:
 - Staff vs manager permissions.
 - Published-only staff content visibility.
 - Staff seeing only their own quiz attempts.
+- Invite email sending still depends on the app creating/sending invites after the current user's role is checked.
 - Storage path access is still broadly authenticated at the S3 access-rule level, with app-layer tenant checks before upload/list/delete.
 
 What must be done before real paid customers:
 
 - Add backend-enforced tenant authorization so database access does not rely on frontend filters.
 - Consider a server-side Function/API layer for sensitive writes like content publishing, invite creation, quiz publishing, and staff progress reporting.
+- Move invite creation/email permission validation fully server-side before inviting real customers at scale.
 - Add audit logs for role changes, invites, content publishing, and quiz attempts.
 - Add stricter backend Storage authorization or a server-side file service before real paid customers.
 - Remove or hard-disable development role switching outside local development.

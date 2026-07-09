@@ -33,7 +33,8 @@ function getUserEmail(user, fallback = "") {
 }
 
 export function makeInviteLink(token) {
-  return `${window.location.origin}/accept-invite?token=${encodeURIComponent(token)}`;
+  const baseUrl = import.meta.env.VITE_APP_BASE_URL || window.location.origin;
+  return `${baseUrl.replace(/\/$/, "")}/accept-invite?token=${encodeURIComponent(token)}`;
 }
 
 export async function createInvite({ restaurantId, invite, invitedBy, currentRole }) {
@@ -57,7 +58,11 @@ export async function createInvite({ restaurantId, invite, invitedBy, currentRol
       invitedBy,
       inviteToken,
       note: invite.note.trim(),
-      expiresAt: getInviteExpiration()
+      expiresAt: getInviteExpiration(),
+      emailSendStatus: "notSent",
+      emailSendError: "",
+      emailSentAt: null,
+      lastEmailAttemptAt: null
     }),
     "Invite was not created."
   );
@@ -237,4 +242,97 @@ export async function acceptInviteForUser({ invite, user, firstName, lastName })
     userProfile,
     membership
   };
+}
+
+export async function updateInviteEmailStatus({ inviteId, status, error = "" }) {
+  const dataClient = getDataClient();
+  const now = new Date().toISOString();
+  const update = {
+    id: inviteId,
+    emailSendStatus: status,
+    emailSendError: error,
+    lastEmailAttemptAt: now
+  };
+
+  // Keep emailSentAt as the last successful send time.
+  // If a later resend fails, we do not erase the older successful timestamp.
+  if (status === "sent") {
+    update.emailSentAt = now;
+  }
+
+  return assertNoErrors(
+    await dataClient.models.Invite.update(update),
+    "Invite email status was not updated."
+  );
+}
+
+export async function sendInviteEmailForInvite({ invite, restaurantName }) {
+  if (invite.status !== "pending") {
+    throw new Error("Only pending invites can be emailed.");
+  }
+
+  if (invite.expiresAt && new Date(invite.expiresAt) < new Date()) {
+    throw new Error("This invite has expired. Create a new invite.");
+  }
+
+  const dataClient = getDataClient();
+  const inviteUrl = makeInviteLink(invite.inviteToken);
+
+  try {
+    const result = await dataClient.mutations.sendInviteEmail({
+      toEmail: invite.email,
+      firstName: invite.firstName || "",
+      restaurantName,
+      role: invite.role,
+      inviteUrl
+    });
+
+    if (result.errors?.length) {
+      throw new Error(result.errors.map((error) => error.message).join(" "));
+    }
+
+    const emailResult = result.data;
+
+    if (!emailResult?.success) {
+      const errorMessage = emailResult?.error || "Email could not be sent.";
+      const updatedInvite = await updateInviteEmailStatus({
+        inviteId: invite.id,
+        status: "failed",
+        error: errorMessage
+      });
+
+      return {
+        invite: updatedInvite,
+        success: false,
+        error: errorMessage,
+        inviteUrl
+      };
+    }
+
+    const updatedInvite = await updateInviteEmailStatus({
+      inviteId: invite.id,
+      status: "sent"
+    });
+
+    return {
+      invite: updatedInvite,
+      success: true,
+      error: "",
+      inviteUrl
+    };
+  } catch (error) {
+    const errorMessage = error.message || "Email could not be sent.";
+    const updatedInvite = await updateInviteEmailStatus({
+      inviteId: invite.id,
+      status: "failed",
+      error: errorMessage
+    });
+
+    return {
+      invite: updatedInvite,
+      success: false,
+      error: errorMessage,
+      inviteUrl
+    };
+  }
 }

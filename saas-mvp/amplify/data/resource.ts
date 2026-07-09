@@ -1,6 +1,13 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+import { sendInviteEmail } from "../functions/send-invite-email/resource";
 
 const schema = a.schema({
+  InviteEmailResult: a.customType({
+    success: a.boolean(),
+    status: a.string(),
+    error: a.string()
+  }),
+
   // A Restaurant is one customer/tenant using the SaaS product.
   // Example: Rezdora, or another restaurant that signs up later.
   Restaurant: a
@@ -42,8 +49,8 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.authenticated()]),
 
-  // An Invite lets a manager manually invite someone into one restaurant workspace.
-  // Email delivery comes later; for now the app creates a copyable invite link.
+  // An Invite lets a manager invite someone into one restaurant workspace.
+  // The token powers the accept-invite link. Email status fields track SES delivery.
   Invite: a
     .model({
       restaurantId: a.id().required(),
@@ -55,9 +62,26 @@ const schema = a.schema({
       invitedBy: a.id(),
       inviteToken: a.string().required(),
       note: a.string(),
-      expiresAt: a.datetime()
+      expiresAt: a.datetime(),
+      emailSentAt: a.datetime(),
+      emailSendStatus: a.enum(["notSent", "sent", "failed"]),
+      emailSendError: a.string(),
+      lastEmailAttemptAt: a.datetime()
     })
     .authorization((allow) => [allow.authenticated()]),
+
+  sendInviteEmail: a
+    .mutation()
+    .arguments({
+      toEmail: a.email().required(),
+      firstName: a.string(),
+      restaurantName: a.string().required(),
+      role: a.string().required(),
+      inviteUrl: a.string().required()
+    })
+    .returns(a.ref("InviteEmailResult"))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(sendInviteEmail)),
 
   // A ContentCollection is a restaurant-created folder or grouping.
   // Examples: Dinner Menu, BTG Wines, SOPs, Events, Opening Procedures.
