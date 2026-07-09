@@ -780,6 +780,41 @@ textarea {
   color: var(--color-muted);
 }
 
+.role-explainer {
+  display: grid;
+  gap: 10px;
+}
+
+.role-explainer article {
+  padding: 14px;
+  background: rgba(164, 182, 154, 0.16);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+}
+
+.role-explainer h3,
+.role-explainer p,
+.invite-link-panel p {
+  margin: 0;
+}
+
+.role-explainer h3 {
+  color: var(--color-primary);
+  font-size: 1rem;
+}
+
+.role-explainer p,
+.invite-link-panel p {
+  color: var(--color-muted);
+}
+
+.invite-link {
+  display: block;
+  padding: 12px;
+  overflow-wrap: anywhere;
+  background: rgba(164, 182, 154, 0.18);
+}
+
 .form-card input:focus,
 .form-card select:focus,
 .form-card textarea:focus {

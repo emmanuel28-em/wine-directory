@@ -281,7 +281,7 @@ To test tenant separation:
 - `/manager/content` protected content management page for Account Owners, Admins, and Managers
 - `/manager/settings` protected settings placeholder
 - `/manager/staff-progress` protected staff progress placeholder
-- `/manager/invite-team` protected invite placeholder
+- `/manager/invite-team` protected invite team page
 - `/training-library` protected staff-facing Training Library for all active members
 - `/staff` same staff-facing Training Library
 - `/quizzes` protected quiz placeholder
@@ -332,6 +332,59 @@ Restaurant A vs Restaurant B:
 8. Confirm Restaurant B has an empty library until it adds or imports its own content.
 9. Create a draft or archived page in Restaurant B.
 10. Confirm draft/archived content does not show in `/training-library`.
+
+## Testing Invite Team
+
+Invites add a new database model. Before testing, restart the cloud sandbox:
+
+```bash
+npm run sandbox
+```
+
+Wait for the sandbox to finish updating, then run the app:
+
+```bash
+npm run dev
+```
+
+Owner invites Staff:
+
+1. Sign in as an Account Owner.
+2. Go to `/manager/invite-team`.
+3. Enter first name, last name, email, choose `Staff`, and create the invite.
+4. Copy the generated invite link.
+5. Log out.
+6. Open the invite link.
+7. Create an account or sign in using the same email address that was invited.
+8. Accept the invite.
+9. Confirm the staff user lands in `/training-library`.
+10. Confirm the staff user cannot access `/manager` or `/manager/content`.
+
+Owner invites Admin/Manager:
+
+1. Sign in as an Account Owner.
+2. Go to `/manager/invite-team`.
+3. Choose `Admin` or `Manager`.
+4. Copy the invite link.
+5. Log out.
+6. Open the invite link.
+7. Create an account or sign in using the invited email.
+8. Accept the invite.
+9. Confirm the Admin/Manager lands in `/manager`.
+10. Confirm the Admin/Manager can access `/manager/content`.
+
+Admin/Manager invites Staff:
+
+1. Sign in as an Admin or Manager.
+2. Go to `/manager/invite-team`.
+3. Confirm only `Staff` is available as the invite role.
+4. Create a staff invite and accept it with the invited email.
+
+Manual email note:
+
+- Email sending is not built yet.
+- For now, copy the invite link and send it manually.
+- Later, this should connect to an email service so Line Up sends invites automatically.
 
 ## Why restaurantId Matters
 

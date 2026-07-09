@@ -105,16 +105,11 @@ export default function ManagerDashboard() {
 
               <article className="stat-card" id="invite-team">
                 <span>Invite Team</span>
-                <h2>Invite Staff</h2>
-                <p>Invite Staff and Invite Admin links are coming next. Invites will set each person's allowed role.</p>
-                <div className="card-actions">
-                  <button className="secondary-button" type="button" disabled>
-                    Invite Staff
-                  </button>
-                  <button className="secondary-button" type="button" disabled>
-                    Invite Admin
-                  </button>
-                </div>
+                <h2>Invite your team</h2>
+                <p>Create invite links for staff, managers, chefs, bartenders, cooks, and anyone who needs access.</p>
+                <Link className="secondary-button card-action" to="/manager/invite-team">
+                  Invite Team
+                </Link>
               </article>
 
               <article className="stat-card" id="staff-progress">

@@ -36,6 +36,23 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.authenticated()]),
 
+  // An Invite lets a manager manually invite someone into one restaurant workspace.
+  // Email delivery comes later; for now the app creates a copyable invite link.
+  Invite: a
+    .model({
+      restaurantId: a.id().required(),
+      email: a.email().required(),
+      firstName: a.string(),
+      lastName: a.string(),
+      role: a.enum(["admin", "manager", "staff"]),
+      status: a.enum(["pending", "accepted", "expired", "revoked"]),
+      invitedBy: a.id(),
+      inviteToken: a.string().required(),
+      note: a.string(),
+      expiresAt: a.datetime()
+    })
+    .authorization((allow) => [allow.authenticated()]),
+
   // A ContentCollection is a restaurant-created folder or grouping.
   // Examples: Dinner Menu, BTG Wines, SOPs, Events, Opening Procedures.
   ContentCollection: a

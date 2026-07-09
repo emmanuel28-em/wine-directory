@@ -1,6 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import AppLayout from "./components/AppLayout.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import AcceptInvitePage from "./pages/AcceptInvitePage.jsx";
+import InviteTeamPage from "./pages/InviteTeamPage.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import ManagedSetupPage from "./pages/ManagedSetupPage.jsx";
@@ -20,6 +22,7 @@ export default function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/trial" element={<TrialPage />} />
         <Route path="/managed-setup" element={<ManagedSetupPage />} />
+        <Route path="/accept-invite" element={<AcceptInvitePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route
           path="/manager"
@@ -57,7 +60,7 @@ export default function App() {
           path="/manager/invite-team"
           element={
             <ProtectedRoute allowedRoles={managerRoles}>
-              <ComingSoonPage page="inviteTeam" backTo="/manager" />
+              <InviteTeamPage />
             </ProtectedRoute>
           }
         />
