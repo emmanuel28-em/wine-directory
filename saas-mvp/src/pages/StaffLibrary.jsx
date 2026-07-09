@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useAmplifySetup } from "../amplify/AmplifySetupProvider.jsx";
-import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
+import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import { listCollectionsForRestaurant } from "../lib/collections.js";
 import { listTrainingDocsForRestaurant, parseContentJson } from "../lib/trainingDocs.js";
-import { loadUserWorkspace } from "../lib/workspace.js";
 
 const typeLabels = {
   wine: "Wine",
@@ -54,54 +52,41 @@ function groupDocsByCollectionAndType(docs, collections) {
 }
 
 export default function StaffLibrary() {
-  const amplifySetup = useAmplifySetup();
-  const authSession = useAuthSession();
-  const [workspace, setWorkspace] = useState({
-    status: "loading",
-    restaurant: null,
-    userProfile: null,
-    membership: null,
-    message: ""
-  });
+  const workspace = useCurrentWorkspace();
   const [collections, setCollections] = useState([]);
   const [docs, setDocs] = useState([]);
   const [message, setMessage] = useState("");
 
   async function loadStaffLibrary() {
-    if (amplifySetup.status !== "ready" || authSession.status !== "authenticated") {
+    if (workspace.status !== "ready") {
       return;
     }
 
     setMessage("");
 
     try {
-      const nextWorkspace = await loadUserWorkspace(authSession.user);
-      setWorkspace(nextWorkspace);
+      const [restaurantCollections, restaurantDocs] = await Promise.all([
+        listCollectionsForRestaurant(workspace.restaurant.id),
+        listTrainingDocsForRestaurant(workspace.restaurant.id)
+      ]);
 
-      if (nextWorkspace.status === "ready") {
-        const [restaurantCollections, restaurantDocs] = await Promise.all([
-          listCollectionsForRestaurant(nextWorkspace.restaurant.id),
-          listTrainingDocsForRestaurant(nextWorkspace.restaurant.id)
-        ]);
-
-        setCollections(restaurantCollections);
-        setDocs(restaurantDocs.filter((doc) => doc.status === "published"));
-      }
+      setCollections(restaurantCollections);
+      setDocs(restaurantDocs.filter((doc) => doc.status === "published"));
     } catch (error) {
-      setWorkspace({
-        status: "error",
-        restaurant: null,
-        userProfile: null,
-        membership: null,
-        message: error.message || "Could not load the staff library."
-      });
       setMessage(error.message || "Could not load the staff library.");
     }
   }
 
   useEffect(() => {
-    loadStaffLibrary();
-  }, [amplifySetup.status, authSession.status, authSession.user?.userId]);
+    if (workspace.status === "ready") {
+      loadStaffLibrary();
+    }
+
+    if (workspace.status === "empty" || workspace.status === "error") {
+      setCollections([]);
+      setDocs([]);
+    }
+  }, [workspace.status, workspace.restaurant?.id]);
 
   const groupedContent = groupDocsByCollectionAndType(docs, collections);
 

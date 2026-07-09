@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useAmplifySetup } from "../amplify/AmplifySetupProvider.jsx";
-import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
+import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import { archiveCollection, listCollectionsForRestaurant, saveCollection } from "../lib/collections.js";
 import { importExistingRestaurantContent } from "../lib/importExistingRestaurantContent.js";
 import {
@@ -13,7 +12,6 @@ import {
   saveTrainingDoc,
   updateTrainingDocStatus
 } from "../lib/trainingDocs.js";
-import { loadUserWorkspace } from "../lib/workspace.js";
 
 const categoryTypeLabels = {
   foodMenu: "Food Menu",
@@ -100,15 +98,7 @@ function isOriginalRezdoraWorkspace(restaurant) {
 }
 
 export default function ManagerContentPage() {
-  const amplifySetup = useAmplifySetup();
-  const authSession = useAuthSession();
-  const [workspace, setWorkspace] = useState({
-    status: "loading",
-    restaurant: null,
-    userProfile: null,
-    membership: null,
-    message: ""
-  });
+  const workspace = useCurrentWorkspace();
   const [categories, setCategories] = useState([]);
   const [categoryForm, setCategoryForm] = useState(emptyCategoryForm);
   const [editingCategoryId, setEditingCategoryId] = useState(null);
@@ -130,7 +120,7 @@ export default function ManagerContentPage() {
   }
 
   async function loadContentPage() {
-    if (amplifySetup.status !== "ready" || authSession.status !== "authenticated") {
+    if (workspace.status !== "ready") {
       return;
     }
 
@@ -138,28 +128,24 @@ export default function ManagerContentPage() {
     setMessage("");
 
     try {
-      const nextWorkspace = await loadUserWorkspace(authSession.user);
-      setWorkspace(nextWorkspace);
-
-      if (nextWorkspace.status === "ready") {
-        await refreshRestaurantContent(nextWorkspace.restaurant.id);
-      }
+      await refreshRestaurantContent(workspace.restaurant.id);
     } catch (error) {
-      setWorkspace({
-        status: "error",
-        restaurant: null,
-        userProfile: null,
-        membership: null,
-        message: error.message || "Could not load training content."
-      });
+      setMessage(error.message || "Could not load training content.");
     } finally {
       setIsWorking(false);
     }
   }
 
   useEffect(() => {
-    loadContentPage();
-  }, [amplifySetup.status, authSession.status, authSession.user?.userId]);
+    if (workspace.status === "ready") {
+      loadContentPage();
+    }
+
+    if (workspace.status === "empty" || workspace.status === "error") {
+      setCategories([]);
+      setDocs([]);
+    }
+  }, [workspace.status, workspace.restaurant?.id]);
 
   function updateForm(event) {
     const { name, value } = event.target;

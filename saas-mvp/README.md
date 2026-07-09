@@ -1,81 +1,26 @@
-# Restaurant Training SaaS MVP
+# Line Up
 
-This folder is the new real SaaS MVP. It is separate from the old static Rezdora training site.
+Line Up is a restaurant training platform. It is separate from the old static Rezdora training site.
 
-## Current Checkpoint
+## Current Product Status
 
-Checkpoint 1 created:
+The app currently includes:
 
-- React + Vite app structure
-- Basic routing
-- Public landing page
-- Start Free Trial page
-- Login page
-- Manager dashboard placeholder
-- Staff library placeholder
-- Shared layout/navigation
-- Basic styling inspired by the static app
+- public Line Up landing page
+- free-trial restaurant workspace signup
+- secure sign in / sign out
+- active restaurant workspace lookup
+- Account Owner, Admin, Manager, and Staff roles
+- role-aware navigation
+- protected manager routes
+- protected staff routes
+- Training Categories
+- Training Pages
+- published staff Training Library
+- Rezdora existing-content import for the Rezdora workspace
+- Managed Setup request page
 
-Checkpoint 2 adds:
-
-- Amplify Gen 2 backend files
-- Amplify Auth / Amazon Cognito setup
-- Email and password signup/login UI
-- Logout button
-- Protected manager and staff routes
-
-Checkpoint 3 adds:
-
-- Amplify Data schema
-- First SaaS database models
-- A temporary protected `/data-test` page
-- Create/list testing for `Restaurant` records
-
-Checkpoint 4 adds:
-
-- Real `/trial` signup flow
-- Cognito user creation
-- Restaurant record creation
-- UserProfile record creation
-- owner Membership record creation
-- Manager dashboard workspace summary
-
-Checkpoint 5 adds:
-
-- Manager content management at `/manager/content`
-- Create, edit, publish, archive, and delete `TrainingDoc` records
-- Staff library that loads published training docs from the database
-- Restaurant-specific content filtering by `restaurantId`
-
-Checkpoint 5B adds:
-
-- Flexible Training Categories
-- Training Pages that can belong to a Training Category
-- Paste-from-Google-Docs style body field
-- Tags, ingredients, service notes, and richer content fields
-- Testable Staff Knowledge stored for future quizzes
-- Staff library grouped by Training Category, then type/category
-
-It does **not** include file storage, payments, roles enforcement, staff invites, generated quizzes, AI parsing, or seeded Rezdora content yet.
-
-Managed setup offer adds:
-
-- Public `/managed-setup` inquiry page
-- Landing page language for Self-Service vs Done-For-You Setup
-- Manager dashboard card for importing existing docs
-- Local success message for submitted inquiries
-
-Managed setup inquiries are not saved to the database yet.
-
-Existing content import adds:
-
-- A reusable import utility for moving existing restaurant training material into a real restaurant workspace
-- A manager button called `Import Existing Training Content`
-- Import into the currently logged-in manager's active `restaurantId`
-- Duplicate protection using same restaurant, same title, and same content type
-- Rezdora's original static-site content imported as real Training Categories and Training Pages
-
-The bundled original-content import is only offered to the Rezdora workspace so another restaurant cannot accidentally import Rezdora's library.
+It does **not** include file uploads, billing, staff invites, generated quizzes, production-grade backend tenant authorization, or staff progress tracking yet.
 
 ## Why This Folder Exists
 
@@ -109,9 +54,9 @@ http://localhost:5173/
 
 Open that URL in your browser.
 
-## Auth Setup For Checkpoint 2
+## Cloud Setup
 
-The code uses Amplify Auth and Amplify Data, so real signup/login and database testing need a cloud sandbox.
+The code uses AWS Amplify for secure login and database records, so real signup/login and saved content need a local cloud sandbox.
 
 From this folder, run:
 
@@ -145,27 +90,9 @@ Now visit:
 http://127.0.0.1:5173/login
 ```
 
-You should see the real Amplify sign up / sign in form.
+You should see the Line Up sign up / sign in form.
 
-## Data Setup For Checkpoint 3
-
-After `npm run sandbox` finishes updating the backend, visit:
-
-```text
-http://127.0.0.1:5173/data-test
-```
-
-You must be logged in to access this page.
-
-On `/data-test`, you can:
-
-- create one `Restaurant` record
-- list existing `Restaurant` records
-- refresh the list
-
-This is a temporary page. It exists only to prove that Amplify Data can create and read records before we build the real manager UI.
-
-## Trial Signup Flow For Checkpoint 4
+## Trial Signup Flow
 
 With `npm run sandbox` running in one terminal and `npm run dev` running in another, visit:
 
@@ -175,10 +102,12 @@ http://127.0.0.1:5173/trial
 
 Enter:
 
-- restaurant name
-- manager name
-- email
+- account owner first and last name
+- work email
 - password
+- restaurant name
+- restaurant address / city
+- title
 
 Use a new email address for a clean test. If your email supports plus-addressing, you can use something like:
 
@@ -188,23 +117,23 @@ yourname+trial1@example.com
 
 After submitting:
 
-1. Cognito creates the login user.
-2. If AWS asks for email confirmation, enter the code from your email.
+1. The app creates the secure login user.
+2. If email confirmation is required, enter the code from your email.
 3. The app signs you in.
-4. The app creates a `Restaurant`.
-5. The app creates a `UserProfile`.
-6. The app creates a `Membership` with role `owner` and status `active`.
+4. The app creates the restaurant workspace.
+5. The app creates the account owner profile.
+6. The app connects the account owner to the workspace with the Account Owner role.
 7. You are redirected to `/manager`.
 
-The manager dashboard should show:
+The Workspace Dashboard should show:
 
 - restaurant name
 - trial status
 - trial end date
-- manager name/email
+- account owner role
 - next setup steps
 
-## Manager Content Flow For Checkpoint 5
+## Manager Content Flow
 
 After logging in with a trial restaurant account, visit:
 
@@ -242,15 +171,15 @@ Test archive/delete:
 1. Click `Archive` to hide an item from staff without deleting it.
 2. Click `Delete` to permanently remove a test item.
 
-## Clear Manager UX For Checkpoint 5B
+## Training Category And Training Page Flow
 
-Because Checkpoint 5B changes the Amplify Data schema, run or restart:
+If the local cloud sandbox is not running, start it:
 
 ```bash
 npm run sandbox
 ```
 
-Wait for the sandbox to finish updating before testing collections.
+Wait for the sandbox to finish updating before testing Training Categories and Training Pages.
 
 On `/manager/content`, test the manager workflow:
 
@@ -347,67 +276,89 @@ To test tenant separation:
 - `/` public landing page
 - `/trial` start free trial page
 - `/managed-setup` done-for-you setup inquiry page
-- `/login` Amplify signup/login page
-- `/manager` protected manager dashboard
-- `/manager/content` protected manager content page
-- `/staff` protected staff library
-- `/data-test` protected database test page
+- `/login` Line Up sign in page
+- `/manager` protected Workspace Dashboard for Account Owners, Admins, and Managers
+- `/manager/content` protected content management page for Account Owners, Admins, and Managers
+- `/manager/settings` protected settings placeholder
+- `/manager/staff-progress` protected staff progress placeholder
+- `/manager/invite-team` protected invite placeholder
+- `/training-library` protected staff-facing Training Library for all active members
+- `/staff` same staff-facing Training Library
+- `/quizzes` protected quiz placeholder
+- `/my-progress` protected staff progress placeholder
+- `/report-issue` protected issue reporting placeholder
 
-## Testing Protected Routes
+## Testing Tenant Security And Roles
 
 Logged out:
 
 - Visit `/manager`
 - You should be redirected to `/login`
-- Visit `/staff`
-- You should be redirected to `/login`
-- Visit `/data-test`
+- Visit `/training-library`
 - You should be redirected to `/login`
 
-Logged in:
+Account Owner/Admin/Manager:
 
 - Sign up or sign in at `/login`
 - Visit `/manager`
-- Visit `/staff`
-- Visit `/data-test`
+- Visit `/manager/content`
 - Both should load
+- Visit `/training-library`
+- Published training pages for that restaurant should load
 - Use the `Log out` button in the header
 - Try `/manager` again and it should redirect back to `/login`
 
+Staff role:
+
+- While running locally with `npm run dev`, use the clearly labeled `Development role testing` dropdown in the signed-in bar.
+- Change your role to `Staff`.
+- Visit `/training-library`.
+- It should load published content.
+- Visit `/manager`.
+- You should see: `You do not have permission to access this page.`
+- Visit `/manager/content`.
+- You should see the same permission message.
+- Change the local testing dropdown back to `Account Owner`, `Admin`, or `Manager` when done.
+
+Restaurant A vs Restaurant B:
+
+1. Create Restaurant A with one account.
+2. Add and publish one Training Page.
+3. Confirm that account can see it in `/manager/content` and `/training-library`.
+4. Log out.
+5. Create Restaurant B with a different account.
+6. Visit `/training-library`.
+7. Confirm Restaurant B does not see Restaurant A content.
+8. Confirm Restaurant B has an empty library until it adds or imports its own content.
+9. Create a draft or archived page in Restaurant B.
+10. Confirm draft/archived content does not show in `/training-library`.
+
 ## Why restaurantId Matters
 
-This is the most important SaaS rule:
+This is the most important tenant-separation rule:
 
 Every restaurant-owned record has a `restaurantId`.
 
-That includes:
+That includes the user's role connection, Training Categories, Training Pages, future quizzes, future quiz questions, and future quiz attempts.
 
-- Membership
-- TrainingDoc
-- Quiz
-- QuizQuestion
-- QuizAttempt
+The frontend now loads the current user's active role connection first, then uses that restaurant's `restaurantId` for Training Category and Training Page queries.
 
-Later, the app will only load records where `restaurantId` matches the signed-in user's restaurant. That is how one restaurant avoids seeing another restaurant's content.
+## Production Hardening Still Needed
 
-## Important Beginner Note
+The current app enforces tenant isolation and role access in the frontend by:
 
-Checkpoint 4 creates the first restaurant workspace, but it still does not invite staff or manage training content.
+- requiring an active role connection to a restaurant workspace
+- checking the user's role before protected routes load
+- filtering Training Categories and Training Pages by the current restaurant's `restaurantId`
+- showing only published pages in the staff Training Library
 
-Checkpoint 5 adds content management, but it still does not invite staff or create quizzes.
+Before production customers, backend authorization should be hardened further so database access is not only protected by frontend filters. The current Amplify Data rules still allow authenticated users broadly; a production version should add stronger owner/group/custom authorization for tenant records.
 
-Checkpoint 5B adds flexible collections and paste-friendly docs, but it still does not parse docs with AI or upload files.
+## Next Product Step
 
-In a later checkpoint:
+After tenant security and role checks are stable, the next build should be the staff invite system:
 
-- Amplify Storage will save images, PDFs, menus, and logos.
-
-## Next Checkpoint
-
-Checkpoint 6 should add the first quiz workflow:
-
-- create quiz questions for a training doc
-- let staff take a simple quiz
-- save quiz attempts by user and restaurant
-
-Do not add Storage or payments until restaurant/user records are understandable and working.
+- Account Owner/Admin/Manager creates invite
+- invite chooses role
+- recipient joins the correct restaurant workspace
+- staff receives staff-only access

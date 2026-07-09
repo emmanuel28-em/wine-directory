@@ -1,44 +1,56 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
-import { useAmplifySetup } from "../amplify/AmplifySetupProvider.jsx";
-import { loadUserWorkspace } from "../lib/workspace.js";
+import { formatRole, useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
+import { getDataClient } from "../lib/dataClient.js";
 import AmplifySetupNotice from "./AmplifySetupNotice.jsx";
+
+function DevelopmentRoleSwitcher({ currentWorkspace }) {
+  const [isUpdatingRole, setIsUpdatingRole] = useState(false);
+
+  if (!import.meta.env.DEV || !currentWorkspace.membership?.id) {
+    return null;
+  }
+
+  async function updateRole(event) {
+    const nextRole = event.target.value;
+    setIsUpdatingRole(true);
+
+    try {
+      const dataClient = getDataClient();
+      const result = await dataClient.models.Membership.update({
+        id: currentWorkspace.membership.id,
+        role: nextRole
+      });
+
+      if (result.errors?.length) {
+        throw new Error(result.errors.map((error) => error.message).join(" "));
+      }
+
+      await currentWorkspace.reloadWorkspace();
+    } finally {
+      setIsUpdatingRole(false);
+    }
+  }
+
+  return (
+    <label className="dev-role-switcher">
+      Development role testing
+      <select value={currentWorkspace.role} onChange={updateRole} disabled={isUpdatingRole}>
+        <option value="owner">Account Owner</option>
+        <option value="admin">Admin</option>
+        <option value="manager">Manager</option>
+        <option value="staff">Staff</option>
+      </select>
+    </label>
+  );
+}
 
 export default function AppLayout() {
   const navigate = useNavigate();
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const [workspaceRole, setWorkspaceRole] = useState("");
   const authSession = useAuthSession();
-  const amplifySetup = useAmplifySetup();
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadRole() {
-      if (amplifySetup.status !== "ready" || authSession.status !== "authenticated") {
-        setWorkspaceRole("");
-        return;
-      }
-
-      try {
-        const workspace = await loadUserWorkspace(authSession.user);
-        if (isMounted) {
-          setWorkspaceRole(workspace.membership?.role || "");
-        }
-      } catch {
-        if (isMounted) {
-          setWorkspaceRole("");
-        }
-      }
-    }
-
-    loadRole();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [amplifySetup.status, authSession.status, authSession.user?.userId]);
+  const currentWorkspace = useCurrentWorkspace();
 
   async function handleLogout() {
     setIsSigningOut(true);
@@ -67,28 +79,27 @@ export default function AppLayout() {
 
         <nav className="main-nav" aria-label="Main navigation">
           {authSession.status === "authenticated" ? (
-            workspaceRole === "staff" ? (
+            currentWorkspace.isLoading ? null : currentWorkspace.role === "staff" ? (
               <>
-                <NavLink to="/staff">Training Library</NavLink>
-                <Link to="/staff#quizzes">Quizzes</Link>
-                <Link to="/staff#progress">My Progress</Link>
-                <Link to="/staff#report-issue">Report Issue</Link>
+                <NavLink to="/training-library">Training Library</NavLink>
+                <NavLink to="/quizzes">Quizzes</NavLink>
+                <NavLink to="/my-progress">My Progress</NavLink>
+                <NavLink to="/report-issue">Report Issue</NavLink>
               </>
             ) : (
               <>
                 <NavLink to="/manager">Dashboard</NavLink>
-                <NavLink to="/staff">Training Library</NavLink>
+                <NavLink to="/training-library">Training Library</NavLink>
                 <NavLink to="/manager/content">Add Content</NavLink>
-                <Link to="/manager#quizzes">Quizzes</Link>
-                <Link to="/manager#staff-progress">Staff Progress</Link>
-                <Link to="/manager#invite-team">Invite Team</Link>
-                <Link to="/manager#settings">Settings</Link>
+                <NavLink to="/manager/staff-progress">Staff Progress</NavLink>
+                <NavLink to="/manager/invite-team">Invite Team</NavLink>
+                <NavLink to="/manager/settings">Settings</NavLink>
               </>
             )
           ) : (
             <>
               <NavLink to="/">Home</NavLink>
-              <Link to="/#how-it-works">How It Works</Link>
+              <Link to="/#problem">How It Works</Link>
               <Link to="/#pricing">Pricing</Link>
               <NavLink to="/managed-setup">Managed Setup</NavLink>
               <NavLink to="/login">Sign In</NavLink>
@@ -106,7 +117,11 @@ export default function AppLayout() {
 
       {authSession.status === "authenticated" ? (
         <div className="user-strip">
-          Signed in as <strong>{authSession.user?.signInDetails?.loginId || authSession.user?.username}</strong>
+          <span>
+            Signed in as <strong>{authSession.user?.signInDetails?.loginId || authSession.user?.username}</strong>
+            {currentWorkspace.role ? <> · {formatRole(currentWorkspace.role)}</> : null}
+          </span>
+          <DevelopmentRoleSwitcher currentWorkspace={currentWorkspace} />
         </div>
       ) : null}
 

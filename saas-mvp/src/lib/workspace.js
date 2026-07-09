@@ -29,21 +29,28 @@ export async function loadUserWorkspace(user) {
     };
   }
 
-  const membership = await listFirst(dataClient.models.Membership, {
+  const membershipResult = await dataClient.models.Membership.list({
     userProfileId: {
       eq: userProfile.id
     }
   });
 
-  const restaurantId = userProfile.activeRestaurantId || membership?.restaurantId;
+  if (membershipResult.errors?.length) {
+    throw new Error(membershipResult.errors.map((error) => error.message).join(" "));
+  }
 
-  if (!restaurantId) {
+  const activeMemberships = (membershipResult.data || []).filter((membership) => membership.status === "active");
+  const membership =
+    activeMemberships.find((item) => item.restaurantId === userProfile.activeRestaurantId) || activeMemberships[0];
+  const restaurantId = membership?.restaurantId;
+
+  if (!membership || !restaurantId) {
     return {
       status: "empty",
       restaurant: null,
       userProfile,
       membership,
-      message: "This user profile does not have an active restaurant yet."
+      message: "No restaurant workspace found for this account."
     };
   }
 

@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useAmplifySetup } from "../amplify/AmplifySetupProvider.jsx";
 import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
-import { loadUserWorkspace } from "../lib/workspace.js";
+import { formatRole, useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 
 function formatDate(value) {
   if (!value) {
@@ -20,64 +18,9 @@ function getUserEmail(user) {
   return user?.signInDetails?.loginId || user?.username || "Not available";
 }
 
-function formatRole(role) {
-  if (role === "owner") {
-    return "Account Owner";
-  }
-
-  if (role === "admin") {
-    return "Admin";
-  }
-
-  if (role === "manager") {
-    return "Manager";
-  }
-
-  if (role === "staff") {
-    return "Staff";
-  }
-
-  return "Account Owner";
-}
-
 export default function ManagerDashboard() {
-  const amplifySetup = useAmplifySetup();
   const authSession = useAuthSession();
-  const [workspace, setWorkspace] = useState({
-    status: "loading",
-    restaurant: null,
-    userProfile: null,
-    membership: null,
-    message: ""
-  });
-
-  async function loadWorkspace() {
-    if (amplifySetup.status !== "ready" || authSession.status !== "authenticated") {
-      return;
-    }
-
-    setWorkspace((current) => ({
-      ...current,
-      status: "loading",
-      message: ""
-    }));
-
-    try {
-      setWorkspace(await loadUserWorkspace(authSession.user));
-    } catch (error) {
-      setWorkspace({
-        status: "error",
-          restaurant: null,
-          userProfile: null,
-          membership: null,
-          message: error.message || "Could not load the workspace dashboard."
-        });
-    }
-  }
-
-  useEffect(() => {
-    loadWorkspace();
-  }, [amplifySetup.status, authSession.status, authSession.user?.userId]);
+  const workspace = useCurrentWorkspace();
 
   const restaurantName = workspace.restaurant?.name || "Your Restaurant";
 
@@ -99,7 +42,7 @@ export default function ManagerDashboard() {
         </Link>
       </div>
 
-      {workspace.status === "loading" ? (
+      {workspace.isLoading ? (
         <div className="empty-panel">Loading your restaurant workspace...</div>
       ) : null}
 
