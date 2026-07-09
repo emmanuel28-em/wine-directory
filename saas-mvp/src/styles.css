@@ -1027,6 +1027,15 @@ code {
   margin: 4px 0 0;
 }
 
+.draft-question-list {
+  display: grid;
+  gap: 14px;
+}
+
+.draft-question-card {
+  box-shadow: none;
+}
+
 .staff-library-sections,
 .library-section {
   display: grid;

@@ -411,23 +411,48 @@ Owner/Admin creates a quiz:
 
 1. Sign in as an Account Owner, Admin, or Manager.
 2. Go to `/manager/quizzes`.
-3. Create a quiz with a title, optional category, optional Training Page, passing score, and published/draft status.
-4. Select the quiz.
-5. Add questions manually.
-6. Put each answer choice on its own line.
-7. Make sure the correct answer exactly matches one answer choice.
-8. Publish the quiz if it is not already published.
+3. Create a quiz with a title, optional Training Category, optional Training Page, number of questions, passing score, and draft/published status.
+4. Select the quiz if it is not already selected.
+5. Click `Generate Questions from Training Material`.
+6. Review the generated draft questions.
+7. Edit a generated question prompt, answer choice, correct answer, or explanation.
+8. Delete any generated question you do not want.
+9. Add a manual draft question if needed.
+10. Save the draft questions to the quiz.
+11. Publish the quiz if it is not already published.
 
-Create a question from Testable Staff Knowledge:
+Generate from Testable Staff Knowledge:
 
 1. Go to `/manager/content`.
 2. Create or edit a Training Page.
 3. Add at least one Testable Staff Knowledge item.
 4. Publish the Training Page.
 5. Go to `/manager/quizzes`.
-6. Create a quiz and choose that Training Page.
-7. Use the `Use:` helper button to start a question from that knowledge item.
-8. Add similar wrong answers before saving the question.
+6. Create a quiz and choose that Training Page or the Training Category it belongs to.
+7. Click `Generate Questions from Training Material`.
+8. Confirm Line Up creates draft questions from the Testable Staff Knowledge.
+9. Edit at least one draft question.
+10. Save the draft questions.
+
+What the generator uses:
+
+- Testable Staff Knowledge
+- allergens
+- ingredients
+- talking points
+- service notes
+- wine producer, region, grape/varietal, and vintage when available
+- training page type and category
+
+The generator does not use an AI API yet. It is rule-based and uses other real answers from the same restaurant as wrong answer choices when possible.
+
+Manual questions still work:
+
+1. Select a quiz.
+2. Use the `Add Question` form.
+3. Put each answer choice on its own line.
+4. Make sure the correct answer exactly matches one answer choice.
+5. Save the question.
 
 Staff takes a quiz:
 

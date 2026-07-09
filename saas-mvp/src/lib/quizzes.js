@@ -76,7 +76,7 @@ export async function createQuiz({ restaurantId, form }) {
       title: form.title.trim(),
       category: form.category.trim(),
       passingScore: Number(form.passingScore) || 80,
-      isPublished: Boolean(form.isPublished)
+      isPublished: form.status ? form.status === "published" : Boolean(form.isPublished)
     }),
     "Quiz was not created."
   );
@@ -140,6 +140,35 @@ export async function createQuizQuestion({ restaurantId, quizId, form }) {
     }),
     "Quiz question was not created."
   );
+}
+
+export async function updateQuizQuestion({ questionId, form }) {
+  const dataClient = getDataClient();
+  const choices = parseChoices(form.choicesText);
+
+  if (!choices.includes(form.correctAnswer.trim())) {
+    throw new Error("Answer choices must include the correct answer.");
+  }
+
+  return assertNoErrors(
+    await dataClient.models.QuizQuestion.update({
+      id: questionId,
+      prompt: form.prompt.trim(),
+      choicesJson: JSON.stringify(choices),
+      correctAnswer: form.correctAnswer.trim(),
+      explanation: form.explanation.trim()
+    }),
+    "Quiz question was not updated."
+  );
+}
+
+export async function deleteQuizQuestion(questionId) {
+  const dataClient = getDataClient();
+  const result = await dataClient.models.QuizQuestion.delete({ id: questionId });
+
+  if (result.errors?.length) {
+    throw new Error(result.errors.map((error) => error.message).join(" "));
+  }
 }
 
 export async function listQuizAttemptsForRestaurant(restaurantId) {
