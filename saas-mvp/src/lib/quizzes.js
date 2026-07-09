@@ -94,14 +94,24 @@ export async function updateQuizPublishStatus({ quiz, isPublished }) {
   );
 }
 
-export async function listQuestionsForQuiz(quizId) {
+export async function listQuestionsForQuiz(quizId, restaurantId) {
   const dataClient = getDataClient();
-  const result = await dataClient.models.QuizQuestion.list({
-    filter: {
-      quizId: {
-        eq: quizId
-      }
+  const filter = {
+    quizId: {
+      eq: quizId
     }
+  };
+
+  // When a restaurantId is provided, we include it in the query so questions
+  // are always scoped to the current restaurant workspace.
+  if (restaurantId) {
+    filter.restaurantId = {
+      eq: restaurantId
+    };
+  }
+
+  const result = await dataClient.models.QuizQuestion.list({
+    filter
   });
 
   if (result.errors?.length) {

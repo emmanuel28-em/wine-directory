@@ -8,8 +8,12 @@ import LoginPage from "./pages/LoginPage.jsx";
 import ManagedSetupPage from "./pages/ManagedSetupPage.jsx";
 import ManagerContentPage from "./pages/ManagerContentPage.jsx";
 import ManagerDashboard from "./pages/ManagerDashboard.jsx";
+import ManagerQuizzesPage from "./pages/ManagerQuizzesPage.jsx";
+import ManagerStaffProgressPage from "./pages/ManagerStaffProgressPage.jsx";
+import MyProgressPage from "./pages/MyProgressPage.jsx";
 import ComingSoonPage from "./pages/placeholders/ComingSoonPage.jsx";
 import StaffLibrary from "./pages/StaffLibrary.jsx";
+import StaffQuizzesPage from "./pages/StaffQuizzesPage.jsx";
 import TrialPage from "./pages/TrialPage.jsx";
 
 const managerRoles = ["owner", "admin", "manager"];
@@ -49,10 +53,18 @@ export default function App() {
           }
         />
         <Route
+          path="/manager/quizzes"
+          element={
+            <ProtectedRoute allowedRoles={managerRoles}>
+              <ManagerQuizzesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/manager/staff-progress"
           element={
             <ProtectedRoute allowedRoles={managerRoles}>
-              <ComingSoonPage page="staffProgress" backTo="/manager" />
+              <ManagerStaffProgressPage />
             </ProtectedRoute>
           }
         />
@@ -84,7 +96,7 @@ export default function App() {
           path="/quizzes"
           element={
             <ProtectedRoute allowedRoles={activeMemberRoles}>
-              <ComingSoonPage page="quizzes" backTo="/training-library" />
+              <StaffQuizzesPage />
             </ProtectedRoute>
           }
         />
@@ -92,7 +104,7 @@ export default function App() {
           path="/my-progress"
           element={
             <ProtectedRoute allowedRoles={activeMemberRoles}>
-              <ComingSoonPage page="myProgress" backTo="/training-library" />
+              <MyProgressPage />
             </ProtectedRoute>
           }
         />

@@ -207,14 +207,20 @@ export default function StaffLibrary() {
           <div className="dashboard-grid">
             <article className="stat-card" id="quizzes">
               <span>Quizzes</span>
-              <h2>Quizzes coming next</h2>
-              <p>Staff will take quizzes built from the training pages your restaurant publishes.</p>
+              <h2>Take a Quiz</h2>
+              <p>Show that you understand the training pages your restaurant publishes.</p>
+              <Link className="secondary-button card-action" to="/quizzes">
+                Start Quiz
+              </Link>
             </article>
 
             <article className="stat-card" id="progress">
               <span>My Progress</span>
-              <h2>Progress tracking coming next</h2>
-              <p>Staff will be able to see completed training and quiz results here.</p>
+              <h2>Review My Progress</h2>
+              <p>See your quiz scores and whether you are ready for service.</p>
+              <Link className="secondary-button card-action" to="/my-progress">
+                View Progress
+              </Link>
             </article>
 
             <article className="stat-card" id="report-issue">

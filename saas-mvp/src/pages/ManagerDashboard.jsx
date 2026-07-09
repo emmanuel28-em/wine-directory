@@ -115,7 +115,10 @@ export default function ManagerDashboard() {
               <article className="stat-card" id="staff-progress">
                 <span>Staff Progress</span>
                 <h2>View Staff Progress</h2>
-                <p>Progress tracking will show quiz results, completion, and who is ready for service.</p>
+                <p>See quiz results, completion dates, and who is ready for service.</p>
+                <Link className="secondary-button card-action" to="/manager/staff-progress">
+                  View Results
+                </Link>
               </article>
 
               <article className="stat-card managed-setup-card">
@@ -164,8 +167,11 @@ export default function ManagerDashboard() {
             <div className="dashboard-grid">
               <article className="stat-card">
                 <span>Quizzes</span>
-                <h2>Quiz builder coming next</h2>
-                <p>Quizzes will pull from Testable Staff Knowledge in each Training Page.</p>
+                <h2>Create Staff Quizzes</h2>
+                <p>Build quizzes from training pages and Testable Staff Knowledge.</p>
+                <Link className="secondary-button card-action" to="/manager/quizzes">
+                  Manage Quizzes
+                </Link>
               </article>
 
               <article className="stat-card" id="settings">

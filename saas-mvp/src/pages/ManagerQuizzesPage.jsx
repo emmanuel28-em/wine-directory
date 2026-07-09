@@ -32,14 +32,15 @@ export default function ManagerQuizzesPage() {
   const [message, setMessage] = useState("");
 
   const selectedQuiz = quizzes.find((quiz) => quiz.id === selectedQuizId);
-  const selectedTrainingDoc = trainingDocs.find((doc) => doc.id === quizForm.trainingDocId);
+  const selectedTrainingDocId = quizForm.trainingDocId || selectedQuiz?.trainingDocId;
+  const selectedTrainingDoc = trainingDocs.find((doc) => doc.id === selectedTrainingDocId);
   const testableStaffKnowledge = useMemo(() => {
     if (!selectedTrainingDoc) {
       return [];
     }
 
     const content = parseContentJson(selectedTrainingDoc.contentJson);
-    return content.testableStaffKnowledge || content.quizFacts || [];
+    return (content.testableStaffKnowledge || content.quizFacts || []).filter((fact) => fact.quizEligible !== false);
   }, [selectedTrainingDoc]);
 
   async function loadQuizPage() {
@@ -75,7 +76,7 @@ export default function ManagerQuizzesPage() {
     }
 
     try {
-      setQuestions(await listQuestionsForQuiz(quizId));
+      setQuestions(await listQuestionsForQuiz(quizId, workspace.restaurant.id));
     } catch (error) {
       setMessage(error.message || "Could not load quiz questions.");
     }

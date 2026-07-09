@@ -91,6 +91,7 @@ export default function AppLayout() {
                 <NavLink to="/manager">Dashboard</NavLink>
                 <NavLink to="/training-library">Training Library</NavLink>
                 <NavLink to="/manager/content">Add Content</NavLink>
+                <NavLink to="/manager/quizzes">Quizzes</NavLink>
                 <NavLink to="/manager/staff-progress">Staff Progress</NavLink>
                 <NavLink to="/manager/invite-team">Invite Team</NavLink>
                 <NavLink to="/manager/settings">Settings</NavLink>

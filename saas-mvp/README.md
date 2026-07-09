@@ -19,8 +19,12 @@ The app currently includes:
 - published staff Training Library
 - Rezdora existing-content import for the Rezdora workspace
 - Managed Setup request page
+- manual team invites with copyable invite links
+- quiz builder
+- staff quiz taking
+- staff and manager quiz progress
 
-It does **not** include file uploads, billing, staff invites, generated quizzes, production-grade backend tenant authorization, or staff progress tracking yet.
+It does **not** include file uploads, billing, automatic invite emails, generated quizzes, or production-grade backend tenant authorization yet.
 
 ## Why This Folder Exists
 
@@ -279,13 +283,14 @@ To test tenant separation:
 - `/login` Line Up sign in page
 - `/manager` protected Workspace Dashboard for Account Owners, Admins, and Managers
 - `/manager/content` protected content management page for Account Owners, Admins, and Managers
+- `/manager/quizzes` protected quiz builder for Account Owners, Admins, and Managers
+- `/manager/staff-progress` protected quiz results page for Account Owners, Admins, and Managers
 - `/manager/settings` protected settings placeholder
-- `/manager/staff-progress` protected staff progress placeholder
 - `/manager/invite-team` protected invite team page
 - `/training-library` protected staff-facing Training Library for all active members
 - `/staff` same staff-facing Training Library
-- `/quizzes` protected quiz placeholder
-- `/my-progress` protected staff progress placeholder
+- `/quizzes` protected staff quiz page
+- `/my-progress` protected personal quiz history page
 - `/report-issue` protected issue reporting placeholder
 
 ## Testing Tenant Security And Roles
@@ -386,13 +391,83 @@ Manual email note:
 - For now, copy the invite link and send it manually.
 - Later, this should connect to an email service so Line Up sends invites automatically.
 
+## Testing Quizzes And Staff Progress
+
+Quizzes use the same restaurant workspace rules as Training Pages. Every quiz, question, and attempt is saved with the current restaurant's `restaurantId`.
+
+Before testing, make sure the sandbox and app are running:
+
+```bash
+npm run sandbox
+```
+
+In another terminal:
+
+```bash
+npm run dev
+```
+
+Owner/Admin creates a quiz:
+
+1. Sign in as an Account Owner, Admin, or Manager.
+2. Go to `/manager/quizzes`.
+3. Create a quiz with a title, optional category, optional Training Page, passing score, and published/draft status.
+4. Select the quiz.
+5. Add questions manually.
+6. Put each answer choice on its own line.
+7. Make sure the correct answer exactly matches one answer choice.
+8. Publish the quiz if it is not already published.
+
+Create a question from Testable Staff Knowledge:
+
+1. Go to `/manager/content`.
+2. Create or edit a Training Page.
+3. Add at least one Testable Staff Knowledge item.
+4. Publish the Training Page.
+5. Go to `/manager/quizzes`.
+6. Create a quiz and choose that Training Page.
+7. Use the `Use:` helper button to start a question from that knowledge item.
+8. Add similar wrong answers before saving the question.
+
+Staff takes a quiz:
+
+1. Invite a Staff user from `/manager/invite-team`.
+2. Copy the invite link.
+3. Log out.
+4. Open the invite link and create/sign into the staff account.
+5. Go to `/quizzes`.
+6. Take a published quiz.
+7. Submit answers.
+8. Confirm the staff user sees a score and either `Ready for Service` or `Needs Review`.
+
+Manager views staff results:
+
+1. Sign back in as the Account Owner, Admin, or Manager.
+2. Go to `/manager/staff-progress`.
+3. Confirm the staff user's quiz result appears with name/email, quiz title, score, status, and completion date.
+
+Staff views personal progress:
+
+1. Sign in as the Staff user.
+2. Go to `/my-progress`.
+3. Confirm only that staff user's own quiz attempts appear.
+
+Restaurant A vs Restaurant B quiz safety:
+
+1. Create Restaurant A.
+2. Create and publish a quiz.
+3. Accept a staff invite for Restaurant A and submit the quiz.
+4. Create Restaurant B with a separate account.
+5. Visit `/quizzes` and `/manager/staff-progress` in Restaurant B.
+6. Confirm Restaurant B cannot see Restaurant A quizzes or quiz results.
+
 ## Why restaurantId Matters
 
 This is the most important tenant-separation rule:
 
 Every restaurant-owned record has a `restaurantId`.
 
-That includes the user's role connection, Training Categories, Training Pages, future quizzes, future quiz questions, and future quiz attempts.
+That includes the user's role connection, Training Categories, Training Pages, quizzes, quiz questions, and quiz attempts.
 
 The frontend now loads the current user's active role connection first, then uses that restaurant's `restaurantId` for Training Category and Training Page queries.
 
@@ -403,15 +478,18 @@ The current app enforces tenant isolation and role access in the frontend by:
 - requiring an active role connection to a restaurant workspace
 - checking the user's role before protected routes load
 - filtering Training Categories and Training Pages by the current restaurant's `restaurantId`
+- filtering Quizzes, Quiz Questions, and Quiz Attempts by the current restaurant's `restaurantId`
 - showing only published pages in the staff Training Library
+- showing only published quizzes on the staff quiz page
 
 Before production customers, backend authorization should be hardened further so database access is not only protected by frontend filters. The current Amplify Data rules still allow authenticated users broadly; a production version should add stronger owner/group/custom authorization for tenant records.
 
 ## Next Product Step
 
-After tenant security and role checks are stable, the next build should be the staff invite system:
+After quiz and progress tracking are stable, the next build should be one of these:
 
-- Account Owner/Admin/Manager creates invite
-- invite chooses role
-- recipient joins the correct restaurant workspace
-- staff receives staff-only access
+- automatic invite emails
+- file/image uploads for Training Pages
+- better quiz editing and question management
+- manager reports by team member and training category
+- Stripe billing and trial conversion
