@@ -1033,6 +1033,16 @@ code {
   gap: 8px;
 }
 
+.workspace-logo-preview {
+  width: min(220px, 100%);
+  max-height: 140px;
+  object-fit: contain;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+}
+
 .draft-question-list {
   display: grid;
   gap: 14px;

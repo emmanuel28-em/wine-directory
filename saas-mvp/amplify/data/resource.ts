@@ -10,7 +10,13 @@ const schema = a.schema({
       plan: a.string(),
       trialEndsAt: a.datetime(),
       status: a.string(),
-      stripePaymentLink: a.string()
+      stripePaymentLink: a.string(),
+      address: a.string(),
+      city: a.string(),
+      website: a.string(),
+      primaryContactName: a.string(),
+      primaryContactEmail: a.email(),
+      logoStorageKey: a.string()
     })
     .authorization((allow) => [allow.authenticated()]),
 

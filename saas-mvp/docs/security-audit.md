@@ -15,6 +15,7 @@ Files inspected:
 - `src/lib/invites.js`
 - `src/lib/quizzes.js`
 - `src/lib/fileAssets.js`
+- `src/lib/settings.js`
 - `src/lib/importExistingRestaurantContent.js`
 - `src/pages/ManagerContentPage.jsx`
 - `src/pages/InviteTeamPage.jsx`
@@ -100,6 +101,9 @@ Data helper protections:
 - File Assets list by `restaurantId`.
 - Updates/deletes for Training Categories, Training Pages, Quizzes, and Quiz Questions verify the record belongs to the active restaurant before changing it.
 - File deletes verify the file belongs to the active restaurant before deleting metadata and the Storage object.
+- Workspace Settings lists Team Members and Invites by `restaurantId`.
+- Team role changes and disabling verify the target Membership belongs to the current restaurant.
+- Restaurant logo uploads are stored under a restaurant-scoped Storage path.
 - Staff quiz attempt saving verifies the quiz and questions belong to the same active restaurant.
 - Staff personal progress filters by both `restaurantId` and `userProfileId`.
 - Invite creation checks the inviter role.
@@ -117,6 +121,7 @@ Remaining risks:
 - `Invite` lookup by token must remain carefully controlled when email sending is added.
 - Storage access is currently broadly authenticated by path pattern, while app helpers enforce tenant checks before upload/list/delete.
 - Account Owner/Admin/Manager roles are not yet enforced by backend resolvers.
+- Workspace Settings role actions are enforced in app helpers, not backend resolvers yet.
 - Development role switching exists locally for testing, though it is hidden outside `import.meta.env.DEV`.
 
 ## Safe Implementation Plan Used In This Checkpoint

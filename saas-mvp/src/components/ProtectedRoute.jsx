@@ -27,9 +27,11 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
     return (
       <section className="page-section narrow-page">
         <div className="form-card">
-          <h1>No restaurant workspace found for this account.</h1>
+          <h1>{currentWorkspace.status === "disabled" ? "Workspace access disabled" : "No restaurant workspace found for this account."}</h1>
           <p>
-            Ask your manager for an invite, or start a new restaurant workspace if you are the account owner.
+            {currentWorkspace.status === "disabled"
+              ? "Your access to this workspace has been disabled."
+              : "Ask your manager for an invite, or start a new restaurant workspace if you are the account owner."}
           </p>
         </div>
       </section>

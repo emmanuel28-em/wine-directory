@@ -21,6 +21,9 @@ The app currently includes:
 - Managed Setup request page
 - authenticated Managed Setup request saving and source file upload
 - manual team invites with copyable invite links
+- Workspace Settings
+- Team Management
+- restaurant logo upload
 - quiz builder
 - staff quiz taking
 - staff and manager quiz progress
@@ -392,6 +395,70 @@ Manual email note:
 - Email sending is not built yet.
 - For now, copy the invite link and send it manually.
 - Later, this should connect to an email service so Line Up sends invites automatically.
+
+## Testing Workspace Settings And Team Management
+
+Settings uses existing Restaurant, UserProfile, Membership, Invite, and Storage records.
+
+If you have not restarted the sandbox since adding Restaurant profile/logo fields, restart it:
+
+```bash
+npm run sandbox
+```
+
+Then run the app:
+
+```bash
+npm run dev
+```
+
+Account Owner settings:
+
+1. Log in as an Account Owner.
+2. Go to `/manager/settings`.
+3. Confirm the page title says `Workspace Settings`.
+4. Update restaurant name, address/city, website, and primary contact.
+5. Save the restaurant profile.
+6. Upload a logo image.
+7. Confirm the logo preview appears.
+
+Team Management:
+
+1. Go to `/manager/invite-team`.
+2. Invite a Staff user.
+3. Go back to `/manager/settings`.
+4. Confirm the invite appears under Pending Invites.
+5. Copy the invite link if needed.
+6. Revoke the invite.
+7. Invite Staff again and accept the invite as that user.
+8. Log back in as Account Owner.
+9. Confirm Staff appears in Team Management.
+10. Disable the Staff member.
+11. Log in as that Staff member.
+12. Confirm the staff user sees: `Your access to this workspace has been disabled.`
+
+Role behavior:
+
+- Account Owner can change non-owner member roles and disable non-owner members.
+- Admin can view all team members, invite Staff, and disable Staff.
+- Manager can view team members and invite Staff, but cannot change roles or disable members.
+- Staff cannot access `/manager/settings`.
+
+Pending Invites:
+
+1. Create a pending invite.
+2. Confirm it appears with email, role, status, and expiration.
+3. Copy the manual invite link.
+4. Revoke it.
+5. Confirm it no longer appears in the pending list.
+
+Restaurant A vs Restaurant B settings safety:
+
+1. Create Restaurant A.
+2. Add members, invites, and a logo.
+3. Create Restaurant B with a different account.
+4. Go to `/manager/settings`.
+5. Confirm Restaurant B cannot see Restaurant A members, invites, logo, or settings.
 
 ## Testing Quizzes And Staff Progress
 

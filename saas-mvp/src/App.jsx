@@ -15,6 +15,7 @@ import ComingSoonPage from "./pages/placeholders/ComingSoonPage.jsx";
 import StaffLibrary from "./pages/StaffLibrary.jsx";
 import StaffQuizzesPage from "./pages/StaffQuizzesPage.jsx";
 import TrialPage from "./pages/TrialPage.jsx";
+import WorkspaceSettingsPage from "./pages/WorkspaceSettingsPage.jsx";
 import { activeMemberRoles, adminManagerRoles as managerRoles } from "./lib/permissions.js";
 
 export default function App() {
@@ -46,7 +47,7 @@ export default function App() {
           path="/manager/settings"
           element={
             <ProtectedRoute allowedRoles={managerRoles}>
-              <ComingSoonPage page="settings" backTo="/manager" />
+              <WorkspaceSettingsPage />
             </ProtectedRoute>
           }
         />

@@ -46,7 +46,7 @@ async function findExistingUserProfile(dataClient, cognitoUserId) {
   return result.data?.[0] || null;
 }
 
-export async function createTrialWorkspace({ user, restaurantName, managerName, email }) {
+export async function createTrialWorkspace({ user, restaurantName, managerName, email, restaurantAddress = "", restaurantWebsite = "" }) {
   const dataClient = getDataClient();
   const slug = `${createSlug(restaurantName)}-${Date.now().toString().slice(-5)}`;
   const userEmail = getUserEmail(user, email);
@@ -59,7 +59,12 @@ export async function createTrialWorkspace({ user, restaurantName, managerName, 
       plan: "trial",
       status: "trial",
       trialEndsAt: getTrialEndDate(),
-      stripePaymentLink: ""
+      stripePaymentLink: "",
+      address: restaurantAddress,
+      city: restaurantAddress,
+      website: restaurantWebsite,
+      primaryContactName: managerName,
+      primaryContactEmail: userEmail
     }),
     "Restaurant was not created."
   );

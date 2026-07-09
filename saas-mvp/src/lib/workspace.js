@@ -48,15 +48,18 @@ export async function loadUserWorkspace(user) {
   const activeMemberships = (membershipResult.data || []).filter((membership) => membership.status === "active");
   const membership =
     activeMemberships.find((item) => item.restaurantId === userProfile.activeRestaurantId) || activeMemberships[0];
+  const disabledMembership = (membershipResult.data || []).find((membershipItem) => membershipItem.status === "disabled");
   const restaurantId = membership?.restaurantId;
 
   if (!membership || !restaurantId) {
     return {
-      status: "empty",
+      status: disabledMembership ? "disabled" : "empty",
       restaurant: null,
       userProfile,
-      membership,
-      message: "No restaurant workspace found for this account."
+      membership: disabledMembership || membership,
+      message: disabledMembership
+        ? "Your access to this workspace has been disabled."
+        : "No restaurant workspace found for this account."
     };
   }
 
