@@ -1,4 +1,5 @@
 import { getDataClient } from "./dataClient.js";
+import { assertSameRestaurant, requireRestaurantId } from "./permissions.js";
 
 function assertNoErrors(result, fallbackMessage) {
   if (result.errors?.length) {
@@ -50,6 +51,7 @@ export function parseAnswersJson(value) {
 }
 
 export async function listQuizzesForRestaurant(restaurantId) {
+  requireRestaurantId(restaurantId);
   const dataClient = getDataClient();
   const result = await dataClient.models.Quiz.list({
     filter: {
@@ -67,6 +69,7 @@ export async function listQuizzesForRestaurant(restaurantId) {
 }
 
 export async function createQuiz({ restaurantId, form }) {
+  requireRestaurantId(restaurantId);
   const dataClient = getDataClient();
 
   return assertNoErrors(
@@ -82,8 +85,16 @@ export async function createQuiz({ restaurantId, form }) {
   );
 }
 
-export async function updateQuizPublishStatus({ quiz, isPublished }) {
+export async function updateQuizPublishStatus({ quiz, restaurantId, isPublished }) {
+  requireRestaurantId(restaurantId);
   const dataClient = getDataClient();
+  const existing = await dataClient.models.Quiz.get({ id: quiz.id });
+
+  if (existing.errors?.length) {
+    throw new Error(existing.errors.map((error) => error.message).join(" "));
+  }
+
+  assertSameRestaurant(existing.data, restaurantId, "Quiz");
 
   return assertNoErrors(
     await dataClient.models.Quiz.update({
@@ -95,6 +106,7 @@ export async function updateQuizPublishStatus({ quiz, isPublished }) {
 }
 
 export async function listQuestionsForQuiz(quizId, restaurantId) {
+  requireRestaurantId(restaurantId);
   const dataClient = getDataClient();
   const filter = {
     quizId: {
@@ -102,13 +114,9 @@ export async function listQuestionsForQuiz(quizId, restaurantId) {
     }
   };
 
-  // When a restaurantId is provided, we include it in the query so questions
-  // are always scoped to the current restaurant workspace.
-  if (restaurantId) {
-    filter.restaurantId = {
-      eq: restaurantId
-    };
-  }
+  filter.restaurantId = {
+    eq: restaurantId
+  };
 
   const result = await dataClient.models.QuizQuestion.list({
     filter
@@ -122,8 +130,16 @@ export async function listQuestionsForQuiz(quizId, restaurantId) {
 }
 
 export async function createQuizQuestion({ restaurantId, quizId, form }) {
+  requireRestaurantId(restaurantId);
   const dataClient = getDataClient();
   const choices = parseChoices(form.choicesText);
+  const quiz = await dataClient.models.Quiz.get({ id: quizId });
+
+  if (quiz.errors?.length) {
+    throw new Error(quiz.errors.map((error) => error.message).join(" "));
+  }
+
+  assertSameRestaurant(quiz.data, restaurantId, "Quiz");
 
   if (!choices.includes(form.correctAnswer.trim())) {
     throw new Error("Answer choices must include the correct answer.");
@@ -142,9 +158,17 @@ export async function createQuizQuestion({ restaurantId, quizId, form }) {
   );
 }
 
-export async function updateQuizQuestion({ questionId, form }) {
+export async function updateQuizQuestion({ questionId, restaurantId, form }) {
+  requireRestaurantId(restaurantId);
   const dataClient = getDataClient();
   const choices = parseChoices(form.choicesText);
+  const existing = await dataClient.models.QuizQuestion.get({ id: questionId });
+
+  if (existing.errors?.length) {
+    throw new Error(existing.errors.map((error) => error.message).join(" "));
+  }
+
+  assertSameRestaurant(existing.data, restaurantId, "Quiz Question");
 
   if (!choices.includes(form.correctAnswer.trim())) {
     throw new Error("Answer choices must include the correct answer.");
@@ -162,8 +186,17 @@ export async function updateQuizQuestion({ questionId, form }) {
   );
 }
 
-export async function deleteQuizQuestion(questionId) {
+export async function deleteQuizQuestion({ questionId, restaurantId }) {
+  requireRestaurantId(restaurantId);
   const dataClient = getDataClient();
+  const existing = await dataClient.models.QuizQuestion.get({ id: questionId });
+
+  if (existing.errors?.length) {
+    throw new Error(existing.errors.map((error) => error.message).join(" "));
+  }
+
+  assertSameRestaurant(existing.data, restaurantId, "Quiz Question");
+
   const result = await dataClient.models.QuizQuestion.delete({ id: questionId });
 
   if (result.errors?.length) {
@@ -172,6 +205,7 @@ export async function deleteQuizQuestion(questionId) {
 }
 
 export async function listQuizAttemptsForRestaurant(restaurantId) {
+  requireRestaurantId(restaurantId);
   const dataClient = getDataClient();
   const result = await dataClient.models.QuizAttempt.list({
     filter: {
@@ -189,11 +223,38 @@ export async function listQuizAttemptsForRestaurant(restaurantId) {
 }
 
 export async function listQuizAttemptsForUser({ restaurantId, userProfileId }) {
-  const attempts = await listQuizAttemptsForRestaurant(restaurantId);
-  return attempts.filter((attempt) => attempt.userProfileId === userProfileId);
+  requireRestaurantId(restaurantId);
+  const dataClient = getDataClient();
+  const result = await dataClient.models.QuizAttempt.list({
+    filter: {
+      restaurantId: {
+        eq: restaurantId
+      },
+      userProfileId: {
+        eq: userProfileId
+      }
+    }
+  });
+
+  if (result.errors?.length) {
+    throw new Error(result.errors.map((error) => error.message).join(" "));
+  }
+
+  return [...(result.data || [])].sort((a, b) => new Date(b.completedAt || 0) - new Date(a.completedAt || 0));
 }
 
 export async function saveQuizAttempt({ restaurantId, quiz, userProfileId, questions, answers }) {
+  requireRestaurantId(restaurantId);
+  assertSameRestaurant(quiz, restaurantId, "Quiz");
+
+  if (!quiz.isPublished) {
+    throw new Error("This quiz is not published yet.");
+  }
+
+  questions.forEach((question) => {
+    assertSameRestaurant(question, restaurantId, "Quiz Question");
+  });
+
   const dataClient = getDataClient();
   const answerRows = questions.map((question) => {
     const selectedAnswer = answers[question.id] || "";

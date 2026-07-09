@@ -1,6 +1,7 @@
 import { rezdoraExistingTrainingContent } from "../legacy/rezdoraExistingTrainingContent.js";
 import { getDataClient } from "./dataClient.js";
 import { listCollectionsForRestaurant, saveCollection } from "./collections.js";
+import { requireRestaurantId } from "./permissions.js";
 import { listTrainingDocsForRestaurant } from "./trainingDocs.js";
 
 const categoryDefinitions = {
@@ -242,6 +243,8 @@ async function ensureCategories({ restaurantId, userProfileId }) {
 }
 
 export async function importExistingRestaurantContent({ restaurantId, userProfileId, items = rezdoraExistingTrainingContent }) {
+  requireRestaurantId(restaurantId);
+
   const dataClient = getDataClient();
   const existingDocs = await listTrainingDocsForRestaurant(restaurantId);
   const existingKeys = new Set(existingDocs.map((doc) => `${doc.title}|${doc.type}`.toLowerCase()));

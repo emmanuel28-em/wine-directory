@@ -225,6 +225,7 @@ export default function ManagerQuizzesPage() {
       if (editingQuestionId) {
         await updateQuizQuestion({
           questionId: editingQuestionId,
+          restaurantId: workspace.restaurant.id,
           form: questionForm
         });
         setMessage("Question updated.");
@@ -333,7 +334,10 @@ export default function ManagerQuizzesPage() {
     setMessage("");
 
     try {
-      await deleteQuizQuestion(question.id);
+      await deleteQuizQuestion({
+        questionId: question.id,
+        restaurantId: workspace.restaurant.id
+      });
       await loadQuestions(selectedQuiz.id);
       setMessage("Question deleted.");
     } catch (error) {
@@ -350,6 +354,7 @@ export default function ManagerQuizzesPage() {
     try {
       await updateQuizPublishStatus({
         quiz,
+        restaurantId: workspace.restaurant.id,
         isPublished: !quiz.isPublished
       });
       await loadQuizPage();

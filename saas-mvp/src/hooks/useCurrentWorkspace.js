@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAmplifySetup } from "../amplify/AmplifySetupProvider.jsx";
 import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
+import { activeMemberRoles, adminManagerRoles, isAdminOrManager } from "../lib/permissions.js";
 import { loadUserWorkspace } from "../lib/workspace.js";
 
-export const managerRoles = ["owner", "admin", "manager"];
-export const activeMemberRoles = ["owner", "admin", "manager", "staff"];
+export { activeMemberRoles };
+export const managerRoles = adminManagerRoles;
 
 export function isManagerRole(role) {
-  return managerRoles.includes(role);
+  return isAdminOrManager(role);
 }
 
 export function formatRole(role) {

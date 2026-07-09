@@ -498,7 +498,20 @@ The frontend now loads the current user's active role connection first, then use
 
 ## Production Hardening Still Needed
 
-The current app enforces tenant isolation and role access in the frontend by:
+Current security level:
+
+- The app is safer than the first MVP because shared helpers now require `restaurantId` and verify ownership before sensitive updates/deletes.
+- Manager/staff routes are role-protected in the app.
+- Staff-facing reads are filtered to the current restaurant workspace.
+- The backend still uses broad authenticated Amplify Data access, so this is not yet enough for real paid customers without additional backend enforcement.
+
+Security audit:
+
+```text
+docs/security-audit.md
+```
+
+What is hardened now:
 
 - requiring an active role connection to a restaurant workspace
 - checking the user's role before protected routes load
@@ -506,15 +519,52 @@ The current app enforces tenant isolation and role access in the frontend by:
 - filtering Quizzes, Quiz Questions, and Quiz Attempts by the current restaurant's `restaurantId`
 - showing only published pages in the staff Training Library
 - showing only published quizzes on the staff quiz page
+- verifying Training Category ownership before archive/update
+- verifying Training Page ownership before update/archive/delete
+- verifying Quiz ownership before publish/unpublish
+- verifying Quiz Question ownership before edit/delete
+- verifying a quiz and its questions belong to the staff user's restaurant before saving an attempt
+- checking invite role permissions before creating invites
+- rechecking invite status, expiration, and invited email before acceptance
 
-Before production customers, backend authorization should be hardened further so database access is not only protected by frontend filters. The current Amplify Data rules still allow authenticated users broadly; a production version should add stronger owner/group/custom authorization for tenant records.
+What is still mostly frontend/app-layer enforced:
+
+- Restaurant membership access rules.
+- Staff vs manager permissions.
+- Published-only staff content visibility.
+- Staff seeing only their own quiz attempts.
+
+What must be done before real paid customers:
+
+- Add backend-enforced tenant authorization so database access does not rely on frontend filters.
+- Consider a server-side Function/API layer for sensitive writes like content publishing, invite creation, quiz publishing, and staff progress reporting.
+- Add audit logs for role changes, invites, content publishing, and quiz attempts.
+- Remove or hard-disable development role switching outside local development.
+
+Testing Restaurant A vs Restaurant B isolation:
+
+1. Create Restaurant A owner.
+2. Add training content and a quiz.
+3. Invite Staff A to Restaurant A.
+4. Confirm Staff A can view Restaurant A published content and take Restaurant A quizzes.
+5. Confirm Staff A cannot access `/manager`, `/manager/content`, `/manager/quizzes`, `/manager/staff-progress`, or `/manager/invite-team`.
+6. Create Restaurant B owner.
+7. Confirm Restaurant B cannot see Restaurant A content, quizzes, invites, or results.
+8. Confirm Staff A cannot see Restaurant B data.
+
+Testing dev/test leakage:
+
+1. Confirm there is no Data Test link in public navigation.
+2. Confirm development role testing appears only when running locally with `npm run dev`.
+3. Confirm deployed/production builds do not show the development role switcher.
 
 ## Next Product Step
 
-After quiz and progress tracking are stable, the next build should be one of these:
+After this production-hardening pass is stable, the next build should be one of these:
 
 - automatic invite emails
 - file/image uploads for Training Pages
 - better quiz editing and question management
 - manager reports by team member and training category
 - Stripe billing and trial conversion
+- backend-enforced tenant authorization

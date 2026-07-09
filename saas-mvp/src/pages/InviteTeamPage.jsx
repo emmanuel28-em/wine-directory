@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import { createInvite, listInvitesForRestaurant, makeInviteLink } from "../lib/invites.js";
+import { canInviteRole } from "../lib/permissions.js";
 
 const emptyInvite = {
   firstName: "",
@@ -17,15 +18,7 @@ const roleLabels = {
 };
 
 function getAllowedRoles(currentRole) {
-  if (currentRole === "owner") {
-    return ["admin", "manager", "staff"];
-  }
-
-  if (currentRole === "admin" || currentRole === "manager") {
-    return ["staff"];
-  }
-
-  return [];
+  return ["admin", "manager", "staff"].filter((role) => canInviteRole(currentRole, role));
 }
 
 export default function InviteTeamPage() {
@@ -77,7 +70,8 @@ export default function InviteTeamPage() {
       const nextInvite = await createInvite({
         restaurantId: workspace.restaurant.id,
         invite,
-        invitedBy: workspace.userProfile.id
+        invitedBy: workspace.userProfile.id,
+        currentRole: workspace.role
       });
 
       setCreatedInvite(nextInvite);

@@ -11,6 +11,10 @@ export async function listFirst(model, filter) {
 }
 
 export async function loadUserWorkspace(user) {
+  if (!user?.userId) {
+    throw new Error("A signed-in user is required.");
+  }
+
   const dataClient = getDataClient();
 
   const userProfile = await listFirst(dataClient.models.UserProfile, {
@@ -30,8 +34,10 @@ export async function loadUserWorkspace(user) {
   }
 
   const membershipResult = await dataClient.models.Membership.list({
-    userProfileId: {
-      eq: userProfile.id
+    filter: {
+      userProfileId: {
+        eq: userProfile.id
+      }
     }
   });
 

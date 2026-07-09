@@ -1,4 +1,5 @@
 import { getDataClient } from "./dataClient.js";
+import { assertSameRestaurant, requireRestaurantId } from "./permissions.js";
 
 export const emptyTrainingDocForm = {
   collectionId: "",
@@ -154,6 +155,7 @@ export function docToForm(doc) {
 }
 
 export async function listTrainingDocsForRestaurant(restaurantId) {
+  requireRestaurantId(restaurantId);
   const dataClient = getDataClient();
   const result = await dataClient.models.TrainingDoc.list({
     filter: {
@@ -174,6 +176,7 @@ export async function listTrainingDocsForRestaurant(restaurantId) {
 }
 
 export async function saveTrainingDoc({ form, editingDocId, restaurantId, userProfileId }) {
+  requireRestaurantId(restaurantId);
   const dataClient = getDataClient();
   const payload = {
     restaurantId,
@@ -188,6 +191,14 @@ export async function saveTrainingDoc({ form, editingDocId, restaurantId, userPr
   };
 
   if (editingDocId) {
+    const existing = await dataClient.models.TrainingDoc.get({ id: editingDocId });
+
+    if (existing.errors?.length) {
+      throw new Error(existing.errors.map((error) => error.message).join(" "));
+    }
+
+    assertSameRestaurant(existing.data, restaurantId, "Training Page");
+
     return assertNoErrors(
       await dataClient.models.TrainingDoc.update({
         id: editingDocId,
@@ -206,8 +217,16 @@ export async function saveTrainingDoc({ form, editingDocId, restaurantId, userPr
   );
 }
 
-export async function updateTrainingDocStatus({ doc, status, userProfileId }) {
+export async function updateTrainingDocStatus({ doc, status, restaurantId, userProfileId }) {
+  requireRestaurantId(restaurantId);
   const dataClient = getDataClient();
+  const existing = await dataClient.models.TrainingDoc.get({ id: doc.id });
+
+  if (existing.errors?.length) {
+    throw new Error(existing.errors.map((error) => error.message).join(" "));
+  }
+
+  assertSameRestaurant(existing.data, restaurantId, "Training Page");
 
   return assertNoErrors(
     await dataClient.models.TrainingDoc.update({
@@ -219,8 +238,17 @@ export async function updateTrainingDocStatus({ doc, status, userProfileId }) {
   );
 }
 
-export async function deleteTrainingDoc(docId) {
+export async function deleteTrainingDoc({ docId, restaurantId }) {
+  requireRestaurantId(restaurantId);
   const dataClient = getDataClient();
+  const existing = await dataClient.models.TrainingDoc.get({ id: docId });
+
+  if (existing.errors?.length) {
+    throw new Error(existing.errors.map((error) => error.message).join(" "));
+  }
+
+  assertSameRestaurant(existing.data, restaurantId, "Training Page");
+
   const result = await dataClient.models.TrainingDoc.delete({ id: docId });
 
   if (result.errors?.length) {

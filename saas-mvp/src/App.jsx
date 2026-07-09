@@ -15,9 +15,7 @@ import ComingSoonPage from "./pages/placeholders/ComingSoonPage.jsx";
 import StaffLibrary from "./pages/StaffLibrary.jsx";
 import StaffQuizzesPage from "./pages/StaffQuizzesPage.jsx";
 import TrialPage from "./pages/TrialPage.jsx";
-
-const managerRoles = ["owner", "admin", "manager"];
-const activeMemberRoles = ["owner", "admin", "manager", "staff"];
+import { activeMemberRoles, adminManagerRoles as managerRoles } from "./lib/permissions.js";
 
 export default function App() {
   return (

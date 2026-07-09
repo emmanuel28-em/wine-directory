@@ -1,4 +1,5 @@
 import { getDataClient } from "./dataClient.js";
+import { canInviteRole, requireRestaurantId } from "./permissions.js";
 import { listFirst } from "./workspace.js";
 
 function assertNoErrors(result, fallbackMessage) {
@@ -35,7 +36,13 @@ export function makeInviteLink(token) {
   return `${window.location.origin}/accept-invite?token=${encodeURIComponent(token)}`;
 }
 
-export async function createInvite({ restaurantId, invite, invitedBy }) {
+export async function createInvite({ restaurantId, invite, invitedBy, currentRole }) {
+  requireRestaurantId(restaurantId);
+
+  if (!canInviteRole(currentRole, invite.role)) {
+    throw new Error("You do not have permission to invite that role.");
+  }
+
   const dataClient = getDataClient();
   const inviteToken = makeInviteToken();
 
@@ -57,6 +64,7 @@ export async function createInvite({ restaurantId, invite, invitedBy }) {
 }
 
 export async function listInvitesForRestaurant(restaurantId) {
+  requireRestaurantId(restaurantId);
   const dataClient = getDataClient();
   const result = await dataClient.models.Invite.list({
     filter: {
@@ -129,14 +137,38 @@ export async function getPendingInviteByToken(token) {
 
 export async function acceptInviteForUser({ invite, user, firstName, lastName }) {
   const dataClient = getDataClient();
-  const userEmail = getUserEmail(user).toLowerCase();
-  const inviteEmail = (invite.email || "").toLowerCase();
+  const latestInviteResult = await dataClient.models.Invite.get({ id: invite.id });
 
-  if (inviteEmail && userEmail !== inviteEmail) {
-    throw new Error(`This invite was sent to ${invite.email}. Sign in with that email address to accept it.`);
+  if (latestInviteResult.errors?.length) {
+    throw new Error(latestInviteResult.errors.map((error) => error.message).join(" "));
   }
 
-  const name = `${firstName || invite.firstName || ""} ${lastName || invite.lastName || ""}`.trim() || userEmail;
+  const latestInvite = latestInviteResult.data;
+
+  if (!latestInvite) {
+    throw new Error("This invite could not be found.");
+  }
+
+  if (latestInvite.status !== "pending") {
+    throw new Error(`This invite is ${latestInvite.status}. Ask your manager for a new invite.`);
+  }
+
+  if (latestInvite.expiresAt && new Date(latestInvite.expiresAt) < new Date()) {
+    await dataClient.models.Invite.update({
+      id: latestInvite.id,
+      status: "expired"
+    });
+    throw new Error("This invite has expired. Ask your manager for a new invite.");
+  }
+
+  const userEmail = getUserEmail(user).toLowerCase();
+  const inviteEmail = (latestInvite.email || "").toLowerCase();
+
+  if (inviteEmail && userEmail !== inviteEmail) {
+    throw new Error(`This invite was sent to ${latestInvite.email}. Sign in with that email address to accept it.`);
+  }
+
+  const name = `${firstName || latestInvite.firstName || ""} ${lastName || latestInvite.lastName || ""}`.trim() || userEmail;
   const existingProfile = await listFirst(dataClient.models.UserProfile, {
     cognitoUserId: {
       eq: user.userId
@@ -149,7 +181,7 @@ export async function acceptInviteForUser({ invite, user, firstName, lastName })
           id: existingProfile.id,
           name,
           email: userEmail,
-          activeRestaurantId: invite.restaurantId
+          activeRestaurantId: latestInvite.restaurantId
         }),
         "User profile was not updated."
       )
@@ -158,7 +190,7 @@ export async function acceptInviteForUser({ invite, user, firstName, lastName })
           cognitoUserId: user.userId,
           name,
           email: userEmail,
-          activeRestaurantId: invite.restaurantId
+          activeRestaurantId: latestInvite.restaurantId
         }),
         "User profile was not created."
       );
@@ -175,29 +207,29 @@ export async function acceptInviteForUser({ invite, user, firstName, lastName })
     throw new Error(membershipResult.errors.map((error) => error.message).join(" "));
   }
 
-  const existingMembership = (membershipResult.data || []).find((membershipItem) => membershipItem.restaurantId === invite.restaurantId);
+  const existingMembership = (membershipResult.data || []).find((membershipItem) => membershipItem.restaurantId === latestInvite.restaurantId);
 
   const membership = existingMembership
     ? assertNoErrors(
         await dataClient.models.Membership.update({
           id: existingMembership.id,
-          role: invite.role,
+          role: latestInvite.role,
           status: "active"
         }),
         "Membership was not updated."
       )
     : assertNoErrors(
         await dataClient.models.Membership.create({
-          restaurantId: invite.restaurantId,
+          restaurantId: latestInvite.restaurantId,
           userProfileId: userProfile.id,
-          role: invite.role,
+          role: latestInvite.role,
           status: "active"
         }),
         "Membership was not created."
       );
 
   await dataClient.models.Invite.update({
-    id: invite.id,
+    id: latestInvite.id,
     status: "accepted"
   });
 

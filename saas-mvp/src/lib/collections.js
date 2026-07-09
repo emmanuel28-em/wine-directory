@@ -1,4 +1,5 @@
 import { getDataClient } from "./dataClient.js";
+import { assertSameRestaurant, requireRestaurantId } from "./permissions.js";
 
 function assertNoErrors(result, fallbackMessage) {
   if (result.errors?.length) {
@@ -13,6 +14,7 @@ function assertNoErrors(result, fallbackMessage) {
 }
 
 export async function listCollectionsForRestaurant(restaurantId, options = {}) {
+  requireRestaurantId(restaurantId);
   const dataClient = getDataClient();
   const result = await dataClient.models.ContentCollection.list({
     filter: {
@@ -38,6 +40,7 @@ export async function listCollectionsForRestaurant(restaurantId, options = {}) {
 }
 
 export async function saveCollection({ collection, restaurantId, userProfileId, editingCollectionId }) {
+  requireRestaurantId(restaurantId);
   const dataClient = getDataClient();
   const payload = {
     restaurantId,
@@ -50,6 +53,14 @@ export async function saveCollection({ collection, restaurantId, userProfileId, 
   };
 
   if (editingCollectionId) {
+    const existing = await dataClient.models.ContentCollection.get({ id: editingCollectionId });
+
+    if (existing.errors?.length) {
+      throw new Error(existing.errors.map((error) => error.message).join(" "));
+    }
+
+    assertSameRestaurant(existing.data, restaurantId, "Training Category");
+
     return assertNoErrors(
       await dataClient.models.ContentCollection.update({
         id: editingCollectionId,
@@ -68,8 +79,16 @@ export async function saveCollection({ collection, restaurantId, userProfileId, 
   );
 }
 
-export async function archiveCollection({ collectionId, userProfileId }) {
+export async function archiveCollection({ collectionId, restaurantId, userProfileId }) {
+  requireRestaurantId(restaurantId);
   const dataClient = getDataClient();
+  const existing = await dataClient.models.ContentCollection.get({ id: collectionId });
+
+  if (existing.errors?.length) {
+    throw new Error(existing.errors.map((error) => error.message).join(" "));
+  }
+
+  assertSameRestaurant(existing.data, restaurantId, "Training Category");
 
   return assertNoErrors(
     await dataClient.models.ContentCollection.update({

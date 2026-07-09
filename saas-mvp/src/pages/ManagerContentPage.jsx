@@ -251,6 +251,7 @@ export default function ManagerContentPage() {
     try {
       await archiveCollection({
         collectionId: category.id,
+        restaurantId: workspace.restaurant.id,
         userProfileId: workspace.userProfile.id
       });
       await refreshRestaurantContent(workspace.restaurant.id);
@@ -302,6 +303,7 @@ export default function ManagerContentPage() {
       await updateTrainingDocStatus({
         doc,
         status,
+        restaurantId: workspace.restaurant.id,
         userProfileId: workspace.userProfile.id
       });
       await refreshRestaurantContent(workspace.restaurant.id);
@@ -324,7 +326,10 @@ export default function ManagerContentPage() {
     setMessage("");
 
     try {
-      await deleteTrainingDoc(doc.id);
+      await deleteTrainingDoc({
+        docId: doc.id,
+        restaurantId: workspace.restaurant.id
+      });
       await refreshRestaurantContent(workspace.restaurant.id);
       setMessage(`${doc.title} was deleted.`);
 

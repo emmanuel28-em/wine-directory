@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { formatRole, useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import { getDataClient } from "../lib/dataClient.js";
+import { requireRestaurantId } from "../lib/permissions.js";
 import { listQuizAttemptsForRestaurant, listQuizzesForRestaurant } from "../lib/quizzes.js";
 
 function formatDateTime(value) {
@@ -23,6 +24,7 @@ function resultLabel(passed) {
 }
 
 async function listMembersForRestaurant(restaurantId) {
+  requireRestaurantId(restaurantId);
   const dataClient = getDataClient();
   const membershipResult = await dataClient.models.Membership.list({
     filter: {
@@ -40,6 +42,10 @@ async function listMembersForRestaurant(restaurantId) {
   const profiles = await Promise.all(
     memberships.map(async (membership) => {
       const profileResult = await dataClient.models.UserProfile.get({ id: membership.userProfileId });
+
+      if (profileResult.errors?.length) {
+        throw new Error(profileResult.errors.map((error) => error.message).join(" "));
+      }
 
       return {
         membership,
