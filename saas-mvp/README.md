@@ -106,6 +106,67 @@ http://127.0.0.1:5173/login
 
 You should see the Line Up sign up / sign in form.
 
+## AWS Amplify Hosting Deployment
+
+This app is inside a subfolder. When connecting the GitHub repo to AWS Amplify Hosting, configure Amplify to build from:
+
+```text
+saas-mvp
+```
+
+Deployment steps:
+
+1. Push the project to GitHub.
+2. In AWS Amplify Hosting, connect the GitHub repository.
+3. Set the app root/base directory to:
+
+```text
+saas-mvp
+```
+
+4. Set the build command:
+
+```bash
+npm run build
+```
+
+5. Set the output directory:
+
+```text
+dist
+```
+
+6. Configure the required environment variables and secrets.
+7. Deploy.
+8. Copy the deployed Amplify URL.
+9. Update these values to the deployed URL:
+
+```text
+VITE_APP_BASE_URL=https://your-deployed-amplify-url
+LINE_UP_APP_BASE_URL=https://your-deployed-amplify-url
+```
+
+10. Redeploy after changing environment variables.
+
+Production environment checklist:
+
+```text
+VITE_APP_BASE_URL
+LINE_UP_APP_BASE_URL
+LINE_UP_FROM_EMAIL
+STRIPE_SECRET_KEY
+STRIPE_PRICE_ID_MONTHLY
+STRIPE_WEBHOOK_SECRET
+```
+
+More detailed deployment steps are in:
+
+```text
+docs/deployment-checklist.md
+docs/production-smoke-test.md
+docs/client-launch-readiness.md
+```
+
 ## Trial Signup Flow
 
 With `npm run sandbox` running in one terminal and `npm run dev` running in another, visit:

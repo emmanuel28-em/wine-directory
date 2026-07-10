@@ -1,3 +1,4 @@
+import { buildAppUrl } from "./appUrl.js";
 import { getDataClient } from "./dataClient.js";
 import { canInviteRole, requireRestaurantId } from "./permissions.js";
 import { listFirst } from "./workspace.js";
@@ -33,8 +34,7 @@ function getUserEmail(user, fallback = "") {
 }
 
 export function makeInviteLink(token) {
-  const baseUrl = import.meta.env.VITE_APP_BASE_URL || window.location.origin;
-  return `${baseUrl.replace(/\/$/, "")}/accept-invite?token=${encodeURIComponent(token)}`;
+  return buildAppUrl(`/accept-invite?token=${encodeURIComponent(token)}`);
 }
 
 export async function createInvite({ restaurantId, invite, invitedBy, currentRole }) {

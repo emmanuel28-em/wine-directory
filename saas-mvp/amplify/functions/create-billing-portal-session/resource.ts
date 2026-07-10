@@ -5,7 +5,7 @@ export const createBillingPortalSession = defineFunction({
   entry: "./handler.ts",
   environment: {
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || "",
-    LINE_UP_APP_BASE_URL: process.env.LINE_UP_APP_BASE_URL || process.env.VITE_APP_BASE_URL || "",
+    LINE_UP_APP_BASE_URL: process.env.LINE_UP_APP_BASE_URL || "",
     RESTAURANT_TABLE_NAME: ""
   }
 });

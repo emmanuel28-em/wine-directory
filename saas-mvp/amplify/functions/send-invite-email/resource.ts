@@ -5,6 +5,6 @@ export const sendInviteEmail = defineFunction({
   entry: "./handler.ts",
   environment: {
     LINE_UP_FROM_EMAIL: process.env.LINE_UP_FROM_EMAIL || "not-configured@lineup.local",
-    LINE_UP_APP_BASE_URL: process.env.LINE_UP_APP_BASE_URL || process.env.VITE_APP_BASE_URL || ""
+    LINE_UP_APP_BASE_URL: process.env.LINE_UP_APP_BASE_URL || ""
   }
 });
