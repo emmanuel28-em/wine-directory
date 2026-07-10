@@ -166,6 +166,21 @@ textarea {
   border-radius: 14px;
 }
 
+.warning-banner {
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  color: #6b5326;
+  font-weight: 800;
+  background: #f7e6bb;
+  border: 1px solid rgba(107, 83, 38, 0.18);
+  border-radius: 14px;
+}
+
+.app-warning-banner {
+  width: min(1120px, calc(100% - 32px));
+  margin: 16px auto 0;
+}
+
 .user-strip {
   display: flex;
   flex-wrap: wrap;
@@ -914,6 +929,12 @@ code {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 16px;
+}
+
+.billing-action-stack {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
 }
 
 .status-badge {

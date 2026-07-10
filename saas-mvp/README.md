@@ -28,8 +28,13 @@ The app currently includes:
 - staff quiz taking
 - staff and manager quiz progress
 - Training Page source file attachments
+- 30-day trial status
+- Owner/Admin billing page
+- Stripe Checkout foundation
+- Stripe webhook function for subscription status updates
+- Stripe Customer Portal foundation
 
-It does **not** include billing, public unauthenticated file uploads, AI-generated quizzes, or production-grade backend tenant authorization yet.
+It does **not** include public unauthenticated file uploads, AI-generated quizzes, or production-grade backend tenant authorization yet.
 
 ## Why This Folder Exists
 
@@ -287,6 +292,7 @@ To test tenant separation:
 - `/managed-setup` done-for-you setup inquiry page
 - `/login` Line Up sign in page
 - `/manager` protected Workspace Dashboard for Account Owners, Admins, and Managers
+- `/manager/billing` protected Billing page for Account Owners and Admins
 - `/manager/content` protected content management page for Account Owners, Admins, and Managers
 - `/manager/quizzes` protected quiz builder for Account Owners, Admins, and Managers
 - `/manager/staff-progress` protected quiz results page for Account Owners, Admins, and Managers
@@ -488,6 +494,106 @@ Restaurant A vs Restaurant B settings safety:
 3. Create Restaurant B with a different account.
 4. Go to `/manager/settings`.
 5. Confirm Restaurant B cannot see Restaurant A members, invites, logo, or settings.
+
+## Testing Billing And Trial Status
+
+Billing uses Stripe Checkout. Line Up never collects card details directly.
+
+Before testing, restart the Amplify sandbox after the billing schema/function changes:
+
+```bash
+npm run sandbox
+```
+
+Then run the app:
+
+```bash
+npm run dev
+```
+
+Account Owner billing test:
+
+1. Log in as an Account Owner.
+2. Go to `/manager`.
+3. Confirm the dashboard shows trial or subscription status.
+4. Go to `/manager/billing`.
+5. Confirm restaurant name, plan, subscription status, trial end date, and billing email appear.
+6. Change the billing email and save it.
+7. Click `Set Up Billing`.
+8. If Stripe is configured, you should be redirected to Stripe Checkout.
+9. If Stripe is not configured, you should see a clear setup error and remain in Line Up.
+10. Complete Checkout with a Stripe test card.
+11. Confirm the webhook updates the Restaurant subscription status if webhook forwarding is configured.
+12. Return to `/manager/billing`.
+13. Click `Manage Billing`.
+14. Confirm you are redirected to Stripe Customer Portal, or see a clear setup error if the portal is not configured.
+
+Role test:
+
+1. Use the local development role switcher to change your role to `Staff`.
+2. Visit `/manager/billing`.
+3. Confirm Staff cannot access the billing page.
+4. Change your role back to Account Owner or Admin.
+
+Required Stripe environment variables:
+
+```text
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_PRICE_ID_MONTHLY=price_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+LINE_UP_APP_BASE_URL=http://localhost:5173
+VITE_APP_BASE_URL=http://localhost:5173
+```
+
+How to create the Stripe Price ID:
+
+1. In Stripe, create a Product for Line Up.
+2. Add a recurring monthly Price.
+3. Copy the Price ID, which starts with `price_`.
+4. Use that value for `STRIPE_PRICE_ID_MONTHLY`.
+
+How to configure Stripe Checkout:
+
+1. Set `STRIPE_SECRET_KEY`.
+2. Set `STRIPE_PRICE_ID_MONTHLY`.
+3. Set `LINE_UP_APP_BASE_URL` to the app URL users should return to after Checkout.
+4. Restart/redeploy the Amplify backend.
+
+How to configure Stripe Customer Portal:
+
+1. In Stripe, open Billing settings.
+2. Configure Customer Portal features such as payment method updates, invoices, and cancellation rules.
+3. Save the portal configuration.
+4. Use `/manager/billing` and click `Manage Billing` after a Stripe customer exists.
+
+How to configure Stripe webhooks:
+
+1. Deploy the backend or run a sandbox that exposes the `stripeWebhookUrl` output.
+2. In Stripe, create a webhook endpoint using that URL.
+3. Subscribe to:
+   - `checkout.session.completed`
+   - `customer.subscription.created`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+   - `invoice.payment_failed`
+   - `invoice.payment_succeeded`
+4. Copy the webhook signing secret, which starts with `whsec_`.
+5. Set `STRIPE_WEBHOOK_SECRET`.
+6. Restart/redeploy the Amplify backend.
+
+Local webhook testing:
+
+- Stripe webhooks need a public URL.
+- For local testing, use Stripe CLI forwarding to send events to the deployed/sandbox webhook URL if available.
+- If you only run `npm run dev`, Checkout can redirect locally, but Stripe cannot call your local browser app directly.
+
+Billing enforcement:
+
+- Owner/Admin can always access `/manager/billing`.
+- Settings and Dashboard remain reachable when billing needs attention.
+- Staff sees a clear subscription message if the workspace is paused.
+- Creating training pages, quizzes, uploads, and new invites is blocked when the trial is expired and there is no active subscription.
+- Existing data is not deleted or hidden.
 
 ## Testing Quizzes And Staff Progress
 
@@ -702,6 +808,7 @@ What is still mostly frontend/app-layer enforced:
 - Published-only staff content visibility.
 - Staff seeing only their own quiz attempts.
 - Invite email sending still depends on the app creating/sending invites after the current user's role is checked.
+- Checkout and billing portal functions receive the current role from the app as an MVP guard; production should verify membership server-side.
 - Storage path access is still broadly authenticated at the S3 access-rule level, with app-layer tenant checks before upload/list/delete.
 
 What must be done before real paid customers:
@@ -734,9 +841,9 @@ Testing dev/test leakage:
 
 After this production-hardening pass is stable, the next build should be one of these:
 
-- automatic invite emails
+- backend-enforced tenant authorization
 - stricter backend file authorization
+- server-side role checks for checkout, portal, invites, and content publishing
 - better quiz editing and question management
 - manager reports by team member and training category
-- Stripe billing and trial conversion
-- backend-enforced tenant authorization
+- audit logs for billing, invites, roles, content publishing, and quiz attempts

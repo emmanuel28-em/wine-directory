@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
 import { formatRole, useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
+import { formatBillingStatus } from "../lib/billing.js";
 import { getDataClient } from "../lib/dataClient.js";
+import { isOwnerOrAdmin } from "../lib/permissions.js";
 import AmplifySetupNotice from "./AmplifySetupNotice.jsx";
 
 function DevelopmentRoleSwitcher({ currentWorkspace }) {
@@ -94,6 +96,7 @@ export default function AppLayout() {
                 <NavLink to="/manager/quizzes">Quizzes</NavLink>
                 <NavLink to="/manager/staff-progress">Staff Progress</NavLink>
                 <NavLink to="/manager/invite-team">Invite Team</NavLink>
+                {isOwnerOrAdmin(currentWorkspace.role) ? <NavLink to="/manager/billing">Billing</NavLink> : null}
                 <NavLink to="/manager/settings">Settings</NavLink>
               </>
             )
@@ -123,6 +126,12 @@ export default function AppLayout() {
             {currentWorkspace.role ? <> · {formatRole(currentWorkspace.role)}</> : null}
           </span>
           <DevelopmentRoleSwitcher currentWorkspace={currentWorkspace} />
+        </div>
+      ) : null}
+
+      {authSession.status === "authenticated" && currentWorkspace.isBillingPaused ? (
+        <div className="warning-banner app-warning-banner">
+          {formatBillingStatus(currentWorkspace.restaurant)}. Please update billing to keep this workspace active.
         </div>
       ) : null}
 

@@ -1,4 +1,5 @@
 export const ownerRole = "owner";
+export const ownerAdminRoles = ["owner", "admin"];
 export const adminManagerRoles = ["owner", "admin", "manager"];
 export const activeMemberRoles = ["owner", "admin", "manager", "staff"];
 
@@ -8,6 +9,10 @@ export function isOwner(role) {
 
 export function isAdminOrManager(role) {
   return role === "admin" || role === "manager" || role === "owner";
+}
+
+export function isOwnerOrAdmin(role) {
+  return role === "owner" || role === "admin";
 }
 
 export function isStaff(role) {

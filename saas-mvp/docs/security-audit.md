@@ -15,6 +15,7 @@ Files inspected:
 - `src/lib/invites.js`
 - `src/lib/quizzes.js`
 - `src/lib/fileAssets.js`
+- `src/lib/billing.js`
 - `src/lib/settings.js`
 - `src/lib/importExistingRestaurantContent.js`
 - `src/pages/ManagerContentPage.jsx`
@@ -99,6 +100,10 @@ Data helper protections:
 - Quiz Questions list by `restaurantId`.
 - Quiz Attempts list by `restaurantId`.
 - File Assets list by `restaurantId`.
+- Billing checkout uses the current workspace's restaurant id and sends card collection to Stripe Checkout.
+- Billing portal sends owners/admins to Stripe Customer Portal instead of collecting card details in Line Up.
+- Stripe webhook events verify Stripe signatures before updating Restaurant billing fields.
+- Stripe secret keys are used only by backend functions, never browser code.
 - Updates/deletes for Training Categories, Training Pages, Quizzes, and Quiz Questions verify the record belongs to the active restaurant before changing it.
 - File deletes verify the file belongs to the active restaurant before deleting metadata and the Storage object.
 - Workspace Settings lists Team Members and Invites by `restaurantId`.
@@ -122,6 +127,8 @@ Remaining risks:
 - Storage access is currently broadly authenticated by path pattern, while app helpers enforce tenant checks before upload/list/delete.
 - Account Owner/Admin/Manager roles are not yet enforced by backend resolvers.
 - Workspace Settings role actions are enforced in app helpers, not backend resolvers yet.
+- Billing checkout and portal creation are Owner/Admin route-protected in the app, but should load and verify the caller's role server-side before production.
+- Stripe webhook table updates use verified Stripe signatures, but webhook event logging/replay protection should be expanded before production.
 - Development role switching exists locally for testing, though it is hidden outside `import.meta.env.DEV`.
 
 ## Safe Implementation Plan Used In This Checkpoint
@@ -155,6 +162,8 @@ Recommended path:
    - create/update/archive Training Pages
    - create/update/publish Quizzes
    - create/revoke Invites
+   - create Stripe Checkout Sessions
+   - create Stripe Customer Portal Sessions
    - view Staff Progress
 2. In that server-side layer, load the signed-in user profile and active membership before any write.
 3. Enforce role permissions server-side.
@@ -178,7 +187,7 @@ Role isolation:
 1. Staff can view Training Library.
 2. Staff can take published quizzes.
 3. Staff can view only their own progress.
-4. Staff cannot open `/manager`, `/manager/content`, `/manager/quizzes`, `/manager/staff-progress`, or `/manager/invite-team`.
+4. Staff cannot open `/manager`, `/manager/content`, `/manager/quizzes`, `/manager/staff-progress`, `/manager/invite-team`, or `/manager/billing`.
 5. Manager/Admin/Owner can manage content and quizzes.
 6. Admin/Manager can invite Staff.
 7. Only Account Owner can invite Admin/Manager.

@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
 import { formatRole, useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
+import { formatBillingStatus, isTrialExpired } from "../lib/billing.js";
+import { isOwnerOrAdmin } from "../lib/permissions.js";
 
 function formatDate(value) {
   if (!value) {
@@ -18,11 +20,28 @@ function getUserEmail(user) {
   return user?.signInDetails?.loginId || user?.username || "Not available";
 }
 
+function getDashboardBillingLine(restaurant) {
+  const status = restaurant?.subscriptionStatus || "trialing";
+
+  if (status === "trialing") {
+    return `Trial active until ${formatDate(restaurant.trialEndsAt)}`;
+  }
+
+  if (status === "active") return "Subscription active";
+  if (status === "past_due") return "Payment past due";
+  if (status === "canceled") return "Subscription canceled";
+  if (status === "unpaid") return "Payment required";
+  if (status === "incomplete") return "Billing setup incomplete";
+
+  return "Billing not set up";
+}
+
 export default function ManagerDashboard() {
   const authSession = useAuthSession();
   const workspace = useCurrentWorkspace();
 
   const restaurantName = workspace.restaurant?.name || "Your Restaurant";
+  const canManageBilling = isOwnerOrAdmin(workspace.role);
 
   return (
     <section className="page-section">
@@ -58,6 +77,12 @@ export default function ManagerDashboard() {
 
       {workspace.status === "ready" ? (
         <>
+          {isTrialExpired(workspace.restaurant) ? (
+            <div className="warning-banner">
+              Your 30-day trial has ended. The workspace is still available, but billing should be set up soon.
+            </div>
+          ) : null}
+
           <div className="dashboard-grid">
             <article className="stat-card">
               <span>Restaurant</span>
@@ -68,7 +93,7 @@ export default function ManagerDashboard() {
             <article className="stat-card">
               <span>Trial Ends</span>
               <h2>{formatDate(workspace.restaurant.trialEndsAt)}</h2>
-              <p>30-day trial workspace</p>
+              <p>{formatBillingStatus(workspace.restaurant)}</p>
             </article>
 
             <article className="stat-card">
@@ -131,6 +156,19 @@ export default function ManagerDashboard() {
                   Request Managed Setup
                 </Link>
               </article>
+
+              <article className="stat-card">
+                <span>Billing</span>
+                <h2>{formatBillingStatus(workspace.restaurant)}</h2>
+                <p>{getDashboardBillingLine(workspace.restaurant)}</p>
+                {canManageBilling ? (
+                  <Link className="secondary-button card-action" to="/manager/billing">
+                    Go to Billing
+                  </Link>
+                ) : (
+                  <p className="helper-text">Ask an Account Owner or Admin to manage billing.</p>
+                )}
+              </article>
             </div>
           </section>
 
@@ -176,8 +214,11 @@ export default function ManagerDashboard() {
 
               <article className="stat-card" id="settings">
                 <span>Settings</span>
-                <h2>Workspace settings coming next</h2>
-                <p>Settings will let Account Owners manage restaurant details and admin access.</p>
+                <h2>Workspace Settings</h2>
+                <p>Manage restaurant details, team access, pending invites, and profile settings.</p>
+                <Link className="secondary-button card-action" to="/manager/settings">
+                  Open Settings
+                </Link>
               </article>
 
               <article className="stat-card">

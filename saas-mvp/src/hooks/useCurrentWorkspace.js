@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAmplifySetup } from "../amplify/AmplifySetupProvider.jsx";
 import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
+import { isWorkspaceBillingPaused } from "../lib/billing.js";
 import { activeMemberRoles, adminManagerRoles, isAdminOrManager } from "../lib/permissions.js";
 import { loadUserWorkspace } from "../lib/workspace.js";
 
@@ -111,6 +112,7 @@ export function useCurrentWorkspace() {
       isLoading: amplifySetup.status === "loading" || authSession.status === "checking" || workspace.status === "loading",
       isAuthenticated: authSession.status === "authenticated",
       isActiveMember: workspace.status === "ready" && workspace.membership?.status === "active",
+      isBillingPaused: workspace.status === "ready" && isWorkspaceBillingPaused(workspace.restaurant),
       isManager: isManagerRole(workspace.membership?.role),
       message: workspace.message,
       reloadWorkspace

@@ -6,6 +6,7 @@ import InviteTeamPage from "./pages/InviteTeamPage.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import ManagedSetupPage from "./pages/ManagedSetupPage.jsx";
+import ManagerBillingPage from "./pages/ManagerBillingPage.jsx";
 import ManagerContentPage from "./pages/ManagerContentPage.jsx";
 import ManagerDashboard from "./pages/ManagerDashboard.jsx";
 import ManagerQuizzesPage from "./pages/ManagerQuizzesPage.jsx";
@@ -16,7 +17,7 @@ import StaffLibrary from "./pages/StaffLibrary.jsx";
 import StaffQuizzesPage from "./pages/StaffQuizzesPage.jsx";
 import TrialPage from "./pages/TrialPage.jsx";
 import WorkspaceSettingsPage from "./pages/WorkspaceSettingsPage.jsx";
-import { activeMemberRoles, adminManagerRoles as managerRoles } from "./lib/permissions.js";
+import { activeMemberRoles, adminManagerRoles as managerRoles, ownerAdminRoles } from "./lib/permissions.js";
 
 export default function App() {
   return (
@@ -32,6 +33,14 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={managerRoles}>
               <ManagerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/billing"
+          element={
+            <ProtectedRoute allowedRoles={ownerAdminRoles}>
+              <ManagerBillingPage />
             </ProtectedRoute>
           }
         />

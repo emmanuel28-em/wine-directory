@@ -3,6 +3,8 @@ import { useAmplifySetup } from "../amplify/AmplifySetupProvider.jsx";
 import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 
+const billingAllowedPaths = new Set(["/manager", "/manager/billing", "/manager/settings"]);
+
 export default function ProtectedRoute({ children, allowedRoles = [] }) {
   const location = useLocation();
   const amplifySetup = useAmplifySetup();
@@ -45,6 +47,19 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
           <h1>You do not have permission to access this page.</h1>
           <p>
             This area is only available to account owners, admins, or managers for this restaurant workspace.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  if (currentWorkspace.isBillingPaused && !billingAllowedPaths.has(location.pathname)) {
+    return (
+      <section className="page-section narrow-page">
+        <div className="form-card">
+          <h1>This workspace needs an active subscription.</h1>
+          <p>
+            Please contact your manager or Account Owner to update billing before adding training material, taking quizzes, uploading files, or inviting new team members.
           </p>
         </div>
       </section>

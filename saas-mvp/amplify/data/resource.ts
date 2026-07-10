@@ -1,9 +1,26 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+import { createBillingPortalSession } from "../functions/create-billing-portal-session/resource";
+import { createCheckoutSession } from "../functions/create-checkout-session/resource";
 import { sendInviteEmail } from "../functions/send-invite-email/resource";
 
 const schema = a.schema({
   InviteEmailResult: a.customType({
     success: a.boolean(),
+    status: a.string(),
+    error: a.string()
+  }),
+
+  CheckoutSessionResult: a.customType({
+    success: a.boolean(),
+    checkoutUrl: a.string(),
+    stripeCustomerId: a.string(),
+    status: a.string(),
+    error: a.string()
+  }),
+
+  BillingPortalSessionResult: a.customType({
+    success: a.boolean(),
+    portalUrl: a.string(),
     status: a.string(),
     error: a.string()
   }),
@@ -18,6 +35,11 @@ const schema = a.schema({
       trialEndsAt: a.datetime(),
       status: a.string(),
       stripePaymentLink: a.string(),
+      stripeCustomerId: a.string(),
+      stripeSubscriptionId: a.string(),
+      subscriptionStatus: a.enum(["trialing", "active", "past_due", "canceled", "paused", "unpaid", "incomplete"]),
+      currentPeriodEnd: a.datetime(),
+      billingEmail: a.email(),
       address: a.string(),
       city: a.string(),
       website: a.string(),
@@ -82,6 +104,30 @@ const schema = a.schema({
     .returns(a.ref("InviteEmailResult"))
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(sendInviteEmail)),
+
+  createCheckoutSession: a
+    .mutation()
+    .arguments({
+      restaurantId: a.id().required(),
+      restaurantName: a.string().required(),
+      billingEmail: a.email().required(),
+      stripeCustomerId: a.string(),
+      trialEndsAt: a.datetime(),
+      requestedByRole: a.string()
+    })
+    .returns(a.ref("CheckoutSessionResult"))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(createCheckoutSession)),
+
+  createBillingPortalSession: a
+    .mutation()
+    .arguments({
+      restaurantId: a.id().required(),
+      requestedByRole: a.string()
+    })
+    .returns(a.ref("BillingPortalSessionResult"))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(createBillingPortalSession)),
 
   // A ContentCollection is a restaurant-created folder or grouping.
   // Examples: Dinner Menu, BTG Wines, SOPs, Events, Opening Procedures.
