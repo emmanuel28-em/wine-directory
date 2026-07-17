@@ -6,6 +6,10 @@ This document explains what is ready before inviting a real restaurant into Line
 
 - Public landing page.
 - Trial signup.
+- Guided owner onboarding.
+- Bulk paste/review/import for menu notes and tech sheets.
+- Imported pages default to draft and duplicate retries are skipped.
+- Public managed-setup inquiries are stored without exposing inquiry records publicly.
 - Restaurant workspace creation.
 - Login/logout.
 - Owner, Admin, Manager, and Staff roles.
@@ -25,6 +29,9 @@ This document explains what is ready before inviting a real restaurant into Line
 - Stripe Customer Portal.
 - Stripe webhook function.
 - Trial/subscription warning and basic enforcement.
+- Backend-enforced restaurant data isolation.
+- Server-side trial provisioning, invite acceptance, billing checks, and team access changes.
+- Point-in-time recovery for production DynamoDB tables and S3 object versioning.
 
 ## Must Be Configured Before Inviting A Client
 
@@ -41,10 +48,13 @@ This document explains what is ready before inviting a real restaurant into Line
 - Set `STRIPE_WEBHOOK_SECRET`.
 - Run the production smoke test.
 
+Until Stripe and SES are configured, Line Up keeps safe fallbacks: billing displays a clear configuration error and team invites provide a manual copyable link. Those fallbacks are useful for testing, but they are not the finished paid-client experience.
+
 ## Known Limitations
 
-- Backend tenant authorization still needs deeper database-level hardening before many paying customers.
-- Checkout and portal role checks should eventually verify Membership server-side.
+- A live second-restaurant test confirmed it could not list or open Rezdora data.
+- Checkout, Customer Portal, invite-email, trial provisioning, invite acceptance, and team-access functions verify identity and Membership server-side.
+- S3 paths are restaurant-scoped in the app, but Storage authorization is still broad for authenticated users. Keep the first pilot's source files non-sensitive until a server-side file layer is added.
 - Stripe webhooks require a deployed endpoint or Stripe CLI forwarding to fully test.
 - SES requires a verified sender/domain and production access for live email sending.
 - Public unauthenticated uploads are disabled.
@@ -63,6 +73,22 @@ This document explains what is ready before inviting a real restaurant into Line
 8. Invite small staff group.
 9. Watch for login, content, upload, quiz, and invite issues.
 10. Convert to paid plan or continue subscription.
+
+## First Client Launch Gate
+
+Before Massara or another unrelated restaurant receives an account:
+
+1. Configure and test a verified SES sender, or explicitly use manual invite links during the pilot.
+2. Connect Stripe in test mode and complete Checkout, webhook, and Customer Portal tests.
+3. Run one owner, one manager, and one staff walkthrough on desktop and mobile.
+4. Keep uploaded source documents non-sensitive during the controlled pilot.
+5. Agree on pilot support, content responsibility, and pricing in writing.
+
+Completed July 17, 2026:
+
+- Rezdora data backfill and Cognito workspace groups.
+- Production DynamoDB point-in-time recovery and S3 versioning.
+- Live two-restaurant Data isolation test, followed by removal of the temporary tenant.
 
 ## First Client Launch Notes
 

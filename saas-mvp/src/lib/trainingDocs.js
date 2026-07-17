@@ -1,5 +1,6 @@
 import { getDataClient } from "./dataClient.js";
 import { assertSameRestaurant, requireRestaurantId } from "./permissions.js";
+import { getWorkspaceGroups } from "./workspaceGroups.js";
 
 export const emptyTrainingDocForm = {
   collectionId: "",
@@ -180,13 +181,13 @@ export async function saveTrainingDoc({ form, editingDocId, restaurantId, userPr
   const dataClient = getDataClient();
   const payload = {
     restaurantId,
+    ...getWorkspaceGroups(restaurantId),
     collectionId: form.collectionId || null,
     type: contentTypeToModelType[form.contentType] || "custom",
     title: form.title.trim(),
     category: form.category.trim(),
     status: form.status,
     contentJson: buildContentJson(form),
-    imageKeys: [],
     updatedBy: userProfileId
   };
 
@@ -211,6 +212,7 @@ export async function saveTrainingDoc({ form, editingDocId, restaurantId, userPr
   return assertNoErrors(
     await dataClient.models.TrainingDoc.create({
       ...payload,
+      imageKeys: [],
       createdBy: userProfileId
     }),
     "Training doc was not created."

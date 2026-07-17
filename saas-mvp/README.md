@@ -7,7 +7,11 @@ Line Up is a restaurant training platform. It is separate from the old static Re
 The app currently includes:
 
 - public Line Up landing page
+- public managed-setup inquiry saving
 - free-trial restaurant workspace signup
+- guided restaurant onboarding
+- reusable starter Training Categories
+- bulk paste, review, and draft import for existing menu notes and tech sheets
 - secure sign in / sign out
 - active restaurant workspace lookup
 - Account Owner, Admin, Manager, and Staff roles
@@ -34,7 +38,7 @@ The app currently includes:
 - Stripe webhook function for subscription status updates
 - Stripe Customer Portal foundation
 
-It does **not** include public unauthenticated file uploads, AI-generated quizzes, or production-grade backend tenant authorization yet.
+It does **not** include public unauthenticated file uploads or AI document extraction yet. Restaurant data now uses backend tenant authorization; Storage still needs a stricter server-side file layer before opening the product beyond a controlled pilot.
 
 ## Why This Folder Exists
 
@@ -198,7 +202,7 @@ After submitting:
 4. The app creates the restaurant workspace.
 5. The app creates the account owner profile.
 6. The app connects the account owner to the workspace with the Account Owner role.
-7. You are redirected to `/manager`.
+7. You are redirected to `/manager/onboarding`.
 
 The Workspace Dashboard should show:
 
@@ -207,6 +211,46 @@ The Workspace Dashboard should show:
 - trial end date
 - account owner role
 - next setup steps
+
+## Guided Restaurant Onboarding
+
+New Account Owners land at:
+
+```text
+/manager/onboarding
+```
+
+The setup page gives a new restaurant four concrete steps:
+
+1. Choose starter Training Categories.
+2. Import or create real training material.
+3. Invite one manager or staff member.
+4. Publish one quiz and test the staff experience.
+
+The progress display is based on saved restaurant data, so it remains accurate after the manager leaves and returns.
+
+## Bulk Import Existing Menu Notes And Tech Sheets
+
+Managers can visit:
+
+```text
+/manager/import
+```
+
+The importer recognizes common restaurant headings including `Menu Description`, `One Liner`, `Allergies`, `Ingredients`, `Details`, `Producer`, `Varietal`, `Region`, `Vintage`, `Glassware`, and `Garnish`.
+
+Safe import workflow:
+
+1. Paste one or many items from an existing document.
+2. Click `Review Import`.
+3. Edit the detected titles, content type, category, notes, ingredients, and allergens.
+4. Import selected items.
+5. Review the new Training Pages in Content Management.
+6. Publish only after a manager approves the information.
+
+Every imported item is saved as a draft. A retry skips pages with the same normalized title and Training Category, which reduces accidental duplicates after a partial import.
+
+PDF and Word files can be attached securely after signup, but automatic text extraction from those files is a future document-intelligence phase. For the first client, managers can paste text directly or request Done-For-You Setup.
 
 ## Manager Content Flow
 
@@ -353,6 +397,8 @@ To test tenant separation:
 - `/managed-setup` done-for-you setup inquiry page
 - `/login` Line Up sign in page
 - `/manager` protected Workspace Dashboard for Account Owners, Admins, and Managers
+- `/manager/onboarding` protected guided workspace setup
+- `/manager/import` protected bulk training-material importer
 - `/manager/billing` protected Billing page for Account Owners and Admins
 - `/manager/content` protected content management page for Account Owners, Admins, and Managers
 - `/manager/quizzes` protected quiz builder for Account Owners, Admins, and Managers
@@ -833,10 +879,11 @@ The frontend now loads the current user's active role connection first, then use
 
 Current security level:
 
-- The app is safer than the first MVP because shared helpers now require `restaurantId` and verify ownership before sensitive updates/deletes.
+- DynamoDB records carry restaurant-specific Cognito group fields, and Amplify Data enforces those fields at the API layer.
+- Trial workspace creation and invite acceptance run in backend functions so the browser cannot choose another restaurant's membership.
 - Manager/staff routes are role-protected in the app.
 - Staff-facing reads are filtered to the current restaurant workspace.
-- The backend still uses broad authenticated Amplify Data access, so this is not yet enough for real paid customers without additional backend enforcement.
+- A live two-restaurant test confirmed Restaurant B could not list or open Rezdora records.
 
 Security audit:
 
@@ -861,24 +908,21 @@ What is hardened now:
 - checking invite role permissions before creating invites
 - sending invite emails from a backend function instead of the browser
 - rechecking invite status, expiration, and invited email before acceptance
+- assigning restaurant and manager Cognito groups from trusted backend functions
+- enforcing restaurant-specific Data read/write rules in AppSync
+- updating role and disabled status through a backend function that also updates Cognito groups
+- verifying Checkout, Customer Portal, and invite-email permissions against active Membership records server-side
 
-What is still mostly frontend/app-layer enforced:
+Remaining security limitations:
 
-- Restaurant membership access rules.
-- Staff vs manager permissions.
-- Published-only staff content visibility.
-- Staff seeing only their own quiz attempts.
-- Invite email sending still depends on the app creating/sending invites after the current user's role is checked.
-- Checkout and billing portal functions receive the current role from the app as an MVP guard; production should verify membership server-side.
+- Published-only staff content visibility is a product-level filter; tenant access is backend-enforced.
+- Dynamic group authorization protects restaurant boundaries, while the trusted UI and backend functions enforce the intended owner/admin/manager workflow.
 - Storage path access is still broadly authenticated at the S3 access-rule level, with app-layer tenant checks before upload/list/delete.
 
-What must be done before real paid customers:
+What must be done before opening beyond a controlled first-client pilot:
 
-- Add backend-enforced tenant authorization so database access does not rely on frontend filters.
-- Consider a server-side Function/API layer for sensitive writes like content publishing, invite creation, quiz publishing, and staff progress reporting.
-- Move invite creation/email permission validation fully server-side before inviting real customers at scale.
 - Add audit logs for role changes, invites, content publishing, and quiz attempts.
-- Add stricter backend Storage authorization or a server-side file service before real paid customers.
+- Add stricter backend Storage authorization or a server-side file service before accepting sensitive documents from many unrelated restaurants.
 - Remove or hard-disable development role switching outside local development.
 
 Testing Restaurant A vs Restaurant B isolation:
@@ -902,9 +946,8 @@ Testing dev/test leakage:
 
 After this production-hardening pass is stable, the next build should be one of these:
 
-- backend-enforced tenant authorization
 - stricter backend file authorization
-- server-side role checks for checkout, portal, invites, and content publishing
+- audit logging and operational error monitoring
 - better quiz editing and question management
 - manager reports by team member and training category
 - audit logs for billing, invites, roles, content publishing, and quiz attempts

@@ -1,6 +1,7 @@
 import { getUrl, remove, uploadData } from "aws-amplify/storage";
 import { getDataClient } from "./dataClient.js";
 import { assertSameRestaurant, requireRestaurantId } from "./permissions.js";
+import { getWorkspaceGroups } from "./workspaceGroups.js";
 
 const allowedTypes = [
   "application/pdf",
@@ -101,6 +102,7 @@ export async function uploadFileAsset({ restaurantId, trainingDocId = null, mana
   return assertNoErrors(
     await dataClient.models.FileAsset.create({
       restaurantId,
+      ...getWorkspaceGroups(restaurantId),
       trainingDocId,
       managedSetupRequestId,
       name: file.name,
@@ -166,8 +168,8 @@ export async function deleteFileAsset({ fileAsset, restaurantId }) {
 }
 
 export async function createManagedSetupRequest({ workspace, inquiry }) {
-  const dataClient = getDataClient();
   const restaurantId = workspace?.restaurant?.id || null;
+  const dataClient = restaurantId ? getDataClient() : getDataClient({ authMode: "identityPool" });
 
   if (restaurantId) {
     requireRestaurantId(restaurantId);
@@ -176,6 +178,7 @@ export async function createManagedSetupRequest({ workspace, inquiry }) {
   return assertNoErrors(
     await dataClient.models.ManagedSetupRequest.create({
       restaurantId,
+      ...(restaurantId ? getWorkspaceGroups(restaurantId) : {}),
       restaurantName: inquiry.restaurantName.trim(),
       contactFirstName: inquiry.contactFirstName.trim(),
       contactLastName: inquiry.contactLastName.trim(),

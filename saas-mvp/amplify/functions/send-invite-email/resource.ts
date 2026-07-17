@@ -6,6 +6,8 @@ export const sendInviteEmail = defineFunction({
   resourceGroupName: "data",
   environment: {
     LINE_UP_FROM_EMAIL: process.env.LINE_UP_FROM_EMAIL || "not-configured@lineup.local",
-    LINE_UP_APP_BASE_URL: process.env.LINE_UP_APP_BASE_URL || ""
+    LINE_UP_APP_BASE_URL: process.env.LINE_UP_APP_BASE_URL || "",
+    USER_PROFILE_TABLE_NAME: "",
+    MEMBERSHIP_TABLE_NAME: ""
   }
 });

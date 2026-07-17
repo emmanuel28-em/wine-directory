@@ -94,6 +94,7 @@ export default function StaffQuizzesPage() {
         restaurantId: workspace.restaurant.id,
         quiz: selectedQuiz,
         userProfileId: workspace.userProfile.id,
+        cognitoUserId: workspace.user?.userId,
         questions,
         answers
       });

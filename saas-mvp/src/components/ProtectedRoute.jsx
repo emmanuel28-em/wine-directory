@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { useAmplifySetup } from "../amplify/AmplifySetupProvider.jsx";
 import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
@@ -61,6 +61,11 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
           <p>
             Please contact your manager or Account Owner to update billing before adding training material, taking quizzes, uploading files, or inviting new team members.
           </p>
+          {currentWorkspace.role === "owner" || currentWorkspace.role === "admin" ? (
+            <Link className="primary-button" to="/manager/billing">
+              Restore Workspace Access
+            </Link>
+          ) : null}
         </div>
       </section>
     );

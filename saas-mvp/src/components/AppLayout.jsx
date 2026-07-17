@@ -91,8 +91,10 @@ export default function AppLayout() {
             ) : (
               <>
                 <NavLink to="/manager">Dashboard</NavLink>
+                <NavLink to="/manager/onboarding">Setup</NavLink>
                 <NavLink to="/training-library">Training Library</NavLink>
                 <NavLink to="/manager/content">Add Content</NavLink>
+                <NavLink to="/manager/import">Import</NavLink>
                 <NavLink to="/manager/quizzes">Quizzes</NavLink>
                 <NavLink to="/manager/staff-progress">Staff Progress</NavLink>
                 <NavLink to="/manager/invite-team">Invite Team</NavLink>
@@ -131,7 +133,8 @@ export default function AppLayout() {
 
       {authSession.status === "authenticated" && currentWorkspace.isBillingPaused ? (
         <div className="warning-banner app-warning-banner">
-          {formatBillingStatus(currentWorkspace.restaurant)}. Please update billing to keep this workspace active.
+          <span>{formatBillingStatus(currentWorkspace.restaurant)}. Update billing to restore full workspace access.</span>
+          {isOwnerOrAdmin(currentWorkspace.role) ? <Link to="/manager/billing">Go to Billing</Link> : null}
         </div>
       ) : null}
 

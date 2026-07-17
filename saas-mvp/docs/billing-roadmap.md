@@ -39,8 +39,8 @@ VITE_APP_BASE_URL=https://your-line-up-domain.com
 
 ## What Still Needs Production Hardening
 
-- Backend role validation should load the signed-in user and active Membership server-side.
-- Checkout and portal mutations currently receive the current role from the frontend as a practical MVP guard.
+- Checkout and Customer Portal functions now load the signed-in user's active Membership server-side and require Account Owner/Admin access.
+- Replace the secure placeholder Amplify secrets with real Stripe test keys before testing Checkout.
 - Add audit logs for billing changes and webhook events.
 - Add automated tests around webhook event payloads.
 - Add a clearer admin view for failed payment recovery.

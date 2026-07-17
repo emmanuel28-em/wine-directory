@@ -3,6 +3,7 @@ import { getDataClient } from "./dataClient.js";
 import { listCollectionsForRestaurant, saveCollection } from "./collections.js";
 import { requireRestaurantId } from "./permissions.js";
 import { listTrainingDocsForRestaurant } from "./trainingDocs.js";
+import { getWorkspaceGroups } from "./workspaceGroups.js";
 
 const categoryDefinitions = {
   "Dinner Menu": {
@@ -267,6 +268,7 @@ export async function importExistingRestaurantContent({ restaurantId, userProfil
 
     const result = await dataClient.models.TrainingDoc.create({
       restaurantId,
+      ...getWorkspaceGroups(restaurantId),
       collectionId: collection?.id || null,
       type,
       title,

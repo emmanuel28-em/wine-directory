@@ -1,7 +1,14 @@
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
+import { requireRestaurantRole } from "../shared/restaurantAccess";
 
 type InviteEmailEvent = {
+  identity?: {
+    sub?: string;
+    username?: string;
+    claims?: Record<string, unknown>;
+  };
   arguments: {
+    restaurantId: string;
     toEmail: string;
     firstName?: string;
     restaurantName: string;
@@ -9,6 +16,15 @@ type InviteEmailEvent = {
     inviteUrl: string;
   };
 };
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
 function roleLabel(role: string) {
   if (role === "admin") return "Admin";
@@ -37,12 +53,17 @@ function buildTextBody({ firstName, restaurantName, role, inviteUrl }: InviteEma
 }
 
 function buildHtmlBody({ firstName, restaurantName, role, inviteUrl }: InviteEmailEvent["arguments"]) {
+  const safeFirstName = escapeHtml(firstName || "there");
+  const safeRestaurantName = escapeHtml(restaurantName);
+  const safeRole = escapeHtml(roleLabel(role));
+  const safeInviteUrl = escapeHtml(inviteUrl);
+
   return `
-    <p>Hi ${firstName || "there"},</p>
-    <p>You've been invited to join <strong>${restaurantName}</strong> on Line Up.</p>
+    <p>Hi ${safeFirstName},</p>
+    <p>You've been invited to join <strong>${safeRestaurantName}</strong> on Line Up.</p>
     <p>Line Up is where your team can study training material, take quizzes, and track progress before service.</p>
-    <p><strong>Your role:</strong> ${roleLabel(role)}</p>
-    <p><a href="${inviteUrl}">Accept your invite here</a></p>
+    <p><strong>Your role:</strong> ${safeRole}</p>
+    <p><a href="${safeInviteUrl}">Accept your invite here</a></p>
     <p>If you were not expecting this invite, you can ignore this email.</p>
     <p>-- Line Up</p>
   `;
@@ -50,7 +71,7 @@ function buildHtmlBody({ firstName, restaurantName, role, inviteUrl }: InviteEma
 
 export const handler = async (event: InviteEmailEvent) => {
   const fromEmail = process.env.LINE_UP_FROM_EMAIL || "";
-  const { toEmail, restaurantName, inviteUrl } = event.arguments;
+  const { restaurantId, toEmail, restaurantName, role, inviteUrl } = event.arguments;
 
   if (!fromEmail || fromEmail.includes("not-configured")) {
     return {
@@ -60,7 +81,7 @@ export const handler = async (event: InviteEmailEvent) => {
     };
   }
 
-  if (!toEmail || !restaurantName || !inviteUrl) {
+  if (!restaurantId || !toEmail || !restaurantName || !inviteUrl) {
     return {
       success: false,
       status: "failed",
@@ -71,6 +92,16 @@ export const handler = async (event: InviteEmailEvent) => {
   const ses = new SESClient({});
 
   try {
+    const caller = await requireRestaurantRole({
+      identity: event.identity,
+      restaurantId,
+      allowedRoles: ["owner", "admin", "manager"]
+    });
+
+    if (caller.role !== "owner" && role !== "staff") {
+      throw new Error("Only the Account Owner can email an Admin or Manager invite.");
+    }
+
     await ses.send(
       new SendEmailCommand({
         Source: fromEmail,

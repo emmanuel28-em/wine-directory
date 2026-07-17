@@ -29,6 +29,23 @@ export function hasActiveSubscription(restaurant) {
   return restaurant?.subscriptionStatus === "active";
 }
 
+export function getTrialDaysRemaining(restaurant) {
+  if (!restaurant?.trialEndsAt) {
+    return 0;
+  }
+
+  const millisecondsRemaining = new Date(restaurant.trialEndsAt).getTime() - Date.now();
+  return Math.max(0, Math.ceil(millisecondsRemaining / (24 * 60 * 60 * 1000)));
+}
+
+export function checkoutPreservesTrial(restaurant) {
+  if (!hasActiveTrial(restaurant)) {
+    return false;
+  }
+
+  return new Date(restaurant.trialEndsAt).getTime() - Date.now() >= 48 * 60 * 60 * 1000;
+}
+
 export function isWorkspaceBillingPaused(restaurant) {
   if (!restaurant) {
     return false;
@@ -59,7 +76,8 @@ export function getBillingMessage(restaurant) {
   }
 
   if (status === "trialing" && !isTrialExpired(restaurant)) {
-    return "Your restaurant is in its free trial.";
+    const daysRemaining = getTrialDaysRemaining(restaurant);
+    return `${daysRemaining} day${daysRemaining === 1 ? "" : "s"} remaining in the free trial.`;
   }
 
   if (status === "past_due") {
@@ -71,7 +89,7 @@ export function getBillingMessage(restaurant) {
   }
 
   if (isTrialExpired(restaurant)) {
-    return "Your trial has ended. You can keep using Line Up for now, but billing should be set up soon.";
+    return "The free trial has ended. Set up billing to restore full workspace access.";
   }
 
   return "Billing is not set up yet.";

@@ -178,13 +178,15 @@ export async function updateMemberRole({ restaurantId, currentRole, membershipId
     throw new Error("You do not have permission to change this role.");
   }
 
-  return assertNoErrors(
-    await dataClient.models.Membership.update({
-      id: membershipId,
-      role: nextRole
-    }),
-    "Member role was not updated."
-  );
+  const result = await dataClient.mutations.manageMemberAccess({
+    restaurantId,
+    membershipId,
+    action: "changeRole",
+    role: nextRole
+  });
+  if (result.errors?.length) throw new Error(result.errors.map((error) => error.message).join(" "));
+  if (!result.data?.success) throw new Error(result.data?.error || "Member role was not updated.");
+  return result.data;
 }
 
 export async function disableMember({ restaurantId, currentRole, currentMembershipId, membershipId }) {
@@ -196,13 +198,14 @@ export async function disableMember({ restaurantId, currentRole, currentMembersh
     throw new Error("You do not have permission to disable this member.");
   }
 
-  return assertNoErrors(
-    await dataClient.models.Membership.update({
-      id: membershipId,
-      status: "disabled"
-    }),
-    "Member was not disabled."
-  );
+  const result = await dataClient.mutations.manageMemberAccess({
+    restaurantId,
+    membershipId,
+    action: "disable"
+  });
+  if (result.errors?.length) throw new Error(result.errors.map((error) => error.message).join(" "));
+  if (!result.data?.success) throw new Error(result.data?.error || "Member was not disabled.");
+  return result.data;
 }
 
 export async function revokeInvite({ restaurantId, invite }) {

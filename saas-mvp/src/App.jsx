@@ -9,6 +9,8 @@ import ManagedSetupPage from "./pages/ManagedSetupPage.jsx";
 import ManagerBillingPage from "./pages/ManagerBillingPage.jsx";
 import ManagerContentPage from "./pages/ManagerContentPage.jsx";
 import ManagerDashboard from "./pages/ManagerDashboard.jsx";
+import ManagerImportPage from "./pages/ManagerImportPage.jsx";
+import ManagerOnboardingPage from "./pages/ManagerOnboardingPage.jsx";
 import ManagerQuizzesPage from "./pages/ManagerQuizzesPage.jsx";
 import ManagerStaffProgressPage from "./pages/ManagerStaffProgressPage.jsx";
 import MyProgressPage from "./pages/MyProgressPage.jsx";
@@ -49,6 +51,22 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={managerRoles}>
               <ManagerContentPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/import"
+          element={
+            <ProtectedRoute allowedRoles={managerRoles}>
+              <ManagerImportPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/onboarding"
+          element={
+            <ProtectedRoute allowedRoles={managerRoles}>
+              <ManagerOnboardingPage />
             </ProtectedRoute>
           }
         />

@@ -1,5 +1,6 @@
 import { getDataClient } from "./dataClient.js";
 import { assertSameRestaurant, requireRestaurantId } from "./permissions.js";
+import { getWorkspaceGroups } from "./workspaceGroups.js";
 
 function assertNoErrors(result, fallbackMessage) {
   if (result.errors?.length) {
@@ -75,6 +76,7 @@ export async function createQuiz({ restaurantId, form }) {
   return assertNoErrors(
     await dataClient.models.Quiz.create({
       restaurantId,
+      ...getWorkspaceGroups(restaurantId),
       trainingDocId: form.trainingDocId || null,
       title: form.title.trim(),
       category: form.category.trim(),
@@ -148,6 +150,7 @@ export async function createQuizQuestion({ restaurantId, quizId, form }) {
   return assertNoErrors(
     await dataClient.models.QuizQuestion.create({
       restaurantId,
+      ...getWorkspaceGroups(restaurantId),
       quizId,
       prompt: form.prompt.trim(),
       choicesJson: JSON.stringify(choices),
@@ -243,7 +246,7 @@ export async function listQuizAttemptsForUser({ restaurantId, userProfileId }) {
   return [...(result.data || [])].sort((a, b) => new Date(b.completedAt || 0) - new Date(a.completedAt || 0));
 }
 
-export async function saveQuizAttempt({ restaurantId, quiz, userProfileId, questions, answers }) {
+export async function saveQuizAttempt({ restaurantId, quiz, userProfileId, cognitoUserId, questions, answers }) {
   requireRestaurantId(restaurantId);
   assertSameRestaurant(quiz, restaurantId, "Quiz");
 
@@ -276,8 +279,10 @@ export async function saveQuizAttempt({ restaurantId, quiz, userProfileId, quest
   return assertNoErrors(
     await dataClient.models.QuizAttempt.create({
       restaurantId,
+      ...getWorkspaceGroups(restaurantId),
       quizId: quiz.id,
       userProfileId,
+      cognitoUserId,
       score,
       passed: score >= passingScore,
       answersJson: JSON.stringify(answerRows),

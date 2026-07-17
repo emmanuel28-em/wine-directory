@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "crypto";
-import { DynamoDBClient, ScanCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, ScanCommand, UpdateItemCommand, type AttributeValue } from "@aws-sdk/client-dynamodb";
 
 type LambdaUrlEvent = {
   body?: string;
@@ -124,20 +124,30 @@ async function findRestaurantByStripeField(fieldName: "stripeCustomerId" | "stri
     return "";
   }
 
-  const result = await dynamo.send(
-    new ScanCommand({
-      TableName: getRestaurantTableName(),
-      FilterExpression: `${fieldName} = :value`,
-      ExpressionAttributeValues: {
-        ":value": {
-          S: value
-        }
-      },
-      Limit: 1
-    })
-  );
+  let exclusiveStartKey: Record<string, AttributeValue> | undefined;
 
-  return result.Items?.[0]?.id?.S || "";
+  do {
+    const result = await dynamo.send(
+      new ScanCommand({
+        TableName: getRestaurantTableName(),
+        FilterExpression: `${fieldName} = :value`,
+        ExpressionAttributeValues: {
+          ":value": {
+            S: value
+          }
+        },
+        ExclusiveStartKey: exclusiveStartKey
+      })
+    );
+
+    if (result.Items?.[0]?.id?.S) {
+      return result.Items[0].id.S;
+    }
+
+    exclusiveStartKey = result.LastEvaluatedKey;
+  } while (exclusiveStartKey);
+
+  return "";
 }
 
 async function findRestaurantId({ restaurantId, stripeCustomerId, stripeSubscriptionId }: RestaurantLookup) {
@@ -232,7 +242,7 @@ export const handler = async (event: LambdaUrlEvent) => {
   const signatureHeader = getHeader(event.headers, "stripe-signature");
   const payload = getPayload(event);
 
-  if (!webhookSecret) {
+  if (!webhookSecret.startsWith("whsec_")) {
     return jsonResponse(500, {
       received: false,
       error: "Stripe webhook secret is not configured."

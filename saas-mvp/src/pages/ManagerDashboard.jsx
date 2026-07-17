@@ -24,7 +24,7 @@ function getDashboardBillingLine(restaurant) {
   const status = restaurant?.subscriptionStatus || "trialing";
 
   if (status === "trialing") {
-    return `Pilot access active until ${formatDate(restaurant.trialEndsAt)}`;
+    return `Free trial active until ${formatDate(restaurant.trialEndsAt)}`;
   }
 
   if (status === "active") return "Subscription active";
@@ -83,6 +83,9 @@ export default function ManagerDashboard() {
         <Link className="secondary-button" to="/staff">
           Training Library
         </Link>
+        <Link className="secondary-button" to="/manager/onboarding">
+          Continue Setup
+        </Link>
         <Link className="primary-button" to="/manager/content">
           Add Training Page
         </Link>
@@ -106,7 +109,7 @@ export default function ManagerDashboard() {
         <>
           {isTrialExpired(workspace.restaurant) ? (
             <div className="warning-banner">
-              This workspace's 30-day pilot window has ended. Access remains available while the plan is reviewed.
+              This workspace's 30-day free trial has ended. Set up billing to restore full access.
             </div>
           ) : null}
 
@@ -114,11 +117,11 @@ export default function ManagerDashboard() {
             <article className="stat-card">
               <span>Restaurant</span>
               <h2>{workspace.restaurant.name}</h2>
-              <p>Status: {workspace.restaurant.status === "trial" || !workspace.restaurant.status ? "pilot / trial" : workspace.restaurant.status}</p>
+              <p>Status: {workspace.restaurant.status === "trial" || !workspace.restaurant.status ? "free trial" : workspace.restaurant.status}</p>
             </article>
 
             <article className="stat-card">
-              <span>Pilot Window</span>
+              <span>Trial End Date</span>
               <h2>{formatDate(workspace.restaurant.trialEndsAt)}</h2>
               <p>{formatBillingStatus(workspace.restaurant)}</p>
             </article>
@@ -132,10 +135,14 @@ export default function ManagerDashboard() {
 
           <section className="pilot-checklist-section">
             <div className="section-heading compact-heading">
-              <p className="eyebrow">Pilot readiness</p>
+              <p className="eyebrow">Launch readiness</p>
               <h2>Get this restaurant ready for its first staff test</h2>
               <p>Follow these in order. Each step opens the exact place you need next.</p>
             </div>
+
+            <Link className="primary-button checklist-main-action" to="/manager/onboarding">
+              Open Guided Setup
+            </Link>
 
             <div className="pilot-checklist">
               {setupChecklist.map((item, index) => (
@@ -163,6 +170,15 @@ export default function ManagerDashboard() {
                 <p>Create the page staff studies: a dish, SOP, wine note, cocktail spec, or service standard.</p>
                 <Link className="secondary-button card-action" to="/manager/content">
                   Add Content
+                </Link>
+              </article>
+
+              <article className="stat-card">
+                <span>Import</span>
+                <h2>Import Existing Material</h2>
+                <p>Paste menu notes or tech sheets, review the fields Line Up finds, and save them safely as drafts.</p>
+                <Link className="secondary-button card-action" to="/manager/import">
+                  Import Material
                 </Link>
               </article>
 
@@ -205,7 +221,7 @@ export default function ManagerDashboard() {
               </article>
 
               <article className="stat-card">
-                <span>Pilot Access</span>
+                <span>Plan & Billing</span>
                 <h2>{formatBillingStatus(workspace.restaurant)}</h2>
                 <p>{getDashboardBillingLine(workspace.restaurant)}</p>
                 {canManageBilling ? (

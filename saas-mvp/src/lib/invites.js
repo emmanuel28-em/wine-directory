@@ -1,7 +1,8 @@
 import { buildAppUrl } from "./appUrl.js";
+import { fetchAuthSession } from "aws-amplify/auth";
 import { getDataClient } from "./dataClient.js";
 import { canInviteRole, requireRestaurantId } from "./permissions.js";
-import { listFirst } from "./workspace.js";
+import { getWorkspaceGroups } from "./workspaceGroups.js";
 
 function assertNoErrors(result, fallbackMessage) {
   if (result.errors?.length) {
@@ -29,10 +30,6 @@ function getInviteExpiration() {
   return date.toISOString();
 }
 
-function getUserEmail(user, fallback = "") {
-  return user?.signInDetails?.loginId || user?.username || fallback;
-}
-
 export function makeInviteLink(token) {
   return buildAppUrl(`/accept-invite?token=${encodeURIComponent(token)}`);
 }
@@ -50,6 +47,7 @@ export async function createInvite({ restaurantId, invite, invitedBy, currentRol
   return assertNoErrors(
     await dataClient.models.Invite.create({
       restaurantId,
+      ...getWorkspaceGroups(restaurantId),
       email: invite.email.trim().toLowerCase(),
       firstName: invite.firstName.trim(),
       lastName: invite.lastName.trim(),
@@ -88,159 +86,51 @@ export async function listInvitesForRestaurant(restaurantId) {
 
 export async function getPendingInviteByToken(token) {
   const dataClient = getDataClient();
-  const invite = await listFirst(dataClient.models.Invite, {
-    inviteToken: {
-      eq: token
-    }
-  });
+  const result = await dataClient.queries.getInviteDetails({ token });
 
-  if (!invite) {
-    return {
-      status: "missing",
-      invite: null,
-      restaurant: null,
-      message: "This invite link could not be found."
-    };
+  if (result.errors?.length) {
+    throw new Error(result.errors.map((error) => error.message).join(" "));
   }
 
-  if (invite.status !== "pending") {
-    return {
-      status: invite.status,
-      invite,
-      restaurant: null,
-      message: `This invite is ${invite.status}.`
-    };
+  if (!result.data?.success) {
+    return { status: result.data?.status || "error", invite: null, restaurant: null, message: result.data?.error || "This invite is unavailable." };
   }
 
-  if (invite.expiresAt && new Date(invite.expiresAt) < new Date()) {
-    await dataClient.models.Invite.update({
-      id: invite.id,
-      status: "expired"
-    });
-
-    return {
-      status: "expired",
-      invite,
-      restaurant: null,
-      message: "This invite has expired."
-    };
-  }
-
-  const restaurantResult = await dataClient.models.Restaurant.get({ id: invite.restaurantId });
-
-  if (restaurantResult.errors?.length) {
-    throw new Error(restaurantResult.errors.map((error) => error.message).join(" "));
-  }
+  const invite = {
+    inviteToken: token,
+    restaurantId: result.data.restaurantId,
+    email: result.data.email,
+    firstName: result.data.firstName,
+    lastName: result.data.lastName,
+    role: result.data.role,
+    status: result.data.status,
+    expiresAt: result.data.expiresAt
+  };
 
   return {
     status: "ready",
     invite,
-    restaurant: restaurantResult.data,
+    restaurant: { id: result.data.restaurantId, name: result.data.restaurantName },
     message: ""
   };
 }
 
 export async function acceptInviteForUser({ invite, user, firstName, lastName }) {
   const dataClient = getDataClient();
-  const latestInviteResult = await dataClient.models.Invite.get({ id: invite.id });
-
-  if (latestInviteResult.errors?.length) {
-    throw new Error(latestInviteResult.errors.map((error) => error.message).join(" "));
-  }
-
-  const latestInvite = latestInviteResult.data;
-
-  if (!latestInvite) {
-    throw new Error("This invite could not be found.");
-  }
-
-  if (latestInvite.status !== "pending") {
-    throw new Error(`This invite is ${latestInvite.status}. Ask your manager for a new invite.`);
-  }
-
-  if (latestInvite.expiresAt && new Date(latestInvite.expiresAt) < new Date()) {
-    await dataClient.models.Invite.update({
-      id: latestInvite.id,
-      status: "expired"
-    });
-    throw new Error("This invite has expired. Ask your manager for a new invite.");
-  }
-
-  const userEmail = getUserEmail(user).toLowerCase();
-  const inviteEmail = (latestInvite.email || "").toLowerCase();
-
-  if (inviteEmail && userEmail !== inviteEmail) {
-    throw new Error(`This invite was sent to ${latestInvite.email}. Sign in with that email address to accept it.`);
-  }
-
-  const name = `${firstName || latestInvite.firstName || ""} ${lastName || latestInvite.lastName || ""}`.trim() || userEmail;
-  const existingProfile = await listFirst(dataClient.models.UserProfile, {
-    cognitoUserId: {
-      eq: user.userId
-    }
+  const result = await dataClient.mutations.acceptInvite({
+    token: invite.inviteToken,
+    firstName: firstName || invite.firstName || "",
+    lastName: lastName || invite.lastName || ""
   });
 
-  const userProfile = existingProfile
-    ? assertNoErrors(
-        await dataClient.models.UserProfile.update({
-          id: existingProfile.id,
-          name,
-          email: userEmail,
-          activeRestaurantId: latestInvite.restaurantId
-        }),
-        "User profile was not updated."
-      )
-    : assertNoErrors(
-        await dataClient.models.UserProfile.create({
-          cognitoUserId: user.userId,
-          name,
-          email: userEmail,
-          activeRestaurantId: latestInvite.restaurantId
-        }),
-        "User profile was not created."
-      );
+  if (result.errors?.length) throw new Error(result.errors.map((error) => error.message).join(" "));
+  if (!result.data?.success) throw new Error(result.data?.error || "Invite could not be accepted.");
 
-  const membershipResult = await dataClient.models.Membership.list({
-    filter: {
-      userProfileId: {
-        eq: userProfile.id
-      }
-    }
-  });
-
-  if (membershipResult.errors?.length) {
-    throw new Error(membershipResult.errors.map((error) => error.message).join(" "));
-  }
-
-  const existingMembership = (membershipResult.data || []).find((membershipItem) => membershipItem.restaurantId === latestInvite.restaurantId);
-
-  const membership = existingMembership
-    ? assertNoErrors(
-        await dataClient.models.Membership.update({
-          id: existingMembership.id,
-          role: latestInvite.role,
-          status: "active"
-        }),
-        "Membership was not updated."
-      )
-    : assertNoErrors(
-        await dataClient.models.Membership.create({
-          restaurantId: latestInvite.restaurantId,
-          userProfileId: userProfile.id,
-          role: latestInvite.role,
-          status: "active"
-        }),
-        "Membership was not created."
-      );
-
-  await dataClient.models.Invite.update({
-    id: latestInvite.id,
-    status: "accepted"
-  });
+  await fetchAuthSession({ forceRefresh: true });
 
   return {
-    userProfile,
-    membership
+    userProfile: { id: result.data.userProfileId },
+    membership: { id: result.data.membershipId, role: result.data.role, restaurantId: result.data.restaurantId }
   };
 }
 
@@ -266,7 +156,7 @@ export async function updateInviteEmailStatus({ inviteId, status, error = "" }) 
   );
 }
 
-export async function sendInviteEmailForInvite({ invite, restaurantName }) {
+export async function sendInviteEmailForInvite({ invite, restaurantName, restaurantId = invite.restaurantId }) {
   if (invite.status !== "pending") {
     throw new Error("Only pending invites can be emailed.");
   }
@@ -280,6 +170,7 @@ export async function sendInviteEmailForInvite({ invite, restaurantName }) {
 
   try {
     const result = await dataClient.mutations.sendInviteEmail({
+      restaurantId,
       toEmail: invite.email,
       firstName: invite.firstName || "",
       restaurantName,

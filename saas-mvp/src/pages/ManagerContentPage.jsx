@@ -158,6 +158,9 @@ export default function ManagerContentPage() {
   const [selectedSourceFile, setSelectedSourceFile] = useState(null);
   const [isWorking, setIsWorking] = useState(false);
   const [message, setMessage] = useState("");
+  const [pageSearch, setPageSearch] = useState("");
+  const [pageStatusFilter, setPageStatusFilter] = useState("all");
+  const [pageTypeFilter, setPageTypeFilter] = useState("all");
 
   async function refreshRestaurantContent(restaurantId) {
     const [nextCategories, nextDocs, nextFiles] = await Promise.all([
@@ -509,7 +512,21 @@ export default function ManagerContentPage() {
     }
   }
 
-  const groupedPages = groupPagesByCategory(docs, categories);
+  const normalizedSearch = pageSearch.trim().toLowerCase();
+  const filteredDocs = docs.filter((doc) => {
+    const content = parseContentJson(doc.contentJson);
+    const matchesSearch =
+      !normalizedSearch ||
+      [doc.title, doc.category, content.summary, content.body, content.ingredients, content.allergens, content.tags?.join?.(" ")]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalizedSearch));
+    const matchesStatus = pageStatusFilter === "all" || doc.status === pageStatusFilter;
+    const contentType = content.contentType || doc.type || "custom";
+    const matchesType = pageTypeFilter === "all" || contentType === pageTypeFilter || doc.type === pageTypeFilter;
+
+    return matchesSearch && matchesStatus && matchesType;
+  });
+  const groupedPages = groupPagesByCategory(filteredDocs, categories);
   const canImportOriginalContent = workspace.status === "ready" && isOriginalRezdoraWorkspace(workspace.restaurant);
   const editingDocFiles = fileAssets.filter((fileAsset) => fileAsset.trainingDocId === editingDocId);
 
@@ -580,14 +597,14 @@ export default function ManagerContentPage() {
             ) : (
               <div className="import-panel">
                 <div>
-                  <h3>Have existing docs from another restaurant?</h3>
+                  <h3>Already have menus or tech sheets?</h3>
                   <p>
-                    Use managed setup for menus, Google Docs, tech sheets, SOPs, wine lists, and cocktail specs from a
-                    different restaurant.
+                    Paste multiple menu descriptions, wine notes, cocktail specs, or SOPs and review them before they
+                    become Training Pages.
                   </p>
                 </div>
-                <Link className="secondary-button" to="/managed-setup">
-                  Request Managed Setup
+                <Link className="primary-button" to="/manager/import">
+                  Import Existing Material
                 </Link>
               </div>
             )}
@@ -968,8 +985,43 @@ export default function ManagerContentPage() {
               </button>
             </div>
 
+            <div className="content-filter-bar">
+              <label>
+                Search Training Pages
+                <input
+                  type="search"
+                  value={pageSearch}
+                  onChange={(event) => setPageSearch(event.target.value)}
+                  placeholder="Search title, ingredient, allergen, grape, or note"
+                />
+              </label>
+              <label>
+                Status
+                <select value={pageStatusFilter} onChange={(event) => setPageStatusFilter(event.target.value)}>
+                  <option value="all">All statuses</option>
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </label>
+              <label>
+                Type
+                <select value={pageTypeFilter} onChange={(event) => setPageTypeFilter(event.target.value)}>
+                  <option value="all">All types</option>
+                  <option value="foodItem">Food Item</option>
+                  <option value="wine">Wine</option>
+                  <option value="cocktail">Cocktail</option>
+                  <option value="sop">SOP</option>
+                  <option value="serviceStandard">Service Standard</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </label>
+            </div>
+
             {docs.length === 0 ? (
               <p className="empty-panel">Add your first Training Page by pasting a tech sheet, SOP, wine note, or menu description.</p>
+            ) : filteredDocs.length === 0 ? (
+              <p className="empty-panel">No Training Pages match those filters.</p>
             ) : (
               <div className="training-page-groups">
                 {groupedPages.map((group) => (

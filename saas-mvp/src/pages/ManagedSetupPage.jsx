@@ -77,40 +77,34 @@ export default function ManagedSetupPage() {
     setIsWorking(true);
     setMessage("");
 
-    if (authSession.status !== "authenticated" || workspace.status !== "ready") {
-      setSubmittedInquiry({
-        ...inquiry,
-        publicOnly: true
-      });
-      setMessage("File uploads are available after creating a restaurant workspace. Start a free trial when you are ready to send source materials.");
-      setInquiry(emptyInquiry);
-      setSelectedFiles([]);
-      setIsWorking(false);
-      return;
-    }
-
     try {
       const request = await createManagedSetupRequest({
-        workspace,
+        workspace: workspace.status === "ready" ? workspace : null,
         inquiry
       });
 
-      for (const file of selectedFiles) {
-        await uploadFileAsset({
-          restaurantId: workspace.restaurant.id,
-          managedSetupRequestId: request.id,
-          file,
-          uploadedBy: workspace.userProfile.id
-        });
+      if (workspace.status === "ready") {
+        for (const file of selectedFiles) {
+          await uploadFileAsset({
+            restaurantId: workspace.restaurant.id,
+            managedSetupRequestId: request.id,
+            file,
+            uploadedBy: workspace.userProfile.id
+          });
+        }
       }
 
       setSubmittedInquiry({
         ...inquiry,
-        uploadedCount: selectedFiles.length
+        uploadedCount: workspace.status === "ready" ? selectedFiles.length : 0
       });
       setInquiry(emptyInquiry);
       setSelectedFiles([]);
-      setMessage("Thanks. We received your setup request. We’ll review your materials and follow up.");
+      setMessage(
+        workspace.status === "ready"
+          ? "Thanks. We received your setup request and files. We’ll review them and follow up."
+          : "Thanks. We received your setup request. We’ll follow up by email; secure file upload becomes available after you create a workspace."
+      );
     } catch (error) {
       setMessage(error.message || "Could not submit this managed setup request.");
     } finally {
@@ -130,18 +124,11 @@ export default function ManagedSetupPage() {
 
       {submittedInquiry ? (
         <div className="success-panel">
-          <h2>{submittedInquiry.publicOnly ? "Account needed for uploads" : "Request received"}</h2>
-          {submittedInquiry.publicOnly ? (
-            <p>
-              Your request details are ready, but secure file upload requires a restaurant workspace first. Start a free trial,
-              then return here to upload menus, SOPs, wine lists, and source files.
-            </p>
-          ) : (
-            <p>
-              We received your managed setup request for <strong>{submittedInquiry.restaurantName}</strong>
-              {submittedInquiry.uploadedCount ? ` with ${submittedInquiry.uploadedCount} file(s)` : ""}. We will follow up with next steps.
-            </p>
-          )}
+          <h2>Request received</h2>
+          <p>
+            We received your managed setup request for <strong>{submittedInquiry.restaurantName}</strong>
+            {submittedInquiry.uploadedCount ? ` with ${submittedInquiry.uploadedCount} file(s)` : ""}. We will follow up with next steps.
+          </p>
         </div>
       ) : null}
 

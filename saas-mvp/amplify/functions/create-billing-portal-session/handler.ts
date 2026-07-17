@@ -1,6 +1,12 @@
 import { DynamoDBClient, GetItemCommand } from "@aws-sdk/client-dynamodb";
+import { requireRestaurantRole } from "../shared/restaurantAccess";
 
 type BillingPortalEvent = {
+  identity?: {
+    sub?: string;
+    username?: string;
+    claims?: Record<string, unknown>;
+  };
   arguments: {
     restaurantId: string;
     requestedByRole?: string;
@@ -15,10 +21,6 @@ type StripeResponse = {
 };
 
 const dynamo = new DynamoDBClient({});
-
-function isOwnerOrAdmin(role?: string) {
-  return role === "owner" || role === "admin";
-}
 
 function getRestaurantTableName() {
   const tableName = process.env.RESTAURANT_TABLE_NAME || "";
@@ -64,12 +66,16 @@ async function postToStripe(path: string, body: URLSearchParams): Promise<Stripe
   return json;
 }
 
+function isStripeSecretConfigured(secretKey: string) {
+  return secretKey.startsWith("sk_test_") || secretKey.startsWith("sk_live_");
+}
+
 export const handler = async (event: BillingPortalEvent) => {
   const secretKey = process.env.STRIPE_SECRET_KEY || "";
   const appBaseUrl = process.env.LINE_UP_APP_BASE_URL || "";
-  const { restaurantId, requestedByRole } = event.arguments;
+  const { restaurantId } = event.arguments;
 
-  if (!secretKey || !appBaseUrl) {
+  if (!isStripeSecretConfigured(secretKey) || !appBaseUrl) {
     return {
       success: false,
       portalUrl: "",
@@ -78,16 +84,12 @@ export const handler = async (event: BillingPortalEvent) => {
     };
   }
 
-  if (!isOwnerOrAdmin(requestedByRole)) {
-    return {
-      success: false,
-      portalUrl: "",
-      status: "forbidden",
-      error: "Only Account Owners and Admins can manage billing."
-    };
-  }
-
   try {
+    await requireRestaurantRole({
+      identity: event.identity,
+      restaurantId,
+      allowedRoles: ["owner", "admin"]
+    });
     const restaurant = await getRestaurant(restaurantId);
     const stripeCustomerId = restaurant?.stripeCustomerId?.S || "";
 

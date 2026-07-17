@@ -1,6 +1,12 @@
 import { DynamoDBClient, GetItemCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
+import { requireRestaurantRole } from "../shared/restaurantAccess";
 
 type CheckoutEvent = {
+  identity?: {
+    sub?: string;
+    username?: string;
+    claims?: Record<string, unknown>;
+  };
   arguments: {
     restaurantId: string;
     restaurantName: string;
@@ -26,7 +32,9 @@ function getTrialEndUnix(trialEndsAt?: string) {
 
   const trialDate = new Date(trialEndsAt);
 
-  if (Number.isNaN(trialDate.getTime()) || trialDate <= new Date()) {
+  const minimumTrialEnd = Date.now() + 48 * 60 * 60 * 1000;
+
+  if (Number.isNaN(trialDate.getTime()) || trialDate.getTime() < minimumTrialEnd) {
     return "";
   }
 
@@ -34,10 +42,6 @@ function getTrialEndUnix(trialEndsAt?: string) {
 }
 
 const dynamo = new DynamoDBClient({});
-
-function isOwnerOrAdmin(role?: string) {
-  return role === "owner" || role === "admin";
-}
 
 function getRestaurantTableName() {
   const tableName = process.env.RESTAURANT_TABLE_NAME || "";
@@ -108,6 +112,12 @@ async function postToStripe(path: string, body: URLSearchParams): Promise<Stripe
   return json;
 }
 
+function isStripeSecretConfigured(secretKey: string) {
+  // A placeholder secret lets the backend deploy before the founder connects Stripe,
+  // but it must never be treated as a real Stripe credential.
+  return secretKey.startsWith("sk_test_") || secretKey.startsWith("sk_live_");
+}
+
 async function createStripeCustomer({ restaurantId, restaurantName, billingEmail }: CheckoutEvent["arguments"]) {
   const body = new URLSearchParams();
   body.set("email", billingEmail);
@@ -133,9 +143,9 @@ export const handler = async (event: CheckoutEvent) => {
   const secretKey = process.env.STRIPE_SECRET_KEY || "";
   const priceId = process.env.STRIPE_PRICE_ID_MONTHLY || "";
   const appBaseUrl = process.env.LINE_UP_APP_BASE_URL || "";
-  const { restaurantId, restaurantName, billingEmail, stripeCustomerId, trialEndsAt, requestedByRole } = event.arguments;
+  const { restaurantId, stripeCustomerId } = event.arguments;
 
-  if (!secretKey || !priceId || !appBaseUrl) {
+  if (!isStripeSecretConfigured(secretKey) || !priceId.startsWith("price_") || !appBaseUrl) {
     return {
       success: false,
       checkoutUrl: "",
@@ -145,17 +155,7 @@ export const handler = async (event: CheckoutEvent) => {
     };
   }
 
-  if (!isOwnerOrAdmin(requestedByRole)) {
-    return {
-      success: false,
-      checkoutUrl: "",
-      stripeCustomerId: stripeCustomerId || "",
-      status: "forbidden",
-      error: "Only Account Owners and Admins can set up billing."
-    };
-  }
-
-  if (!restaurantId || !restaurantName || !billingEmail) {
+  if (!restaurantId) {
     return {
       success: false,
       checkoutUrl: "",
@@ -166,30 +166,43 @@ export const handler = async (event: CheckoutEvent) => {
   }
 
   try {
+    await requireRestaurantRole({
+      identity: event.identity,
+      restaurantId,
+      allowedRoles: ["owner", "admin"]
+    });
     const restaurant = await getRestaurant(restaurantId);
 
     if (!restaurant) {
       throw new Error("Restaurant workspace was not found.");
     }
 
+    const restaurantName = restaurant.name?.S || "Restaurant";
+    const billingEmail = restaurant.billingEmail?.S || restaurant.primaryContactEmail?.S || "";
+
+    if (!billingEmail) {
+      throw new Error("Add a billing email before setting up billing.");
+    }
+
     const savedCustomerId = restaurant.stripeCustomerId?.S || "";
-    const customerId = stripeCustomerId || savedCustomerId || (await createStripeCustomer(event.arguments));
+    const customerId = savedCustomerId || (await createStripeCustomer({ restaurantId, restaurantName, billingEmail }));
     await updateStripeCustomerMetadata(customerId, restaurantId);
     await saveCustomerId({ restaurantId, stripeCustomerId: customerId, billingEmail });
 
     const checkoutBody = new URLSearchParams();
     const cleanBaseUrl = appBaseUrl.replace(/\/$/, "");
-    const trialEndUnix = getTrialEndUnix(trialEndsAt);
+    const trialEndUnix = getTrialEndUnix(restaurant.trialEndsAt?.S);
 
     checkoutBody.set("mode", "subscription");
     checkoutBody.set("customer", customerId);
     checkoutBody.set("client_reference_id", restaurantId);
     checkoutBody.set("line_items[0][price]", priceId);
     checkoutBody.set("line_items[0][quantity]", "1");
-    checkoutBody.set("success_url", `${cleanBaseUrl}/manager/billing?checkout=success`);
+    checkoutBody.set("success_url", `${cleanBaseUrl}/manager/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`);
     checkoutBody.set("cancel_url", `${cleanBaseUrl}/manager/billing?checkout=cancelled`);
     checkoutBody.set("metadata[restaurantId]", restaurantId);
     checkoutBody.set("subscription_data[metadata][restaurantId]", restaurantId);
+    checkoutBody.set("subscription_data[trial_settings][end_behavior][missing_payment_method]", "cancel");
 
     if (trialEndUnix) {
       checkoutBody.set("subscription_data[trial_end]", trialEndUnix);

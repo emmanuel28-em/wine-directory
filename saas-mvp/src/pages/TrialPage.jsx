@@ -31,6 +31,32 @@ function getAccountOwnerName(form) {
   return `${form.firstName} ${form.lastName}`.trim();
 }
 
+function getNormalizedEmail(value) {
+  return value.trim().toLowerCase();
+}
+
+function getFriendlySignupError(error, fallbackMessage) {
+  const errorName = error?.name || "";
+
+  if (errorName === "UsernameExistsException") {
+    return "An account already exists for this email. Sign in instead, then create the restaurant workspace.";
+  }
+
+  if (errorName === "InvalidPasswordException") {
+    return "Use at least 8 characters with an uppercase letter, lowercase letter, number, and symbol.";
+  }
+
+  if (errorName === "CodeMismatchException") {
+    return "That confirmation code is not correct. Check the latest email and try again.";
+  }
+
+  if (errorName === "ExpiredCodeException") {
+    return "That confirmation code has expired. Return to signup to request a new code.";
+  }
+
+  return error?.message || fallbackMessage;
+}
+
 export default function TrialPage() {
   const navigate = useNavigate();
   const authSession = useAuthSession();
@@ -64,7 +90,7 @@ export default function TrialPage() {
       });
 
       await authSession.refreshSession();
-      navigate("/manager", { replace: true });
+      navigate("/manager/onboarding", { replace: true });
     } catch (error) {
       setMessage(error.message || "Could not create the trial workspace.");
     } finally {
@@ -74,7 +100,7 @@ export default function TrialPage() {
 
   async function signInAndCreateWorkspace() {
     const signInResult = await signIn({
-      username: form.email,
+      username: getNormalizedEmail(form.email),
       password: form.password
     });
 
@@ -88,14 +114,14 @@ export default function TrialPage() {
       user,
       restaurantName: form.restaurantName,
       managerName: getAccountOwnerName(form),
-      email: form.email,
+      email: getNormalizedEmail(form.email),
       ownerTitle: form.ownerTitle,
       restaurantAddress: form.restaurantAddress,
       restaurantWebsite: form.restaurantWebsite
     });
 
     await authSession.refreshSession();
-    navigate("/manager", { replace: true });
+    navigate("/manager/onboarding", { replace: true });
   }
 
   async function startTrial(event) {
@@ -105,11 +131,11 @@ export default function TrialPage() {
 
     try {
       const result = await signUp({
-        username: form.email,
+        username: getNormalizedEmail(form.email),
         password: form.password,
         options: {
           userAttributes: {
-            email: form.email
+            email: getNormalizedEmail(form.email)
           }
         }
       });
@@ -122,7 +148,7 @@ export default function TrialPage() {
 
       await signInAndCreateWorkspace();
     } catch (error) {
-      setMessage(error.message || "Could not start the trial.");
+      setMessage(getFriendlySignupError(error, "Could not start the trial."));
     } finally {
       setIsWorking(false);
     }
@@ -135,13 +161,13 @@ export default function TrialPage() {
 
     try {
       await confirmSignUp({
-        username: form.email,
+        username: getNormalizedEmail(form.email),
         confirmationCode: form.confirmationCode
       });
 
       await signInAndCreateWorkspace();
     } catch (error) {
-      setMessage(error.message || "Could not confirm the account.");
+      setMessage(getFriendlySignupError(error, "Could not confirm the account."));
     } finally {
       setIsWorking(false);
     }
@@ -159,7 +185,7 @@ export default function TrialPage() {
     return (
       <section className="page-section narrow-page">
         <div className="section-heading">
-          <p className="eyebrow">Pilot workspace</p>
+          <p className="eyebrow">30-day free trial</p>
           <h1>Create a restaurant workspace</h1>
           <p>
             You are already signed in. Create the restaurant workspace for this account,
@@ -217,8 +243,8 @@ export default function TrialPage() {
           </label>
 
           <div className="trial-note">
-            <strong>30-day pilot workspace.</strong>
-            <p>No card is required for the pilot. Billing can be set up later through Stripe when the restaurant is ready.</p>
+            <strong>30-day free trial.</strong>
+            <p>No card is required today. Add a payment method before the trial ends to avoid an interruption.</p>
           </div>
 
           <button className="primary-button full-width" type="submit" disabled={isWorking}>
@@ -234,10 +260,10 @@ export default function TrialPage() {
   return (
     <section className="page-section narrow-page">
       <div className="section-heading">
-        <p className="eyebrow">Pilot workspace</p>
+        <p className="eyebrow">30-day free trial</p>
         <h1>Start your restaurant training workspace</h1>
         <p>
-          Start with a 30-day pilot. Create your account owner login and restaurant workspace.
+          Create your Account Owner login and restaurant workspace. No card is required today.
         </p>
       </div>
 
@@ -277,6 +303,7 @@ export default function TrialPage() {
               onChange={updateForm}
               required
             />
+            <span className="helper-text">At least 8 characters with uppercase, lowercase, a number, and a symbol.</span>
           </label>
 
           <h2>Restaurant Info</h2>
@@ -309,12 +336,12 @@ export default function TrialPage() {
           </label>
 
           <div className="trial-note">
-            <strong>30-day pilot workspace.</strong>
-            <p>No card is required for the pilot. Billing can be set up later through Stripe when the restaurant is ready.</p>
+            <strong>30-day free trial.</strong>
+            <p>No card is required today. Add a payment method before the trial ends to avoid an interruption.</p>
           </div>
 
           <button className="primary-button full-width" type="submit" disabled={isWorking}>
-            {isWorking ? "Creating account..." : "Start Pilot Workspace"}
+            {isWorking ? "Creating account..." : "Start Free Trial"}
           </button>
 
           {message ? <p className="form-message">{message}</p> : null}

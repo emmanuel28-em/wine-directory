@@ -4,8 +4,10 @@ import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import {
   createBillingPortalSessionForRestaurant,
   createCheckoutSessionForRestaurant,
+  checkoutPreservesTrial,
   formatBillingStatus,
   getBillingMessage,
+  getTrialDaysRemaining,
   hasActiveSubscription,
   isTrialExpired,
   updateBillingEmail
@@ -42,13 +44,44 @@ export default function ManagerBillingPage() {
 
   useEffect(() => {
     if (searchParams.get("checkout") === "success") {
-      setMessage("Checkout completed. Your subscription status will update shortly.");
+      setMessage("Payment setup was completed. Line Up is confirming the subscription with Stripe.");
+
+      let isCancelled = false;
+      let attemptCount = 0;
+      let refreshTimer;
+
+      async function refreshSubscription() {
+        attemptCount += 1;
+        const nextWorkspace = await workspace.reloadWorkspace();
+
+        if (isCancelled) {
+          return;
+        }
+
+        if (nextWorkspace?.restaurant?.stripeSubscriptionId) {
+          setMessage("Billing is connected. Your workspace subscription is ready.");
+          return;
+        }
+
+        if (attemptCount < 8) {
+          refreshTimer = window.setTimeout(refreshSubscription, 2500);
+        } else {
+          setMessage("Stripe received the payment setup. Use Refresh Billing Status in a moment if the status has not changed yet.");
+        }
+      }
+
+      refreshTimer = window.setTimeout(refreshSubscription, 1500);
+
+      return () => {
+        isCancelled = true;
+        window.clearTimeout(refreshTimer);
+      };
     }
 
     if (searchParams.get("checkout") === "cancelled") {
       setMessage("Stripe Checkout was cancelled. You can set up billing whenever you are ready.");
     }
-  }, [searchParams]);
+  }, [searchParams.get("checkout")]);
 
   async function saveBillingEmail(event) {
     event.preventDefault();
@@ -113,6 +146,18 @@ export default function ManagerBillingPage() {
     }
   }
 
+  async function refreshBillingStatus() {
+    setIsWorking(true);
+    setMessage("");
+
+    try {
+      await workspace.reloadWorkspace();
+      setMessage("Billing status refreshed.");
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
   if (workspace.status !== "ready") {
     return (
       <section className="page-section narrow-page">
@@ -126,6 +171,8 @@ export default function ManagerBillingPage() {
   const trialExpired = isTrialExpired(restaurant);
   const shouldShowCheckout = !restaurant.stripeCustomerId || !hasActiveSubscription(restaurant);
   const shouldShowPortal = Boolean(restaurant.stripeCustomerId);
+  const trialDaysRemaining = getTrialDaysRemaining(restaurant);
+  const preservesTrial = checkoutPreservesTrial(restaurant);
 
   return (
     <section className="page-section">
@@ -142,7 +189,11 @@ export default function ManagerBillingPage() {
 
       {trialExpired ? (
         <div className="warning-banner">
-          Your 30-day trial has ended. The workspace remains available for now, but billing should be set up soon.
+          The 30-day trial has ended. Set up billing to restore content, quiz, invite, and staff access.
+        </div>
+      ) : subscriptionStatus === "trialing" ? (
+        <div className="info-banner">
+          {trialDaysRemaining} day{trialDaysRemaining === 1 ? "" : "s"} remain in the free trial. Add a payment method now to avoid an interruption.
         </div>
       ) : null}
 
@@ -157,7 +208,7 @@ export default function ManagerBillingPage() {
 
         <article className="stat-card">
           <span>Plan</span>
-          <h2>{restaurant.plan || "trial"}</h2>
+          <h2>{restaurant.plan === "trial" ? "Monthly" : restaurant.plan || "Monthly"}</h2>
           <p>Monthly platform fee after trial.</p>
         </article>
 
@@ -198,15 +249,26 @@ export default function ManagerBillingPage() {
         </form>
 
         <section className="form-card">
-          <h2>Stripe Checkout</h2>
+          <h2>Secure Payment Setup</h2>
           <p>
             Line Up does not collect or store card details. Stripe Checkout handles payment information securely.
           </p>
 
+          {shouldShowCheckout ? (
+            <div className="billing-timing-note">
+              <strong>{preservesTrial ? "No charge today" : "Billing starts when checkout completes"}</strong>
+              <p>
+                {preservesTrial
+                  ? `Your free trial remains active through ${formatDate(restaurant.trialEndsAt)}.`
+                  : "Stripe requires at least 48 hours to preserve a trial end date, so payment begins immediately this close to or after expiration."}
+              </p>
+            </div>
+          ) : null}
+
           <div className="billing-action-stack">
             {shouldShowCheckout ? (
               <button className="primary-button full-width" type="button" onClick={startCheckout} disabled={isWorking}>
-                {isWorking ? "Opening Stripe..." : "Set Up Billing"}
+                {isWorking ? "Opening Stripe..." : preservesTrial ? "Add Payment Method" : "Start Subscription"}
               </button>
             ) : null}
             {shouldShowPortal ? (
@@ -214,10 +276,13 @@ export default function ManagerBillingPage() {
                 {isWorking ? "Opening Stripe..." : "Manage Billing"}
               </button>
             ) : null}
+            <button className="secondary-button full-width" type="button" onClick={refreshBillingStatus} disabled={isWorking}>
+              Refresh Billing Status
+            </button>
           </div>
 
           <p className="helper-text">
-            If Stripe is not configured yet, these buttons will show a setup message instead of opening Stripe.
+            Card details are entered only on Stripe's secure checkout or customer portal.
           </p>
         </section>
       </div>

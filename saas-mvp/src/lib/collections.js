@@ -1,5 +1,6 @@
 import { getDataClient } from "./dataClient.js";
 import { assertSameRestaurant, requireRestaurantId } from "./permissions.js";
+import { getWorkspaceGroups } from "./workspaceGroups.js";
 
 function assertNoErrors(result, fallbackMessage) {
   if (result.errors?.length) {
@@ -44,6 +45,7 @@ export async function saveCollection({ collection, restaurantId, userProfileId, 
   const dataClient = getDataClient();
   const payload = {
     restaurantId,
+    ...getWorkspaceGroups(restaurantId),
     name: collection.name.trim(),
     description: collection.description.trim(),
     categoryType: collection.categoryType,
