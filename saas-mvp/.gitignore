@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.amplify/
+.env
+.env.local
+amplify_outputs.json
