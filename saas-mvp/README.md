@@ -908,3 +908,15 @@ After this production-hardening pass is stable, the next build should be one of 
 - better quiz editing and question management
 - manager reports by team member and training category
 - audit logs for billing, invites, roles, content publishing, and quiz attempts
+
+## Pilot Readiness
+
+The manager dashboard now includes a five-step pilot checklist, and the content editor includes starter choices for Food Items, Wines, Cocktails, SOPs, Service Standards, and Custom pages.
+
+Before inviting a restaurant team, follow the full checklist in:
+
+```text
+docs/pilot-launch-checklist.md
+```
+
+The recommended first pilot is intentionally small: create a few real Training Pages, invite one manager and one staff member, publish one quiz, and confirm the complete study-to-results flow before importing the restaurant's full library.

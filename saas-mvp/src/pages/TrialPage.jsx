@@ -159,7 +159,7 @@ export default function TrialPage() {
     return (
       <section className="page-section narrow-page">
         <div className="section-heading">
-          <p className="eyebrow">Free trial</p>
+          <p className="eyebrow">Pilot workspace</p>
           <h1>Create a restaurant workspace</h1>
           <p>
             You are already signed in. Create the restaurant workspace for this account,
@@ -217,8 +217,8 @@ export default function TrialPage() {
           </label>
 
           <div className="trial-note">
-            <strong>30-day free trial.</strong>
-            <p>Payment will be handled securely through Stripe later. Line Up does not store credit card information.</p>
+            <strong>30-day pilot workspace.</strong>
+            <p>No card is required for the pilot. Billing can be set up later through Stripe when the restaurant is ready.</p>
           </div>
 
           <button className="primary-button full-width" type="submit" disabled={isWorking}>
@@ -234,10 +234,10 @@ export default function TrialPage() {
   return (
     <section className="page-section narrow-page">
       <div className="section-heading">
-        <p className="eyebrow">Free trial</p>
+        <p className="eyebrow">Pilot workspace</p>
         <h1>Start your restaurant training workspace</h1>
         <p>
-          Start with a 30-day free trial. Create your account owner login and restaurant workspace.
+          Start with a 30-day pilot. Create your account owner login and restaurant workspace.
         </p>
       </div>
 
@@ -309,12 +309,12 @@ export default function TrialPage() {
           </label>
 
           <div className="trial-note">
-            <strong>30-day free trial.</strong>
-            <p>Payment will be handled securely through Stripe later. Line Up does not store credit card information.</p>
+            <strong>30-day pilot workspace.</strong>
+            <p>No card is required for the pilot. Billing can be set up later through Stripe when the restaurant is ready.</p>
           </div>
 
           <button className="primary-button full-width" type="submit" disabled={isWorking}>
-            {isWorking ? "Creating account..." : "Start Free Trial"}
+            {isWorking ? "Creating account..." : "Start Pilot Workspace"}
           </button>
 
           {message ? <p className="form-message">{message}</p> : null}

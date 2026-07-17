@@ -38,6 +38,53 @@ const contentTypeLabels = {
   custom: "Custom"
 };
 
+// These starters help a busy manager begin with familiar restaurant material.
+// They only prefill the form; the manager still reviews and saves the page.
+const starterTemplates = [
+  {
+    contentType: "foodItem",
+    title: "Food Item",
+    helper: "Dish notes, allergens, ingredients, mise, and talking points.",
+    tags: "food, menu",
+    summaryPlaceholder: "Short staff-facing one-liner for this dish."
+  },
+  {
+    contentType: "wine",
+    title: "Wine",
+    helper: "Producer, grape, region, style, farming, and staff talking points.",
+    tags: "wine, beverage",
+    summaryPlaceholder: "Short staff-facing one-liner for this wine."
+  },
+  {
+    contentType: "cocktail",
+    title: "Cocktail",
+    helper: "Spec, glassware, garnish, allergens, and guest-facing description.",
+    tags: "cocktail, beverage",
+    summaryPlaceholder: "Short staff-facing one-liner for this cocktail."
+  },
+  {
+    contentType: "sop",
+    title: "SOP",
+    helper: "Opening, closing, sidework, service standards, or manager procedures.",
+    tags: "sop, operations",
+    summaryPlaceholder: "Short summary of when staff use this SOP."
+  },
+  {
+    contentType: "serviceStandard",
+    title: "Service Standard",
+    helper: "Steps of service, language, table maintenance, or hospitality standards.",
+    tags: "service, standards",
+    summaryPlaceholder: "Short summary of this service standard."
+  },
+  {
+    contentType: "custom",
+    title: "Custom",
+    helper: "Anything that does not fit the standard restaurant training templates.",
+    tags: "custom",
+    summaryPlaceholder: "Short summary for staff."
+  }
+];
+
 const emptyCategoryForm = {
   name: "",
   description: "",
@@ -193,6 +240,19 @@ export default function ManagerContentPage() {
     setEditingDocId(null);
     setSelectedSourceFile(null);
     setMessage("");
+  }
+
+  function startFromTemplate(template) {
+    setForm((currentForm) => ({
+      ...currentForm,
+      contentType: template.contentType,
+      status: "draft",
+      tags: currentForm.tags || template.tags
+    }));
+    setMessage(
+      `Starting a ${template.title} Training Page. Fill in the title, notes, and staff knowledge, then save as a draft.`
+    );
+    document.getElementById("training-page-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function editCategory(category) {
@@ -641,8 +701,23 @@ export default function ManagerContentPage() {
               </div>
             </div>
 
-            <form className="form-card wide-form" onSubmit={submitPage}>
+            <div className="starter-template-grid" aria-label="Training page starters">
+              {starterTemplates.map((template) => (
+                <button
+                  className={`starter-template-card ${form.contentType === template.contentType ? "is-selected" : ""}`}
+                  key={template.contentType}
+                  type="button"
+                  onClick={() => startFromTemplate(template)}
+                >
+                  <span>{template.title}</span>
+                  <p>{template.helper}</p>
+                </button>
+              ))}
+            </div>
+
+            <form className="form-card wide-form" id="training-page-form" onSubmit={submitPage}>
               <h3>{editingDocId ? "Edit Training Page" : "Create Training Page"}</h3>
+              <p className="helper-text">Choose a starter above, then paste or type the information your staff needs.</p>
 
               <div className="field-pair">
                 <label>
@@ -698,7 +773,10 @@ export default function ManagerContentPage() {
                   name="summary"
                   value={form.summary}
                   onChange={updateForm}
-                  placeholder="Signature egg yolk raviolo with ricotta and brown butter."
+                  placeholder={
+                    starterTemplates.find((template) => template.contentType === form.contentType)?.summaryPlaceholder ||
+                    "Short staff-facing one-liner."
+                  }
                 />
               </label>
 
@@ -754,7 +832,7 @@ export default function ManagerContentPage() {
                     <p className="eyebrow">Section 3</p>
                     <h2>What Should Staff Be Tested On?</h2>
                     <p>
-                      Add the key facts staff should know. These will later help generate quizzes and track training.
+                      Add the key facts staff should know. Line Up uses these to generate useful quiz questions later.
                     </p>
                   </div>
                   <button className="secondary-button" type="button" onClick={() => setKnowledgeItems((items) => [...items, makeEmptyKnowledgeItem()])}>
@@ -883,7 +961,7 @@ export default function ManagerContentPage() {
               <div>
                 <p className="eyebrow">Training Page List</p>
                 <h2>Existing Training Pages</h2>
-                <p>Grouped by Training Category so managers can scan the library quickly.</p>
+                <p>Drafts stay hidden from staff. Published pages appear in the staff Training Library.</p>
               </div>
               <button className="secondary-button" type="button" onClick={loadContentPage} disabled={isWorking}>
                 Refresh

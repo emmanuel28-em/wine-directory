@@ -24,7 +24,7 @@ function getDashboardBillingLine(restaurant) {
   const status = restaurant?.subscriptionStatus || "trialing";
 
   if (status === "trialing") {
-    return `Trial active until ${formatDate(restaurant.trialEndsAt)}`;
+    return `Pilot access active until ${formatDate(restaurant.trialEndsAt)}`;
   }
 
   if (status === "active") return "Subscription active";
@@ -42,6 +42,33 @@ export default function ManagerDashboard() {
 
   const restaurantName = workspace.restaurant?.name || "Your Restaurant";
   const canManageBilling = isOwnerOrAdmin(workspace.role);
+  const setupChecklist = [
+    {
+      label: "Create training categories",
+      detail: "Match how this restaurant already talks about training.",
+      to: "/manager/content"
+    },
+    {
+      label: "Add the first training page",
+      detail: "Start with one dish, wine, cocktail, or SOP.",
+      to: "/manager/content"
+    },
+    {
+      label: "Invite one staff member",
+      detail: "Send a real invite and confirm the staff view feels clear.",
+      to: "/manager/invite-team"
+    },
+    {
+      label: "Create one quiz",
+      detail: "Use Testable Staff Knowledge from a training page.",
+      to: "/manager/quizzes"
+    },
+    {
+      label: "Review staff progress",
+      detail: "Confirm managers can see scores after a quiz is submitted.",
+      to: "/manager/staff-progress"
+    }
+  ];
 
   return (
     <section className="page-section">
@@ -79,7 +106,7 @@ export default function ManagerDashboard() {
         <>
           {isTrialExpired(workspace.restaurant) ? (
             <div className="warning-banner">
-              Your 30-day trial has ended. The workspace is still available, but billing should be set up soon.
+              This workspace's 30-day pilot window has ended. Access remains available while the plan is reviewed.
             </div>
           ) : null}
 
@@ -87,11 +114,11 @@ export default function ManagerDashboard() {
             <article className="stat-card">
               <span>Restaurant</span>
               <h2>{workspace.restaurant.name}</h2>
-              <p>Status: {workspace.restaurant.status || "trial"}</p>
+              <p>Status: {workspace.restaurant.status === "trial" || !workspace.restaurant.status ? "pilot / trial" : workspace.restaurant.status}</p>
             </article>
 
             <article className="stat-card">
-              <span>Trial Ends</span>
+              <span>Pilot Window</span>
               <h2>{formatDate(workspace.restaurant.trialEndsAt)}</h2>
               <p>{formatBillingStatus(workspace.restaurant)}</p>
             </article>
@@ -102,6 +129,26 @@ export default function ManagerDashboard() {
               <p>{workspace.userProfile?.email || getUserEmail(authSession.user)}</p>
             </article>
           </div>
+
+          <section className="pilot-checklist-section">
+            <div className="section-heading compact-heading">
+              <p className="eyebrow">Pilot readiness</p>
+              <h2>Get this restaurant ready for its first staff test</h2>
+              <p>Follow these in order. Each step opens the exact place you need next.</p>
+            </div>
+
+            <div className="pilot-checklist">
+              {setupChecklist.map((item, index) => (
+                <Link className="pilot-checklist-item" key={item.label} to={item.to}>
+                  <span>{index + 1}</span>
+                  <div>
+                    <h3>{item.label}</h3>
+                    <p>{item.detail}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
 
           <section className="setup-steps">
             <div className="section-heading">
@@ -158,12 +205,12 @@ export default function ManagerDashboard() {
               </article>
 
               <article className="stat-card">
-                <span>Billing</span>
+                <span>Pilot Access</span>
                 <h2>{formatBillingStatus(workspace.restaurant)}</h2>
                 <p>{getDashboardBillingLine(workspace.restaurant)}</p>
                 {canManageBilling ? (
                   <Link className="secondary-button card-action" to="/manager/billing">
-                    Go to Billing
+                    View Plan
                   </Link>
                 ) : (
                   <p className="helper-text">Ask an Account Owner or Admin to manage billing.</p>
