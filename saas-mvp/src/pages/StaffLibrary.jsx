@@ -18,6 +18,91 @@ const typeLabels = {
   custom: "Custom"
 };
 
+const allFilter = "all";
+
+const collectionOrder = [
+  "Dinner Menu",
+  "Lunch Menu",
+  "Brunch Menu",
+  "Pasta Tasting Menu",
+  "BTG Wines",
+  "Cocktails",
+  "Food Items"
+];
+
+function normalizeValue(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function getMainArea(doc, collection) {
+  const content = parseContentJson(doc.contentJson);
+  const text = normalizeValue([doc.type, doc.category, collection?.name, content.contentType, content.tags?.join?.(" ")].join(" "));
+
+  if (text.includes("wine") || text.includes("cocktail") || text.includes("beverage") || text.includes("btg")) {
+    return "beverage";
+  }
+
+  return "food";
+}
+
+function getSectionLabel(doc, collection) {
+  const name = collection?.name || "";
+  const category = doc.category || "";
+  const combined = normalizeValue(`${name} ${category}`);
+
+  if (combined.includes("dinner")) return "Dinner Menu";
+  if (combined.includes("lunch")) return "Lunch Menu";
+  if (combined.includes("brunch")) return "Brunch Menu";
+  if (combined.includes("pasta") || combined.includes("pairing")) return "Pasta Tasting Menu";
+  if (combined.includes("btg") || combined.includes("by-the-glass")) return "BTG Wines";
+  if (combined.includes("cocktail")) return "Cocktails";
+  if (combined.includes("sop") || combined.includes("procedure")) return "SOPs";
+
+  return name || "Unassigned";
+}
+
+function getSubsectionLabel(doc) {
+  const category = doc.category || "";
+  const normalized = normalizeValue(category);
+
+  if (normalized.includes("antipasta") || normalized.includes("antipasti")) return "Antipasta";
+  if (normalized.includes("primi")) return "Primi";
+  if (normalized.includes("secondi")) return "Secondi";
+  if (normalized.includes("verdure")) return "Verdure";
+  if (normalized.includes("course 1")) return "Course 1";
+  if (normalized.includes("course 2")) return "Course 2";
+  if (normalized.includes("course 3")) return "Course 3";
+  if (normalized.includes("course 4")) return "Course 4";
+  if (normalized.includes("course 5")) return "Course 5";
+
+  return "";
+}
+
+function docMatchesSearch(doc, collection, searchTerm) {
+  if (!searchTerm) return true;
+
+  const content = parseContentJson(doc.contentJson);
+  const searchableText = [
+    doc.title,
+    doc.type,
+    doc.category,
+    collection?.name,
+    content.summary,
+    content.body,
+    content.details,
+    content.ingredients,
+    content.allergens,
+    content.talkingPoints,
+    content.serviceNotes,
+    content.tags?.join?.(" ")
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return searchableText.includes(searchTerm);
+}
+
 function groupDocsByCollectionAndType(docs, collections) {
   const collectionMap = new Map(collections.map((collection) => [collection.id, collection]));
   const groups = new Map();
@@ -47,13 +132,21 @@ function groupDocsByCollectionAndType(docs, collections) {
     collectionGroup.typeGroups.get(typeKey).push(doc);
   });
 
-  return [...groups.values()].map((collectionGroup) => ({
-    ...collectionGroup,
-    typeGroups: [...collectionGroup.typeGroups.entries()].map(([type, typeDocs]) => ({
+  return [...groups.values()]
+    .sort((a, b) => {
+      const orderA = collectionOrder.indexOf(a.name);
+      const orderB = collectionOrder.indexOf(b.name);
+      const safeOrderA = orderA === -1 ? 999 : orderA;
+      const safeOrderB = orderB === -1 ? 999 : orderB;
+      return safeOrderA - safeOrderB || a.name.localeCompare(b.name);
+    })
+    .map((collectionGroup) => ({
+      ...collectionGroup,
+      typeGroups: [...collectionGroup.typeGroups.entries()].map(([type, typeDocs]) => ({
       type,
-      docs: typeDocs
+      docs: [...typeDocs].sort((a, b) => (a.category || "").localeCompare(b.category || "") || a.title.localeCompare(b.title))
     }))
-  }));
+    }));
 }
 
 export default function StaffLibrary() {
@@ -64,6 +157,9 @@ export default function StaffLibrary() {
   const [acknowledgements, setAcknowledgements] = useState([]);
   const [reviewingDocId, setReviewingDocId] = useState("");
   const [message, setMessage] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [mainAreaFilter, setMainAreaFilter] = useState(allFilter);
+  const [sectionFilter, setSectionFilter] = useState(allFilter);
 
   async function loadStaffLibrary() {
     if (workspace.status !== "ready") {
@@ -105,7 +201,31 @@ export default function StaffLibrary() {
     }
   }, [workspace.status, workspace.restaurant?.id]);
 
-  const groupedContent = groupDocsByCollectionAndType(docs, collections);
+  const collectionMap = new Map(collections.map((collection) => [collection.id, collection]));
+  const decoratedDocs = docs.map((doc) => {
+    const collection = collectionMap.get(doc.collectionId);
+    return {
+      doc,
+      collection,
+      mainArea: getMainArea(doc, collection),
+      section: getSectionLabel(doc, collection),
+      subsection: getSubsectionLabel(doc)
+    };
+  });
+  const availableSections = [...new Set(decoratedDocs.map((item) => item.section).filter(Boolean))].sort((a, b) => {
+    const orderA = collectionOrder.indexOf(a);
+    const orderB = collectionOrder.indexOf(b);
+    const safeOrderA = orderA === -1 ? 999 : orderA;
+    const safeOrderB = orderB === -1 ? 999 : orderB;
+    return safeOrderA - safeOrderB || a.localeCompare(b);
+  });
+  const normalizedSearch = normalizeValue(searchTerm);
+  const filteredDocs = decoratedDocs
+    .filter((item) => mainAreaFilter === allFilter || item.mainArea === mainAreaFilter)
+    .filter((item) => sectionFilter === allFilter || item.section === sectionFilter)
+    .filter((item) => docMatchesSearch(item.doc, item.collection, normalizedSearch))
+    .map((item) => item.doc);
+  const groupedContent = groupDocsByCollectionAndType(filteredDocs, collections);
 
   async function openAttachedResource(fileAsset) {
     try {
@@ -175,6 +295,73 @@ export default function StaffLibrary() {
 
       {workspace.status === "ready" && docs.length > 0 ? (
         <div className="staff-library-sections">
+          <section className="staff-library-filter-panel" aria-label="Training library filters">
+            <label className="staff-library-search">
+              Search anything
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Try antipasta, Nebbiolo, dairy, cocktail, course 1..."
+              />
+            </label>
+
+            <div className="quick-filter-row" aria-label="Main training area">
+              {[
+                [allFilter, "All"],
+                ["food", "Food"],
+                ["beverage", "Beverage"]
+              ].map(([value, label]) => (
+                <button
+                  className={mainAreaFilter === value ? "filter-chip active-filter-chip" : "filter-chip"}
+                  type="button"
+                  key={value}
+                  onClick={() => {
+                    setMainAreaFilter(value);
+                    setSectionFilter(allFilter);
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <div className="quick-filter-row" aria-label="Training section">
+              <button
+                className={sectionFilter === allFilter ? "filter-chip active-filter-chip" : "filter-chip"}
+                type="button"
+                onClick={() => setSectionFilter(allFilter)}
+              >
+                All sections
+              </button>
+              {availableSections
+                .filter((section) => {
+                  if (mainAreaFilter === allFilter) return true;
+                  return decoratedDocs.some((item) => item.section === section && item.mainArea === mainAreaFilter);
+                })
+                .map((section) => (
+                  <button
+                    className={sectionFilter === section ? "filter-chip active-filter-chip" : "filter-chip"}
+                    type="button"
+                    key={section}
+                    onClick={() => setSectionFilter(section)}
+                  >
+                    {section}
+                  </button>
+                ))}
+            </div>
+
+            <p className="library-result-count">
+              Showing {filteredDocs.length} of {docs.length} published training pages.
+            </p>
+          </section>
+
+          {filteredDocs.length === 0 ? (
+            <div className="empty-panel">
+              No pages match those filters. Try clearing search or choosing another section.
+            </div>
+          ) : null}
+
           {groupedContent.map((collectionGroup) => (
             <section className="library-section collection-section" key={collectionGroup.id}>
               <div className="section-heading compact-heading">
