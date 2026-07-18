@@ -188,7 +188,7 @@ export default function ManagerDashboard() {
               <div className="getting-started-heading">
                 <div>
                   <p className="eyebrow">Getting started</p>
-                  <h2>Set up Line Up in four simple steps</h2>
+                  <h2>Follow the setup checklist</h2>
                   <p>{completedSteps} of {gettingStartedSteps.length} complete</p>
                 </div>
                 <div className="progress-track" aria-label={`${completedSteps} of ${gettingStartedSteps.length} steps complete`}>
@@ -250,6 +250,11 @@ export default function ManagerDashboard() {
                 <span>Mastery</span>
                 <h3>Create certifications</h3>
                 <p>Name the skills staff need to master and choose which quizzes count toward each one.</p>
+              </Link>
+              <Link className="home-action" to="/report-issue">
+                <span>Help</span>
+                <h3>Report a problem</h3>
+                <p>Tell Line Up what failed, looks wrong, or would make training easier for your restaurant.</p>
               </Link>
             </div>
           </section>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import { listCollectionsForRestaurant, saveCollection } from "../lib/collections.js";
 import { listQuizzesForRestaurant } from "../lib/quizzes.js";
@@ -16,12 +16,13 @@ const starterCategories = [
 ];
 
 export default function ManagerOnboardingPage() {
+  const navigate = useNavigate();
   const workspace = useCurrentWorkspace();
   const [collections, setCollections] = useState([]);
   const [docs, setDocs] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
-  const [selectedCategories, setSelectedCategories] = useState(starterCategories.map((category) => category.name));
+  const [selectedCategoryName, setSelectedCategoryName] = useState(starterCategories[0].name);
   const [isWorking, setIsWorking] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -85,48 +86,38 @@ export default function ManagerOnboardingPage() {
   );
   const completedCount = steps.filter((step) => step.complete).length;
 
-  function toggleCategory(name) {
-    setSelectedCategories((current) =>
-      current.includes(name) ? current.filter((item) => item !== name) : [...current, name]
-    );
-  }
-
-  async function createStarterCategories() {
+  async function createFirstCategoryAndContinue() {
     if (workspace.status !== "ready") {
       return;
     }
 
-    const existingNames = new Set(collections.map((collection) => collection.name.trim().toLowerCase()));
-    const toCreate = starterCategories.filter(
-      (category) => selectedCategories.includes(category.name) && !existingNames.has(category.name.toLowerCase())
-    );
-
-    if (toCreate.length === 0) {
-      setMessage("Those library sections already exist, or none are selected.");
-      return;
-    }
+    const category = starterCategories.find((item) => item.name === selectedCategoryName);
+    if (!category) return;
 
     setIsWorking(true);
     setMessage("");
 
     try {
-      for (const [index, category] of toCreate.entries()) {
-        await saveCollection({
+      const existing = collections.find(
+        (collection) => collection.name.trim().toLowerCase() === category.name.toLowerCase()
+      );
+      const savedCategory = existing ||
+        (await saveCollection({
           collection: {
             ...category,
             status: "active",
-            sortOrder: String(collections.length + index)
+            sortOrder: String(collections.length)
           },
           restaurantId: workspace.restaurant.id,
           userProfileId: workspace.userProfile.id,
           editingCollectionId: null
-        });
-      }
+        }));
 
-      await loadProgress();
-      setMessage(`${toCreate.length} library section${toCreate.length === 1 ? " was" : "s were"} created.`);
+      navigate(
+        `/manager/import?collection=${encodeURIComponent(savedCategory.id)}&focus=${encodeURIComponent(category.categoryType)}`
+      );
     } catch (error) {
-      setMessage(error.message || "Could not create the starter categories.");
+      setMessage(error.message || "Could not create the first training area.");
     } finally {
       setIsWorking(false);
     }
@@ -137,8 +128,8 @@ export default function ManagerOnboardingPage() {
       <div className="dashboard-header">
         <div>
           <p className="eyebrow">Getting started</p>
-          <h1>Get {workspace.restaurant?.name || "your restaurant"} ready</h1>
-          <p>Start with the training material you already have. You can improve and expand it at any time.</p>
+          <h1>Let’s build your first training area</h1>
+          <p>Choose one place to begin. You will paste the material you already use on the next screen.</p>
         </div>
         <Link className="secondary-button" to="/manager">
           Back home
@@ -176,35 +167,30 @@ export default function ManagerOnboardingPage() {
         <div className="operator-section-heading">
           <div>
             <p className="eyebrow">Library sections</p>
-            <h2>Choose how your team finds training</h2>
-            <p>Use the words your restaurant already uses. You can rename, archive, or add sections later.</p>
+            <h2>What do you want to train first?</h2>
+            <p>Pick the material that changes most often or matters most before service. You can add every other area later.</p>
           </div>
         </div>
 
         <div className="starter-category-grid">
           {starterCategories.map((category) => {
             const exists = collections.some((collection) => collection.name.toLowerCase() === category.name.toLowerCase());
-            const selected = selectedCategories.includes(category.name);
+            const selected = selectedCategoryName === category.name;
 
             return (
               <label className={`starter-category-option ${selected || exists ? "is-selected" : ""}`} key={category.name}>
-                <input
-                  type="checkbox"
-                  checked={selected || exists}
-                  disabled={exists}
-                  onChange={() => toggleCategory(category.name)}
-                />
+                <input type="radio" name="first-training-area" checked={selected} onChange={() => setSelectedCategoryName(category.name)} />
                 <span>
                   <strong>{category.name}</strong>
-                  <small>{exists ? "Already created" : category.description}</small>
+                  <small>{exists ? `${category.description} This section already exists.` : category.description}</small>
                 </span>
               </label>
             );
           })}
         </div>
 
-        <button className="primary-button" type="button" onClick={createStarterCategories} disabled={isWorking}>
-          {isWorking ? "Creating..." : "Create selected sections"}
+        <button className="primary-button" type="button" onClick={createFirstCategoryAndContinue} disabled={isWorking}>
+          {isWorking ? "Preparing..." : "Continue to import material"}
         </button>
       </section>
 

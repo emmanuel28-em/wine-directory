@@ -4,6 +4,8 @@ import { formatRole, useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js
 import { getDataClient } from "../lib/dataClient.js";
 import { requireRestaurantId } from "../lib/permissions.js";
 import { listQuizAttemptsForRestaurant, listQuizzesForRestaurant } from "../lib/quizzes.js";
+import { listTrainingAcknowledgementsForRestaurant } from "../lib/trainingAcknowledgements.js";
+import { listTrainingDocsForRestaurant } from "../lib/trainingDocs.js";
 
 function formatDateTime(value) {
   if (!value) {
@@ -62,6 +64,8 @@ export default function ManagerStaffProgressPage() {
   const [attempts, setAttempts] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
   const [members, setMembers] = useState([]);
+  const [acknowledgements, setAcknowledgements] = useState([]);
+  const [trainingDocs, setTrainingDocs] = useState([]);
   const [message, setMessage] = useState("");
 
   async function loadProgress() {
@@ -72,15 +76,19 @@ export default function ManagerStaffProgressPage() {
     setMessage("");
 
     try {
-      const [restaurantAttempts, restaurantQuizzes, restaurantMembers] = await Promise.all([
+      const [restaurantAttempts, restaurantQuizzes, restaurantMembers, restaurantAcknowledgements, restaurantDocs] = await Promise.all([
         listQuizAttemptsForRestaurant(workspace.restaurant.id),
         listQuizzesForRestaurant(workspace.restaurant.id),
-        listMembersForRestaurant(workspace.restaurant.id)
+        listMembersForRestaurant(workspace.restaurant.id),
+        listTrainingAcknowledgementsForRestaurant(workspace.restaurant.id),
+        listTrainingDocsForRestaurant(workspace.restaurant.id)
       ]);
 
       setAttempts(restaurantAttempts);
       setQuizzes(restaurantQuizzes);
       setMembers(restaurantMembers);
+      setAcknowledgements(restaurantAcknowledgements);
+      setTrainingDocs(restaurantDocs);
     } catch (error) {
       setMessage(error.message || "Could not load staff progress.");
     }
@@ -95,6 +103,7 @@ export default function ManagerStaffProgressPage() {
     () => new Map(members.map((member) => [member.profile?.id || member.membership.userProfileId, member])),
     [members]
   );
+  const trainingDocById = useMemo(() => new Map(trainingDocs.map((doc) => [doc.id, doc])), [trainingDocs]);
 
   return (
     <section className="page-section">
@@ -102,7 +111,7 @@ export default function ManagerStaffProgressPage() {
         <div>
           <p className="eyebrow">Staff Quiz Results</p>
           <h1>Staff Progress</h1>
-          <p>See who has completed quizzes and who is ready for service.</p>
+          <p>See which pages staff reviewed and whether they demonstrated the knowledge in quizzes.</p>
         </div>
         <Link className="primary-button" to="/manager/quizzes">
           Create Quiz
@@ -121,6 +130,46 @@ export default function ManagerStaffProgressPage() {
       ) : null}
 
       {workspace.status === "ready" ? (
+        <>
+        <section className="data-list-panel">
+          <div className="data-list-heading">
+            <h2>Training Pages Reviewed</h2>
+            <span>{acknowledgements.length} confirmations</span>
+          </div>
+
+          {acknowledgements.length === 0 ? (
+            <div className="empty-panel">No page reviews yet. Staff can mark a page as reviewed from the Training Library.</div>
+          ) : (
+            <div className="operator-table">
+              {[...acknowledgements]
+                .sort((a, b) => new Date(b.reviewedAt || 0) - new Date(a.reviewedAt || 0))
+                .map((acknowledgement) => {
+                  const member = memberByProfileId.get(acknowledgement.userProfileId);
+                  const trainingDoc = trainingDocById.get(acknowledgement.trainingDocId);
+                  return (
+                    <article className="operator-table-row progress-row" key={acknowledgement.id}>
+                      <div>
+                        <h4>{member?.profile?.name || "Team Member"}</h4>
+                        <p>{member?.profile?.email || "No email found"}</p>
+                      </div>
+                      <div>
+                        <h4>{trainingDoc?.title || "Training Page"}</h4>
+                        <p>{trainingDoc?.category || trainingDoc?.type || "Training"}</p>
+                      </div>
+                      <div>
+                        <span className="status-badge status-published">Reviewed</span>
+                      </div>
+                      <div>
+                        <h4>Confirmed</h4>
+                        <p>{formatDateTime(acknowledgement.reviewedAt)}</p>
+                      </div>
+                    </article>
+                  );
+                })}
+            </div>
+          )}
+        </section>
+
         <section className="data-list-panel">
           <div className="data-list-heading">
             <h2>Quiz Attempts</h2>
@@ -163,6 +212,7 @@ export default function ManagerStaffProgressPage() {
             </div>
           )}
         </section>
+        </>
       ) : null}
     </section>
   );

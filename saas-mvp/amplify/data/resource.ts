@@ -328,6 +328,23 @@ const schema = a.schema({
       allow.groupDefinedIn("managerGroup").to(["create", "update", "delete"])
     ]),
 
+  // A TrainingDocAcknowledgement records that one team member reviewed one page.
+  // It complements quiz scores: managers can see both reading activity and demonstrated knowledge.
+  TrainingDocAcknowledgement: a
+    .model({
+      restaurantId: a.id().required(),
+      trainingDocId: a.id().required(),
+      userProfileId: a.id().required(),
+      cognitoUserId: a.string(),
+      reviewedAt: a.datetime().required(),
+      tenantGroup: a.string(),
+      managerGroup: a.string()
+    })
+    .authorization((allow) => [
+      allow.ownerDefinedIn("cognitoUserId").identityClaim("sub").to(["create", "read", "update"]),
+      allow.groupDefinedIn("managerGroup").to(["read"])
+    ]),
+
   // A FileAsset stores metadata for a file uploaded to S3.
   // The actual file lives in Storage; this model ties it to a restaurant and optionally a Training Page.
   FileAsset: a

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import { listCollectionsForRestaurant } from "../lib/collections.js";
 import { parseBulkTrainingMaterial } from "../lib/bulkTrainingImport.js";
@@ -11,12 +11,14 @@ function updateDraftAtIndex(drafts, index, field, value) {
 
 export default function ManagerImportPage() {
   const workspace = useCurrentWorkspace();
+  const [searchParams] = useSearchParams();
   const [collections, setCollections] = useState([]);
   const [sourceText, setSourceText] = useState("");
   const [defaultCollectionId, setDefaultCollectionId] = useState("");
   const [drafts, setDrafts] = useState([]);
   const [isWorking, setIsWorking] = useState(false);
   const [message, setMessage] = useState("");
+  const [importSummary, setImportSummary] = useState(null);
 
   useEffect(() => {
     async function loadCollections() {
@@ -25,18 +27,24 @@ export default function ManagerImportPage() {
       }
 
       try {
-        setCollections(await listCollectionsForRestaurant(workspace.restaurant.id));
+        const nextCollections = await listCollectionsForRestaurant(workspace.restaurant.id);
+        setCollections(nextCollections);
+        const requestedCollectionId = searchParams.get("collection");
+        if (requestedCollectionId && nextCollections.some((collection) => collection.id === requestedCollectionId)) {
+          setDefaultCollectionId(requestedCollectionId);
+        }
       } catch (error) {
         setMessage(error.message || "Could not load your library sections.");
       }
     }
 
     loadCollections();
-  }, [workspace.status, workspace.restaurant?.id]);
+  }, [workspace.status, workspace.restaurant?.id, searchParams]);
 
   const selectedCount = useMemo(() => drafts.filter((draft) => draft.selected).length, [drafts]);
 
   function reviewMaterial() {
+    setImportSummary(null);
     const parsedDrafts = parseBulkTrainingMaterial(sourceText).map((draft) => ({
       ...draft,
       collectionId: defaultCollectionId
@@ -55,6 +63,26 @@ export default function ManagerImportPage() {
     );
   }
 
+  async function loadTextFile(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const allowedExtensions = [".txt", ".md", ".csv"];
+    const extension = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
+    if (!allowedExtensions.includes(extension)) {
+      setMessage("This importer can read .txt, .md, and .csv files. For PDFs or Word documents, paste the text here or request setup help.");
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      setSourceText(await file.text());
+      setMessage(`${file.name} is ready. Select “Find training pages” to review what Line Up finds.`);
+    } catch {
+      setMessage("Line Up could not read that file. Try pasting its text instead.");
+    }
+  }
+
   function updateDraft(index, field, value) {
     setDrafts((currentDrafts) => updateDraftAtIndex(currentDrafts, index, field, value));
   }
@@ -71,6 +99,7 @@ export default function ManagerImportPage() {
     setIsWorking(true);
     setMessage("");
     let createdCount = 0;
+    let publishedCreatedCount = 0;
     let skippedCount = 0;
 
     try {
@@ -101,13 +130,16 @@ export default function ManagerImportPage() {
           userProfileId: workspace.userProfile.id
         });
         createdCount += 1;
+        if (draft.status === "published") publishedCreatedCount += 1;
         existingKeys.add(duplicateKey);
       }
 
       setDrafts([]);
       setSourceText("");
+      setImportSummary({ createdCount, skippedCount });
+      const draftCount = createdCount - publishedCreatedCount;
       setMessage(
-        `${createdCount} training page${createdCount === 1 ? " was" : "s were"} saved as a draft.${
+        `${createdCount} training page${createdCount === 1 ? " was" : "s were"} saved. ${publishedCreatedCount} published and ${draftCount} kept as ${draftCount === 1 ? "a draft" : "drafts"}.${
           skippedCount ? ` ${skippedCount} possible duplicate${skippedCount === 1 ? " was" : "s were"} skipped.` : ""
         } Review and publish the new pages when they are ready for staff.`
       );
@@ -125,8 +157,8 @@ export default function ManagerImportPage() {
       <div className="dashboard-header">
         <div>
           <p className="eyebrow">Add training</p>
-          <h1>Paste the material you already have</h1>
-          <p>Line Up separates your notes into pages. You review everything before staff can see it.</p>
+          <h1>Bring your training material into one place</h1>
+          <p>Paste a menu, wine list, cocktail spec, or procedure. Line Up separates it into pages you can review.</p>
         </div>
         <Link className="secondary-button" to="/manager/content">
           Back to training
@@ -136,7 +168,7 @@ export default function ManagerImportPage() {
       <div className="workflow-strip">
         <span>1. Paste your material</span>
         <span>2. Check what Line Up found</span>
-        <span>3. Save as drafts</span>
+        <span>3. Save or publish</span>
       </div>
 
       {message ? <p className="form-message page-message">{message}</p> : null}
@@ -163,6 +195,12 @@ export default function ManagerImportPage() {
             </label>
 
             <label>
+              Or load a text document
+              <input type="file" accept=".txt,.md,.csv,text/plain,text/markdown,text/csv" onChange={loadTextFile} />
+              <small>Works with text, Markdown, and CSV files. Your file is read in your browser before anything is saved.</small>
+            </label>
+
+            <label>
               Menu notes, tech sheets, or procedures
               <textarea
                 className="import-textarea"
@@ -182,7 +220,7 @@ export default function ManagerImportPage() {
           <aside className="form-card import-guidance-card">
             <p className="eyebrow">You stay in control</p>
             <h2>Staff will not see anything yet</h2>
-            <p>Every page is saved as a draft. Review the details, add quiz facts, and publish it only when it is ready.</p>
+            <p>You choose whether each page stays a draft or is published for staff. Nothing is saved until you confirm.</p>
             <h3>Best results</h3>
             <ul className="plain-list">
               <li>Keep the item name on its own line.</li>
@@ -203,7 +241,7 @@ export default function ManagerImportPage() {
               <p>{selectedCount} of {drafts.length} drafts selected for import.</p>
             </div>
             <button className="primary-button" type="button" onClick={importDrafts} disabled={isWorking || selectedCount === 0}>
-              {isWorking ? "Saving..." : `Save ${selectedCount} Draft${selectedCount === 1 ? "" : "s"}`}
+              {isWorking ? "Saving..." : `Save ${selectedCount} Training Page${selectedCount === 1 ? "" : "s"}`}
             </button>
           </div>
 
@@ -255,6 +293,14 @@ export default function ManagerImportPage() {
                 </label>
 
                 <label>
+                  Staff visibility
+                  <select value={draft.status} onChange={(event) => updateDraft(index, "status", event.target.value)}>
+                    <option value="draft">Draft — managers only</option>
+                    <option value="published">Published — visible to staff</option>
+                  </select>
+                </label>
+
+                <label>
                   Short description
                   <textarea value={draft.summary} onChange={(event) => updateDraft(index, "summary", event.target.value)} />
                 </label>
@@ -284,6 +330,32 @@ export default function ManagerImportPage() {
           </div>
         </section>
       ) : null}
+
+      {importSummary ? (
+        <section className="success-panel import-next-steps">
+          <div>
+            <p className="eyebrow">Material added</p>
+            <h2>Your training pages are ready for the next step.</h2>
+            <p>Review the library, create a knowledge check, or invite one staff member to begin testing the workspace.</p>
+          </div>
+          <div className="import-next-actions">
+            <Link className="secondary-button" to="/manager/content">Review training pages</Link>
+            <Link className="primary-button" to="/manager/quizzes">Generate a quiz</Link>
+            <Link className="secondary-button" to="/manager/invite-team">Invite your team</Link>
+          </div>
+        </section>
+      ) : null}
+
+      <section className="setup-help-strip">
+        <div>
+          <strong>Have a PDF, Word document, or a large training manual?</strong>
+          <span>Send it through setup help and we can organize the first library with you.</span>
+        </div>
+        <div>
+          <Link to="/managed-setup">Request setup help</Link>
+          <Link to="/report-issue">Report a problem</Link>
+        </div>
+      </section>
     </section>
   );
 }

@@ -4,6 +4,10 @@ import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import { listCollectionsForRestaurant } from "../lib/collections.js";
 import { getFileAssetUrl, listFileAssetsForRestaurant } from "../lib/fileAssets.js";
 import { listTrainingDocsForRestaurant, parseContentJson } from "../lib/trainingDocs.js";
+import {
+  listMyTrainingAcknowledgements,
+  markTrainingDocReviewed
+} from "../lib/trainingAcknowledgements.js";
 
 const typeLabels = {
   wine: "Wine",
@@ -57,6 +61,8 @@ export default function StaffLibrary() {
   const [collections, setCollections] = useState([]);
   const [docs, setDocs] = useState([]);
   const [fileAssets, setFileAssets] = useState([]);
+  const [acknowledgements, setAcknowledgements] = useState([]);
+  const [reviewingDocId, setReviewingDocId] = useState("");
   const [message, setMessage] = useState("");
 
   async function loadStaffLibrary() {
@@ -67,15 +73,20 @@ export default function StaffLibrary() {
     setMessage("");
 
     try {
-      const [restaurantCollections, restaurantDocs, restaurantFiles] = await Promise.all([
+      const [restaurantCollections, restaurantDocs, restaurantFiles, myAcknowledgements] = await Promise.all([
         listCollectionsForRestaurant(workspace.restaurant.id),
         listTrainingDocsForRestaurant(workspace.restaurant.id),
-        listFileAssetsForRestaurant(workspace.restaurant.id)
+        listFileAssetsForRestaurant(workspace.restaurant.id),
+        listMyTrainingAcknowledgements({
+          restaurantId: workspace.restaurant.id,
+          userProfileId: workspace.userProfile.id
+        })
       ]);
 
       setCollections(restaurantCollections);
       setDocs(restaurantDocs.filter((doc) => doc.status === "published"));
       setFileAssets(restaurantFiles);
+      setAcknowledgements(myAcknowledgements);
     } catch (error) {
       setMessage(error.message || "Could not load the staff library.");
     }
@@ -90,6 +101,7 @@ export default function StaffLibrary() {
       setCollections([]);
       setDocs([]);
       setFileAssets([]);
+      setAcknowledgements([]);
     }
   }, [workspace.status, workspace.restaurant?.id]);
 
@@ -104,6 +116,27 @@ export default function StaffLibrary() {
       window.open(url, "_blank", "noopener,noreferrer");
     } catch (error) {
       setMessage(error.message || "Could not open this resource.");
+    }
+  }
+
+  async function markReviewed(doc) {
+    const existing = acknowledgements.find((item) => item.trainingDocId === doc.id);
+    setReviewingDocId(doc.id);
+    setMessage("");
+
+    try {
+      const saved = await markTrainingDocReviewed({
+        restaurantId: workspace.restaurant.id,
+        trainingDoc: doc,
+        userProfileId: workspace.userProfile.id,
+        cognitoUserId: workspace.user?.userId,
+        existingId: existing?.id
+      });
+      setAcknowledgements((current) => [...current.filter((item) => item.trainingDocId !== doc.id), saved]);
+    } catch (error) {
+      setMessage(error.message || "Could not mark this page as reviewed.");
+    } finally {
+      setReviewingDocId("");
     }
   }
 
@@ -160,6 +193,7 @@ export default function StaffLibrary() {
                     {typeGroup.docs.map((doc) => {
                       const content = parseContentJson(doc.contentJson);
                       const attachedFiles = fileAssets.filter((fileAsset) => fileAsset.trainingDocId === doc.id);
+                      const acknowledgement = acknowledgements.find((item) => item.trainingDocId === doc.id);
 
                       return (
                         <article className="training-card" key={doc.id}>
@@ -222,6 +256,22 @@ export default function StaffLibrary() {
                               </div>
                             </div>
                           ) : null}
+
+                          <div className="training-review-action">
+                            <button
+                              className={acknowledgement ? "secondary-button" : "primary-button"}
+                              type="button"
+                              onClick={() => markReviewed(doc)}
+                              disabled={reviewingDocId === doc.id}
+                            >
+                              {reviewingDocId === doc.id
+                                ? "Saving..."
+                                : acknowledgement
+                                  ? "Reviewed — update confirmation"
+                                  : "Mark as reviewed"}
+                            </button>
+                            <small>{acknowledgement ? `Reviewed ${new Date(acknowledgement.reviewedAt).toLocaleDateString()}` : "Confirm after you have studied this page."}</small>
+                          </div>
                         </article>
                       );
                     })}

@@ -1062,7 +1062,30 @@ After this production-hardening pass is stable, the next build should be one of 
 
 ## Pilot Readiness
 
-The manager dashboard now includes a five-step pilot checklist, and the content editor includes starter choices for Food Items, Wines, Cocktails, SOPs, Service Standards, and Custom pages.
+The first-use flow now connects restaurant setup to the work a manager actually needs to finish:
+
+1. Start a trial and create the restaurant workspace.
+2. Choose the first training area, such as Current Menu, Wine, Cocktails, or Service Standards.
+3. Paste existing notes or load a `.txt`, `.md`, or `.csv` file.
+4. Review the pages Line Up finds and choose Draft or Published for each page.
+5. Continue directly to training review, automatic quiz generation, or team invitations.
+
+PDF and Word extraction is not automatic yet. Managers can paste their text or use Request Setup Help for larger document migrations.
+
+Staff can select **Mark as reviewed** on a published Training Page after studying it. The Staff Progress page shows these review confirmations separately from quiz attempts. This distinction is intentional: a review confirms that staff saw the material, while a passing quiz demonstrates knowledge.
+
+To test the guided pilot flow:
+
+1. Create a new restaurant trial and confirm it opens Getting Started.
+2. Choose one training area and continue.
+3. Paste two tech sheets separated by `---`, then select Find Training Pages.
+4. Check the titles, types, sections, details, allergens, and visibility.
+5. Publish one page and leave one as a draft, then save both.
+6. Confirm only the published page appears in the Training Library.
+7. Mark the published page as reviewed from the staff view.
+8. Confirm the review appears in Staff Progress.
+9. Generate and publish a quiz from the imported material.
+10. Complete the quiz and confirm the attempt appears beside the review activity in Staff Progress.
 
 Before inviting a restaurant team, follow the full checklist in:
 
