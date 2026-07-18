@@ -32,9 +32,187 @@ const collectionOrder = [
 ];
 
 const subsectionOrder = ["Antipasta", "Primi", "Secondi", "Verdure", "Course 1", "Course 2", "Course 3", "Course 4", "Course 5"];
+const reviewQuestionCount = 5;
+const reviewPassingScore = 4;
 
 function normalizeValue(value) {
   return String(value || "").trim().toLowerCase();
+}
+
+function cleanText(value) {
+  return String(value || "").trim();
+}
+
+function splitList(value) {
+  return cleanText(value)
+    .split(/\n|,|;|\|/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function unique(values) {
+  return [...new Set(values.map(cleanText).filter(Boolean))];
+}
+
+function firstSentence(value) {
+  const text = cleanText(value);
+  return text.split(/(?<=[.!?])\s+/)[0] || text;
+}
+
+function shuffle(values) {
+  return [...values].sort(() => Math.random() - 0.5);
+}
+
+function collectReviewAnswerPool(docs, fieldName) {
+  return unique(
+    docs.flatMap((doc) => {
+      const content = parseContentJson(doc.contentJson);
+
+      if (fieldName === "ingredients") return splitList(content.ingredients);
+      if (fieldName === "allergens") return splitList(content.allergens);
+      if (fieldName === "summary") return [content.summary];
+      if (fieldName === "serviceNotes") return [firstSentence(content.serviceNotes)];
+      if (fieldName === "category") return [doc.category, doc.type];
+
+      const facts = content.testableStaffKnowledge || content.quizFacts || [];
+      return facts
+        .filter((fact) => normalizeValue(fact.label).includes(fieldName))
+        .map((fact) => fact.value);
+    })
+  );
+}
+
+function makeReviewChoices({ correctAnswer, pool, fallback = [] }) {
+  const wrongAnswers = unique([...pool, ...fallback]).filter((choice) => choice !== correctAnswer).slice(0, 3);
+  const choices = unique([correctAnswer, ...wrongAnswers]);
+
+  while (choices.length < 4) {
+    choices.push(`Review the training notes option ${choices.length + 1}`);
+  }
+
+  return shuffle(choices).slice(0, 4);
+}
+
+function addReviewQuestion(questions, question) {
+  if (!question.correctAnswer || questions.some((item) => item.prompt === question.prompt)) {
+    return;
+  }
+
+  questions.push(question);
+}
+
+function buildReviewQuestionsForDoc(doc, allDocs) {
+  const content = parseContentJson(doc.contentJson);
+  const title = doc.title || "this item";
+  const questions = [];
+  const facts = content.testableStaffKnowledge || content.quizFacts || [];
+
+  facts
+    .filter((fact) => fact.quizEligible !== false && cleanText(fact.value))
+    .forEach((fact) => {
+      const label = cleanText(fact.label) || "detail";
+      const lowerLabel = normalizeValue(label);
+      const poolKey =
+        lowerLabel.includes("allergen")
+          ? "allergens"
+          : lowerLabel.includes("ingredient")
+            ? "ingredients"
+            : lowerLabel.includes("service")
+              ? "serviceNotes"
+              : "category";
+
+      addReviewQuestion(questions, {
+        prompt: fact.questionHint || `What should staff know about ${label} for ${title}?`,
+        correctAnswer: cleanText(fact.value),
+        choices: makeReviewChoices({
+          correctAnswer: cleanText(fact.value),
+          pool: collectReviewAnswerPool(allDocs, poolKey),
+          fallback: ["Ask a manager before service", "Check the most recent training page", "Review the dish notes"]
+        }),
+        explanation: `${label}: ${cleanText(fact.value)}`
+      });
+    });
+
+  addReviewQuestion(questions, {
+    prompt: `What is the correct one-liner for ${title}?`,
+    correctAnswer: content.summary,
+    choices: makeReviewChoices({
+      correctAnswer: content.summary,
+      pool: collectReviewAnswerPool(allDocs, "summary"),
+      fallback: ["A classic house favorite with seasonal garnish.", "A rich preparation with bright acidity.", "A staff-only note for pre-shift."]
+    }),
+    explanation: content.summary
+  });
+
+  addReviewQuestion(questions, {
+    prompt: `What allergens should staff know for ${title}?`,
+    correctAnswer: content.allergens,
+    choices: makeReviewChoices({
+      correctAnswer: content.allergens,
+      pool: collectReviewAnswerPool(allDocs, "allergens"),
+      fallback: ["Dairy, gluten", "Citrus, allium", "Nuts, egg"]
+    }),
+    explanation: content.allergens ? `${title} allergens: ${content.allergens}` : ""
+  });
+
+  splitList(content.ingredients).slice(0, 2).forEach((ingredient) => {
+    addReviewQuestion(questions, {
+      prompt: `Which ingredient is used in ${title}?`,
+      correctAnswer: ingredient,
+      choices: makeReviewChoices({
+        correctAnswer: ingredient,
+        pool: collectReviewAnswerPool(allDocs, "ingredients"),
+        fallback: ["Parmigiano", "Lemon", "Garlic"]
+      }),
+      explanation: `${ingredient} is listed for ${title}.`
+    });
+  });
+
+  addReviewQuestion(questions, {
+    prompt: `What service note should staff remember for ${title}?`,
+    correctAnswer: firstSentence(content.serviceNotes || content.talkingPoints || content.body),
+    choices: makeReviewChoices({
+      correctAnswer: firstSentence(content.serviceNotes || content.talkingPoints || content.body),
+      pool: collectReviewAnswerPool(allDocs, "serviceNotes"),
+      fallback: ["Confirm with a manager before promising changes.", "Serve only after the table is cleared.", "This is used during opening sidework."]
+    }),
+    explanation: firstSentence(content.serviceNotes || content.talkingPoints || content.body)
+  });
+
+  addReviewQuestion(questions, {
+    prompt: `Where is ${title} organized in the training library?`,
+    correctAnswer: doc.category || doc.type,
+    choices: makeReviewChoices({
+      correctAnswer: doc.category || doc.type,
+      pool: collectReviewAnswerPool(allDocs, "category"),
+      fallback: ["Dinner Menu", "Cocktails", "BTG Wines"]
+    }),
+    explanation: `${title} is organized as ${doc.category || doc.type}.`
+  });
+
+  addReviewQuestion(questions, {
+    prompt: "Which training page are you reviewing?",
+    correctAnswer: title,
+    choices: makeReviewChoices({
+      correctAnswer: title,
+      pool: allDocs.map((item) => item.title),
+      fallback: ["Opening Sidework", "Dinner Menu Overview", "Wine Service Standards"]
+    }),
+    explanation: `This review check is for ${title}.`
+  });
+
+  addReviewQuestion(questions, {
+    prompt: `What type of training page is ${title}?`,
+    correctAnswer: typeLabels[doc.type] || doc.type,
+    choices: makeReviewChoices({
+      correctAnswer: typeLabels[doc.type] || doc.type,
+      pool: Object.values(typeLabels),
+      fallback: ["Food", "Wine", "Cocktail"]
+    }),
+    explanation: `${title} is saved as ${typeLabels[doc.type] || doc.type}.`
+  });
+
+  return shuffle(questions).slice(0, reviewQuestionCount);
 }
 
 function getSectionLabel(doc, collection) {
@@ -152,6 +330,10 @@ export default function StaffLibrary() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sectionFilter, setSectionFilter] = useState(allFilter);
   const [subsectionFilter, setSubsectionFilter] = useState(allFilter);
+  const [activeReviewDocId, setActiveReviewDocId] = useState("");
+  const [reviewQuestions, setReviewQuestions] = useState([]);
+  const [reviewAnswers, setReviewAnswers] = useState({});
+  const [reviewResult, setReviewResult] = useState(null);
 
   async function loadStaffLibrary() {
     if (workspace.status !== "ready") {
@@ -245,8 +427,55 @@ export default function StaffLibrary() {
     }
   }
 
-  async function markReviewed(doc) {
+  function startReviewCheck(doc) {
+    const questions = buildReviewQuestionsForDoc(doc, docs);
+
+    if (questions.length < reviewQuestionCount) {
+      setMessage("This page needs more testable staff knowledge before it can use a review check.");
+      return;
+    }
+
+    setActiveReviewDocId(doc.id);
+    setReviewQuestions(questions);
+    setReviewAnswers({});
+    setReviewResult(null);
+    setMessage("");
+  }
+
+  function updateReviewAnswer(questionIndex, answer) {
+    setReviewAnswers((currentAnswers) => ({
+      ...currentAnswers,
+      [questionIndex]: answer
+    }));
+  }
+
+  async function submitReviewCheck(doc) {
     const existing = acknowledgements.find((item) => item.trainingDocId === doc.id);
+    const answeredCount = reviewQuestions.filter((_, index) => reviewAnswers[index]).length;
+
+    if (answeredCount < reviewQuestionCount) {
+      setReviewResult({
+        passed: false,
+        score: 0,
+        message: `Answer all ${reviewQuestionCount} questions before submitting.`
+      });
+      return;
+    }
+
+    const correctCount = reviewQuestions.reduce(
+      (count, question, index) => count + (reviewAnswers[index] === question.correctAnswer ? 1 : 0),
+      0
+    );
+
+    if (correctCount < reviewPassingScore) {
+      setReviewResult({
+        passed: false,
+        score: correctCount,
+        message: `You scored ${correctCount}/${reviewQuestionCount}. Review the notes and try again.`
+      });
+      return;
+    }
+
     setReviewingDocId(doc.id);
     setMessage("");
 
@@ -259,6 +488,14 @@ export default function StaffLibrary() {
         existingId: existing?.id
       });
       setAcknowledgements((current) => [...current.filter((item) => item.trainingDocId !== doc.id), saved]);
+      setReviewResult({
+        passed: true,
+        score: correctCount,
+        message: `Passed ${correctCount}/${reviewQuestionCount}. This page is now marked reviewed.`
+      });
+      setActiveReviewDocId("");
+      setReviewQuestions([]);
+      setReviewAnswers({});
     } catch (error) {
       setMessage(error.message || "Could not mark this page as reviewed.");
     } finally {
@@ -467,17 +704,86 @@ export default function StaffLibrary() {
                             <button
                               className={acknowledgement ? "secondary-button" : "primary-button"}
                               type="button"
-                              onClick={() => markReviewed(doc)}
+                              onClick={() => startReviewCheck(doc)}
                               disabled={reviewingDocId === doc.id}
                             >
-                              {reviewingDocId === doc.id
-                                ? "Saving..."
-                                : acknowledgement
-                                  ? "Reviewed — update confirmation"
-                                  : "Mark as reviewed"}
+                              {acknowledgement ? "Retake review check" : "Start 5-question review"}
                             </button>
-                            <small>{acknowledgement ? `Reviewed ${new Date(acknowledgement.reviewedAt).toLocaleDateString()}` : "Confirm after you have studied this page."}</small>
+                            <small>
+                              {acknowledgement
+                                ? `Reviewed ${new Date(acknowledgement.reviewedAt).toLocaleDateString()}`
+                                : `Answer ${reviewQuestionCount} questions to mark this page reviewed.`}
+                            </small>
                           </div>
+
+                          {activeReviewDocId === doc.id ? (
+                            <div className="inline-review-check">
+                              <div>
+                                <p className="eyebrow">Review check</p>
+                                <h3>{doc.title}</h3>
+                                <p>Score at least {reviewPassingScore}/{reviewQuestionCount} to mark this page reviewed.</p>
+                              </div>
+
+                              {reviewQuestions.map((question, questionIndex) => (
+                                <fieldset className="review-question" key={`${doc.id}-${question.prompt}`}>
+                                  <legend>{questionIndex + 1}. {question.prompt}</legend>
+                                  {question.choices.map((choice) => (
+                                    <label className="quiz-choice" key={choice}>
+                                      <input
+                                        type="radio"
+                                        name={`${doc.id}-review-${questionIndex}`}
+                                        value={choice}
+                                        checked={reviewAnswers[questionIndex] === choice}
+                                        onChange={() => updateReviewAnswer(questionIndex, choice)}
+                                      />
+                                      <span>{choice}</span>
+                                    </label>
+                                  ))}
+                                </fieldset>
+                              ))}
+
+                              {reviewResult ? (
+                                <div className={reviewResult.passed ? "quiz-result quiz-result-pass" : "quiz-result quiz-result-review"}>
+                                  <h3>{reviewResult.passed ? "Ready" : "Needs review"}</h3>
+                                  <p>{reviewResult.message}</p>
+                                  {!reviewResult.passed ? (
+                                    <div className="result-answer-list">
+                                      {reviewQuestions.map((question, questionIndex) => (
+                                        <article key={`${question.prompt}-answer`}>
+                                          <strong>{question.prompt}</strong>
+                                          <p>Correct answer: {question.correctAnswer}</p>
+                                          {question.explanation ? <p>{question.explanation}</p> : null}
+                                        </article>
+                                      ))}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              ) : null}
+
+                              <div className="form-button-row">
+                                <button
+                                  className="primary-button"
+                                  type="button"
+                                  onClick={() => submitReviewCheck(doc)}
+                                  disabled={reviewingDocId === doc.id}
+                                >
+                                  {reviewingDocId === doc.id ? "Saving..." : "Submit review check"}
+                                </button>
+                                <button
+                                  className="secondary-button"
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveReviewDocId("");
+                                    setReviewQuestions([]);
+                                    setReviewAnswers({});
+                                    setReviewResult(null);
+                                  }}
+                                >
+                                  Close
+                                </button>
+                              </div>
+                            </div>
+                          ) : null}
                         </article>
                       );
                     })}
