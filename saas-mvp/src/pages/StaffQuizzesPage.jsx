@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
+import {
+  getAssignedItemIdsForUser,
+  listStaffGroupMembersForRestaurant,
+  listTrainingAssignmentsForRestaurant
+} from "../lib/assignments.js";
 import { listQuestionsForQuiz, listQuizzesForRestaurant, parseChoices, parseAnswersJson, saveQuizAttempt } from "../lib/quizzes.js";
 
 function getResultLabel(passed) {
@@ -14,6 +19,8 @@ export default function StaffQuizzesPage() {
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [result, setResult] = useState(null);
+  const [assignedQuizIds, setAssignedQuizIds] = useState(new Set());
+  const [hasAssignments, setHasAssignments] = useState(false);
   const [message, setMessage] = useState("");
   const [isWorking, setIsWorking] = useState(false);
 
@@ -29,12 +36,24 @@ export default function StaffQuizzesPage() {
     setMessage("");
 
     try {
-      const restaurantQuizzes = await listQuizzesForRestaurant(workspace.restaurant.id);
+      const [restaurantQuizzes, assignments, groupMembers] = await Promise.all([
+        listQuizzesForRestaurant(workspace.restaurant.id),
+        listTrainingAssignmentsForRestaurant(workspace.restaurant.id),
+        listStaffGroupMembersForRestaurant(workspace.restaurant.id)
+      ]);
       const publishedQuizzes = restaurantQuizzes.filter((quiz) => quiz.isPublished);
+      const nextAssignedQuizIds = getAssignedItemIdsForUser({
+        assignments,
+        groupMembers,
+        userProfileId: workspace.userProfile.id,
+        itemType: "quiz"
+      });
       setQuizzes(publishedQuizzes);
+      setAssignedQuizIds(nextAssignedQuizIds);
+      setHasAssignments(assignments.some((assignment) => assignment.status === "active" && assignment.itemType === "quiz"));
 
       if (!selectedQuizId && publishedQuizzes.length) {
-        setSelectedQuizId(publishedQuizzes[0].id);
+        setSelectedQuizId(publishedQuizzes.find((quiz) => nextAssignedQuizIds.has(quiz.id))?.id || publishedQuizzes[0].id);
       }
     } catch (error) {
       setMessage(error.message || "Could not load quizzes.");
@@ -72,6 +91,15 @@ export default function StaffQuizzesPage() {
       [questionId]: answer
     }));
   }
+
+  const assignedQuizzes = quizzes.filter((quiz) => assignedQuizIds.has(quiz.id));
+  const otherQuizzes = quizzes.filter((quiz) => !assignedQuizIds.has(quiz.id));
+  const visibleQuizSections = hasAssignments
+    ? [
+        { title: "Assigned to me", empty: "No quizzes are assigned to you yet.", quizzes: assignedQuizzes },
+        { title: "Other available quizzes", empty: "", quizzes: otherQuizzes }
+      ]
+    : [{ title: "Available quizzes", empty: "No published quizzes yet.", quizzes }];
 
   async function submitQuiz(event) {
     event.preventDefault();
@@ -139,26 +167,34 @@ export default function StaffQuizzesPage() {
         <div className="content-manager-grid">
           <section className="data-list-panel">
             <div className="data-list-heading">
-              <h2>Available Quizzes</h2>
+              <h2>Quizzes</h2>
               <button className="secondary-button" type="button" onClick={loadQuizzes}>
                 Refresh
               </button>
             </div>
 
-            <div className="operator-card-list">
-              {quizzes.map((quiz) => (
-                <article className="operator-list-card" key={quiz.id}>
-                  <div>
-                    <span className="type-pill">{quiz.category || "Training"}</span>
-                    <h4>{quiz.title}</h4>
-                    <p>Passing Score: {quiz.passingScore || 80}%</p>
+            {visibleQuizSections.map((section) => (
+              <div className="assignment-section" key={section.title}>
+                <h3>{section.title}</h3>
+                {section.quizzes.length === 0 && section.empty ? <p className="empty-panel">{section.empty}</p> : null}
+                {section.quizzes.length > 0 ? (
+                  <div className="operator-card-list">
+                    {section.quizzes.map((quiz) => (
+                      <article className="operator-list-card" key={quiz.id}>
+                        <div>
+                          <span className="type-pill">{assignedQuizIds.has(quiz.id) ? "Assigned" : quiz.category || "Training"}</span>
+                          <h4>{quiz.title}</h4>
+                          <p>Passing Score: {quiz.passingScore || 80}%</p>
+                        </div>
+                        <button className="secondary-button" type="button" onClick={() => setSelectedQuizId(quiz.id)}>
+                          Take Quiz
+                        </button>
+                      </article>
+                    ))}
                   </div>
-                  <button className="secondary-button" type="button" onClick={() => setSelectedQuizId(quiz.id)}>
-                    Take Quiz
-                  </button>
-                </article>
-              ))}
-            </div>
+                ) : null}
+              </div>
+            ))}
           </section>
 
           <form className="form-card quiz-card" onSubmit={submitQuiz}>

@@ -448,6 +448,56 @@ const schema = a.schema({
 
   // A Certification is a manager-created mastery goal.
   // Example: "BTG Wine Certified" can require staff to pass selected wine quizzes.
+  StaffGroup: a
+    .model({
+      restaurantId: a.id().required(),
+      name: a.string().required(),
+      description: a.string(),
+      status: a.enum(["active", "archived"]),
+      createdBy: a.id(),
+      updatedBy: a.id(),
+      tenantGroup: a.string(),
+      managerGroup: a.string()
+    })
+    .authorization((allow) => [
+      allow.groupDefinedIn("tenantGroup").to(["read"]),
+      allow.groupDefinedIn("managerGroup").to(["create", "update", "delete"])
+    ]),
+
+  StaffGroupMember: a
+    .model({
+      restaurantId: a.id().required(),
+      staffGroupId: a.id().required(),
+      userProfileId: a.id().required(),
+      membershipId: a.id(),
+      status: a.enum(["active", "removed"]),
+      tenantGroup: a.string(),
+      managerGroup: a.string()
+    })
+    .authorization((allow) => [
+      allow.groupDefinedIn("tenantGroup").to(["read"]),
+      allow.groupDefinedIn("managerGroup").to(["create", "update", "delete"])
+    ]),
+
+  TrainingAssignment: a
+    .model({
+      restaurantId: a.id().required(),
+      itemType: a.enum(["quiz", "certification"]),
+      itemId: a.id().required(),
+      targetType: a.enum(["group", "member"]),
+      targetId: a.id().required(),
+      note: a.string(),
+      dueDate: a.date(),
+      status: a.enum(["active", "archived"]),
+      assignedBy: a.id(),
+      tenantGroup: a.string(),
+      managerGroup: a.string()
+    })
+    .authorization((allow) => [
+      allow.groupDefinedIn("tenantGroup").to(["read"]),
+      allow.groupDefinedIn("managerGroup").to(["create", "update", "delete"])
+    ]),
+
   Certification: a
     .model({
       restaurantId: a.id().required(),

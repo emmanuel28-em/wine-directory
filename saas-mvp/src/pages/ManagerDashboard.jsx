@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
+import { listTrainingAssignmentsForRestaurant } from "../lib/assignments.js";
 import { formatBillingStatus, isTrialExpired } from "../lib/billing.js";
 import { listCertificationsForRestaurant } from "../lib/certifications.js";
 import { listCollectionsForRestaurant } from "../lib/collections.js";
@@ -26,7 +27,8 @@ const emptyOverview = {
   members: 0,
   quizzes: 0,
   publishedQuizzes: 0,
-  certifications: 0
+  certifications: 0,
+  assignments: 0
 };
 
 export default function ManagerDashboard() {
@@ -46,12 +48,13 @@ export default function ManagerDashboard() {
 
       try {
         const restaurantId = workspace.restaurant.id;
-        const [collections, pages, members, quizzes, certifications] = await Promise.all([
+        const [collections, pages, members, quizzes, certifications, assignments] = await Promise.all([
           listCollectionsForRestaurant(restaurantId),
           listTrainingDocsForRestaurant(restaurantId),
           listTeamMembersForRestaurant(restaurantId),
           listQuizzesForRestaurant(restaurantId),
-          listCertificationsForRestaurant(restaurantId)
+          listCertificationsForRestaurant(restaurantId),
+          listTrainingAssignmentsForRestaurant(restaurantId)
         ]);
 
         if (!isCurrent) return;
@@ -63,7 +66,8 @@ export default function ManagerDashboard() {
           members: members.filter((item) => item.membership?.status === "active").length,
           quizzes: quizzes.length,
           publishedQuizzes: quizzes.filter((item) => item.isPublished).length,
-          certifications: certifications.filter((item) => item.status === "published").length
+          certifications: certifications.filter((item) => item.status === "published").length,
+          assignments: assignments.filter((item) => item.status === "active").length
         });
       } catch (error) {
         if (isCurrent) setOverviewMessage(error.message || "Your restaurant summary could not be loaded.");
@@ -114,6 +118,13 @@ export default function ManagerDashboard() {
         complete: overview.certifications > 0,
         to: "/manager/certifications",
         action: "Create certification"
+      },
+      {
+        title: "Assign training",
+        description: "Send quizzes or certifications to groups such as Servers, Captains, Bar Team, or New Hires.",
+        complete: overview.assignments > 0,
+        to: "/manager/assignments",
+        action: "Assign training"
       }
     ],
     [overview]
@@ -250,6 +261,11 @@ export default function ManagerDashboard() {
                 <span>Mastery</span>
                 <h3>Create certifications</h3>
                 <p>Name the skills staff need to master and choose which quizzes count toward each one.</p>
+              </Link>
+              <Link className="home-action" to="/manager/assignments">
+                <span>Assignments</span>
+                <h3>Assign training</h3>
+                <p>Create groups like Server or Captain, then assign quizzes and certifications to the right people.</p>
               </Link>
               <Link className="home-action" to="/report-issue">
                 <span>Help</span>

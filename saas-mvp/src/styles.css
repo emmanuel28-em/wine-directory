@@ -2000,6 +2000,17 @@ code {
   background: rgba(31, 61, 46, 0.12);
 }
 
+.assignment-section {
+  display: grid;
+  gap: 12px;
+}
+
+.assignment-section h2,
+.assignment-section h3 {
+  margin: 0;
+  color: var(--color-primary);
+}
+
 .certification-requirement-list {
   display: grid;
   gap: 8px;

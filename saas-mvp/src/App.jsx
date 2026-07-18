@@ -8,6 +8,7 @@ import LandingPage from "./pages/LandingPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import ManagedSetupPage from "./pages/ManagedSetupPage.jsx";
 import ManagerBillingPage from "./pages/ManagerBillingPage.jsx";
+import ManagerAssignmentsPage from "./pages/ManagerAssignmentsPage.jsx";
 import ManagerCertificationsPage from "./pages/ManagerCertificationsPage.jsx";
 import ManagerContentPage from "./pages/ManagerContentPage.jsx";
 import ManagerDashboard from "./pages/ManagerDashboard.jsx";
@@ -120,6 +121,14 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={managerRoles}>
               <ManagerCertificationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/assignments"
+          element={
+            <ProtectedRoute allowedRoles={managerRoles}>
+              <ManagerAssignmentsPage />
             </ProtectedRoute>
           }
         />

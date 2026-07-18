@@ -31,6 +31,7 @@ The app currently includes:
 - quiz builder
 - automated draft quiz questions from manager-entered training pages
 - manager-created certifications
+- manager-created staff groups and training assignments
 - staff quiz taking
 - staff and manager quiz progress
 - Training Page source file attachments
@@ -367,6 +368,20 @@ Certification workflow:
 6. Managers can see which staff members are certified or still in progress.
 
 Certifications are calculated from passed quiz attempts. A staff member earns a certification after passing every quiz attached to that certification.
+
+Managers can assign training at:
+
+```text
+/manager/assignments
+```
+
+Assignment workflow:
+
+1. Create staff groups using the restaurant's own language, such as `Server`, `Captain`, `Bar Team`, or `New Hire`.
+2. Add staff members to those groups.
+3. Assign a published quiz or published certification to either a group or an individual staff member.
+4. Staff see assigned quizzes and certifications first on their quiz and certification pages.
+5. Unassigned published quizzes and certifications remain available for extra study.
 
 ## Import Existing Training Content
 
