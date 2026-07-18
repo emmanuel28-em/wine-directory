@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import { listCollectionsForRestaurant } from "../lib/collections.js";
 import { getFileAssetUrl, listFileAssetsForRestaurant } from "../lib/fileAssets.js";
+import { isAdminOrManager } from "../lib/permissions.js";
 import { listTrainingDocsForRestaurant, parseContentJson } from "../lib/trainingDocs.js";
 import {
   listMyTrainingAcknowledgements,
@@ -21,28 +22,19 @@ const typeLabels = {
 const allFilter = "all";
 
 const collectionOrder = [
-  "Dinner Menu",
   "Lunch Menu",
   "Brunch Menu",
+  "Dinner Menu",
+  "Cocktails",
   "Pasta Tasting Menu",
   "BTG Wines",
-  "Cocktails",
   "Food Items"
 ];
 
+const subsectionOrder = ["Antipasta", "Primi", "Secondi", "Verdure", "Course 1", "Course 2", "Course 3", "Course 4", "Course 5"];
+
 function normalizeValue(value) {
   return String(value || "").trim().toLowerCase();
-}
-
-function getMainArea(doc, collection) {
-  const content = parseContentJson(doc.contentJson);
-  const text = normalizeValue([doc.type, doc.category, collection?.name, content.contentType, content.tags?.join?.(" ")].join(" "));
-
-  if (text.includes("wine") || text.includes("cocktail") || text.includes("beverage") || text.includes("btg")) {
-    return "beverage";
-  }
-
-  return "food";
 }
 
 function getSectionLabel(doc, collection) {
@@ -50,12 +42,12 @@ function getSectionLabel(doc, collection) {
   const category = doc.category || "";
   const combined = normalizeValue(`${name} ${category}`);
 
-  if (combined.includes("dinner")) return "Dinner Menu";
   if (combined.includes("lunch")) return "Lunch Menu";
   if (combined.includes("brunch")) return "Brunch Menu";
+  if (combined.includes("dinner")) return "Dinner Menu";
+  if (combined.includes("cocktail")) return "Cocktails";
   if (combined.includes("pasta") || combined.includes("pairing")) return "Pasta Tasting Menu";
   if (combined.includes("btg") || combined.includes("by-the-glass")) return "BTG Wines";
-  if (combined.includes("cocktail")) return "Cocktails";
   if (combined.includes("sop") || combined.includes("procedure")) return "SOPs";
 
   return name || "Unassigned";
@@ -158,8 +150,8 @@ export default function StaffLibrary() {
   const [reviewingDocId, setReviewingDocId] = useState("");
   const [message, setMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [mainAreaFilter, setMainAreaFilter] = useState(allFilter);
   const [sectionFilter, setSectionFilter] = useState(allFilter);
+  const [subsectionFilter, setSubsectionFilter] = useState(allFilter);
 
   async function loadStaffLibrary() {
     if (workspace.status !== "ready") {
@@ -207,7 +199,6 @@ export default function StaffLibrary() {
     return {
       doc,
       collection,
-      mainArea: getMainArea(doc, collection),
       section: getSectionLabel(doc, collection),
       subsection: getSubsectionLabel(doc)
     };
@@ -219,13 +210,28 @@ export default function StaffLibrary() {
     const safeOrderB = orderB === -1 ? 999 : orderB;
     return safeOrderA - safeOrderB || a.localeCompare(b);
   });
+  const availableSubsections = [
+    ...new Set(
+      decoratedDocs
+        .filter((item) => sectionFilter === allFilter || item.section === sectionFilter)
+        .map((item) => item.subsection)
+        .filter(Boolean)
+    )
+  ].sort((a, b) => {
+    const orderA = subsectionOrder.indexOf(a);
+    const orderB = subsectionOrder.indexOf(b);
+    const safeOrderA = orderA === -1 ? 999 : orderA;
+    const safeOrderB = orderB === -1 ? 999 : orderB;
+    return safeOrderA - safeOrderB || a.localeCompare(b);
+  });
   const normalizedSearch = normalizeValue(searchTerm);
   const filteredDocs = decoratedDocs
-    .filter((item) => mainAreaFilter === allFilter || item.mainArea === mainAreaFilter)
     .filter((item) => sectionFilter === allFilter || item.section === sectionFilter)
+    .filter((item) => subsectionFilter === allFilter || item.subsection === subsectionFilter)
     .filter((item) => docMatchesSearch(item.doc, item.collection, normalizedSearch))
     .map((item) => item.doc);
   const groupedContent = groupDocsByCollectionAndType(filteredDocs, collections);
+  const canManageLibrary = isAdminOrManager(workspace.role);
 
   async function openAttachedResource(fileAsset) {
     try {
@@ -296,6 +302,59 @@ export default function StaffLibrary() {
       {workspace.status === "ready" && docs.length > 0 ? (
         <div className="staff-library-sections">
           <section className="staff-library-filter-panel" aria-label="Training library filters">
+            <div>
+              <p className="eyebrow">Browse</p>
+              <h2 className="staff-library-tabs-title">Choose a training area</h2>
+            </div>
+
+            <div className="staff-library-tabs" aria-label="Training area tabs">
+              <button
+                className={sectionFilter === allFilter ? "library-tab active-library-tab" : "library-tab"}
+                type="button"
+                onClick={() => {
+                  setSectionFilter(allFilter);
+                  setSubsectionFilter(allFilter);
+                }}
+              >
+                All
+              </button>
+              {availableSections.map((section) => (
+                <button
+                  className={sectionFilter === section ? "library-tab active-library-tab" : "library-tab"}
+                  type="button"
+                  key={section}
+                  onClick={() => {
+                    setSectionFilter(section);
+                    setSubsectionFilter(allFilter);
+                  }}
+                >
+                  {section.replace(" Menu", "")}
+                </button>
+              ))}
+            </div>
+
+            {availableSubsections.length > 0 ? (
+              <div className="quick-filter-row" aria-label="Menu subsection tabs">
+                <button
+                  className={subsectionFilter === allFilter ? "filter-chip active-filter-chip" : "filter-chip"}
+                  type="button"
+                  onClick={() => setSubsectionFilter(allFilter)}
+                >
+                  All
+                </button>
+                {availableSubsections.map((subsection) => (
+                  <button
+                    className={subsectionFilter === subsection ? "filter-chip active-filter-chip" : "filter-chip"}
+                    type="button"
+                    key={subsection}
+                    onClick={() => setSubsectionFilter(subsection)}
+                  >
+                    {subsection}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+
             <label className="staff-library-search">
               Search anything
               <input
@@ -305,51 +364,6 @@ export default function StaffLibrary() {
                 placeholder="Try antipasta, Nebbiolo, dairy, cocktail, course 1..."
               />
             </label>
-
-            <div className="quick-filter-row" aria-label="Main training area">
-              {[
-                [allFilter, "All"],
-                ["food", "Food"],
-                ["beverage", "Beverage"]
-              ].map(([value, label]) => (
-                <button
-                  className={mainAreaFilter === value ? "filter-chip active-filter-chip" : "filter-chip"}
-                  type="button"
-                  key={value}
-                  onClick={() => {
-                    setMainAreaFilter(value);
-                    setSectionFilter(allFilter);
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            <div className="quick-filter-row" aria-label="Training section">
-              <button
-                className={sectionFilter === allFilter ? "filter-chip active-filter-chip" : "filter-chip"}
-                type="button"
-                onClick={() => setSectionFilter(allFilter)}
-              >
-                All sections
-              </button>
-              {availableSections
-                .filter((section) => {
-                  if (mainAreaFilter === allFilter) return true;
-                  return decoratedDocs.some((item) => item.section === section && item.mainArea === mainAreaFilter);
-                })
-                .map((section) => (
-                  <button
-                    className={sectionFilter === section ? "filter-chip active-filter-chip" : "filter-chip"}
-                    type="button"
-                    key={section}
-                    onClick={() => setSectionFilter(section)}
-                  >
-                    {section}
-                  </button>
-                ))}
-            </div>
 
             <p className="library-result-count">
               Showing {filteredDocs.length} of {docs.length} published training pages.
@@ -385,6 +399,11 @@ export default function StaffLibrary() {
                       return (
                         <article className="training-card" key={doc.id}>
                           <span className="type-pill">{typeLabels[doc.type] || doc.type}</span>
+                          {canManageLibrary ? (
+                            <Link className="manager-edit-link" to={`/manager/content?edit=${doc.id}#training-page-form`}>
+                              Edit / add photos
+                            </Link>
+                          ) : null}
                           <h2>{doc.title}</h2>
                           <p className="card-category">{doc.category || "Uncategorized"}</p>
                           <p>{content.summary || "No one-liner yet."}</p>

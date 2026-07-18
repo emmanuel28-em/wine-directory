@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import { archiveCollection, listCollectionsForRestaurant, saveCollection } from "../lib/collections.js";
 import { deleteFileAsset, getFileAssetUrl, listFileAssetsForRestaurant, uploadFileAsset } from "../lib/fileAssets.js";
@@ -147,6 +147,7 @@ function isOriginalRezdoraWorkspace(restaurant) {
 
 export default function ManagerContentPage() {
   const workspace = useCurrentWorkspace();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [categories, setCategories] = useState([]);
   const [categoryForm, setCategoryForm] = useState(emptyCategoryForm);
   const [editingCategoryId, setEditingCategoryId] = useState(null);
@@ -201,6 +202,22 @@ export default function ManagerContentPage() {
       setDocs([]);
     }
   }, [workspace.status, workspace.restaurant?.id]);
+
+  useEffect(() => {
+    const requestedDocId = searchParams.get("edit");
+
+    if (!requestedDocId || docs.length === 0) {
+      return;
+    }
+
+    const requestedDoc = docs.find((doc) => doc.id === requestedDocId);
+
+    if (requestedDoc) {
+      editPage(requestedDoc);
+      document.getElementById("training-page-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      setSearchParams({}, { replace: true });
+    }
+  }, [docs, searchParams, setSearchParams]);
 
   function updateForm(event) {
     const { name, value } = event.target;
