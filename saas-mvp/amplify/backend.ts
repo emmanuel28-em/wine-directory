@@ -9,6 +9,7 @@ import { sendInviteEmail } from "./functions/send-invite-email/resource";
 import { provisionTrialWorkspace } from "./functions/provision-trial-workspace/resource";
 import { inviteAccess } from "./functions/invite-access/resource";
 import { platformAccess } from "./functions/platform-access/resource";
+import { supportAccess } from "./functions/support-access/resource";
 import { stripeWebhook } from "./functions/stripe-webhook/resource";
 import { storage } from "./storage/resource";
 
@@ -21,6 +22,7 @@ const backend = defineBackend({
   data,
   inviteAccess,
   platformAccess,
+  supportAccess,
   provisionTrialWorkspace,
   sendInviteEmail,
   stripeWebhook,
@@ -31,6 +33,7 @@ const restaurantTable = backend.data.resources.tables.Restaurant;
 const userProfileTable = backend.data.resources.tables.UserProfile;
 const membershipTable = backend.data.resources.tables.Membership;
 const inviteTable = backend.data.resources.tables.Invite;
+const supportTicketTable = backend.data.resources.tables.SupportTicket;
 
 restaurantTable.grantReadWriteData(backend.createCheckoutSession.resources.lambda);
 restaurantTable.grantReadWriteData(backend.createBillingPortalSession.resources.lambda);
@@ -48,6 +51,10 @@ restaurantTable.grantReadData(backend.inviteAccess.resources.lambda);
 userProfileTable.grantReadWriteData(backend.inviteAccess.resources.lambda);
 membershipTable.grantReadWriteData(backend.inviteAccess.resources.lambda);
 inviteTable.grantReadWriteData(backend.inviteAccess.resources.lambda);
+restaurantTable.grantReadData(backend.supportAccess.resources.lambda);
+userProfileTable.grantReadData(backend.supportAccess.resources.lambda);
+membershipTable.grantReadData(backend.supportAccess.resources.lambda);
+supportTicketTable.grantReadWriteData(backend.supportAccess.resources.lambda);
 
 backend.createCheckoutSession.addEnvironment("RESTAURANT_TABLE_NAME", restaurantTable.tableName);
 backend.createBillingPortalSession.addEnvironment("RESTAURANT_TABLE_NAME", restaurantTable.tableName);
@@ -68,6 +75,10 @@ backend.inviteAccess.addEnvironment("USER_PROFILE_TABLE_NAME", userProfileTable.
 backend.inviteAccess.addEnvironment("MEMBERSHIP_TABLE_NAME", membershipTable.tableName);
 backend.inviteAccess.addEnvironment("INVITE_TABLE_NAME", inviteTable.tableName);
 backend.platformAccess.addEnvironment("USER_POOL_ID", backend.auth.resources.userPool.userPoolId);
+backend.supportAccess.addEnvironment("RESTAURANT_TABLE_NAME", restaurantTable.tableName);
+backend.supportAccess.addEnvironment("USER_PROFILE_TABLE_NAME", userProfileTable.tableName);
+backend.supportAccess.addEnvironment("MEMBERSHIP_TABLE_NAME", membershipTable.tableName);
+backend.supportAccess.addEnvironment("SUPPORT_TICKET_TABLE_NAME", supportTicketTable.tableName);
 
 backend.provisionTrialWorkspace.resources.lambda.addToRolePolicy(
   new PolicyStatement({
@@ -105,6 +116,14 @@ const stripeWebhookUrl = backend.stripeWebhook.resources.lambda.addFunctionUrl({
 });
 
 backend.sendInviteEmail.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: ["ses:SendEmail", "ses:SendRawEmail"],
+    resources: ["*"]
+  })
+);
+
+backend.supportAccess.resources.lambda.addToRolePolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
     actions: ["ses:SendEmail", "ses:SendRawEmail"],

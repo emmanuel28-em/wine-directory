@@ -16,7 +16,8 @@ import ManagerQuizzesPage from "./pages/ManagerQuizzesPage.jsx";
 import ManagerStaffProgressPage from "./pages/ManagerStaffProgressPage.jsx";
 import MyProgressPage from "./pages/MyProgressPage.jsx";
 import PlatformControlPage from "./pages/PlatformControlPage.jsx";
-import ComingSoonPage from "./pages/placeholders/ComingSoonPage.jsx";
+import PlatformSupportPage from "./pages/PlatformSupportPage.jsx";
+import ReportIssuePage from "./pages/ReportIssuePage.jsx";
 import StaffLibrary from "./pages/StaffLibrary.jsx";
 import StaffQuizzesPage from "./pages/StaffQuizzesPage.jsx";
 import TrialPage from "./pages/TrialPage.jsx";
@@ -37,6 +38,14 @@ export default function App() {
           element={
             <PlatformRoute>
               <PlatformControlPage />
+            </PlatformRoute>
+          }
+        />
+        <Route
+          path="/platform/support"
+          element={
+            <PlatformRoute ownerOnly>
+              <PlatformSupportPage />
             </PlatformRoute>
           }
         />
@@ -148,7 +157,7 @@ export default function App() {
           path="/report-issue"
           element={
             <ProtectedRoute allowedRoles={activeMemberRoles}>
-              <ComingSoonPage page="reportIssue" backTo="/training-library" />
+              <ReportIssuePage />
             </ProtectedRoute>
           }
         />

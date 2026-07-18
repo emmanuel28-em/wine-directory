@@ -5,6 +5,7 @@ import { sendInviteEmail } from "../functions/send-invite-email/resource";
 import { provisionTrialWorkspace } from "../functions/provision-trial-workspace/resource";
 import { inviteAccess } from "../functions/invite-access/resource";
 import { platformAccess } from "../functions/platform-access/resource";
+import { supportAccess } from "../functions/support-access/resource";
 
 const schema = a.schema({
   InviteEmailResult: a.customType({
@@ -65,6 +66,32 @@ const schema = a.schema({
     currentRole: a.string(),
     usersJson: a.string()
   }),
+
+  SupportTicketResult: a.customType({
+    success: a.boolean(),
+    error: a.string(),
+    ticketId: a.id(),
+    reference: a.string(),
+    severity: a.string(),
+    triageSummary: a.string(),
+    alertStatus: a.string()
+  }),
+
+  submitSupportTicket: a
+    .mutation()
+    .arguments({
+      restaurantId: a.id().required(),
+      title: a.string().required(),
+      category: a.string().required(),
+      description: a.string().required(),
+      expectedBehavior: a.string(),
+      actualBehavior: a.string(),
+      route: a.string(),
+      browserInfo: a.string()
+    })
+    .returns(a.ref("SupportTicketResult"))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(supportAccess)),
 
   getPlatformAccess: a
     .query()
@@ -400,6 +427,40 @@ const schema = a.schema({
       // their own restaurant's readiness dashboard.
       allow.ownerDefinedIn("cognitoUserId").identityClaim("sub").to(["create", "read"]),
       allow.groupDefinedIn("managerGroup").to(["read"])
+    ]),
+
+  // A SupportTicket captures a restaurant user's problem or feature request.
+  // Creation runs through a backend function that verifies active membership.
+  SupportTicket: a
+    .model({
+      restaurantId: a.id().required(),
+      restaurantName: a.string(),
+      reference: a.string().required(),
+      title: a.string().required(),
+      category: a.enum(["upload", "access", "content", "invite", "quiz", "billing", "login", "feature_request", "other"]),
+      severity: a.enum(["low", "normal", "high", "critical"]),
+      status: a.enum(["open", "investigating", "waiting", "resolved", "closed"]),
+      description: a.string().required(),
+      expectedBehavior: a.string(),
+      actualBehavior: a.string(),
+      route: a.string(),
+      browserInfo: a.string(),
+      reporterName: a.string(),
+      reporterEmail: a.email(),
+      reporterRole: a.string(),
+      reporterUserProfileId: a.id(),
+      reportedByCognitoUserId: a.string(),
+      triageSummary: a.string(),
+      suggestedChecksJson: a.string(),
+      resolutionNotes: a.string(),
+      alertStatus: a.string(),
+      tenantGroup: a.string(),
+      managerGroup: a.string()
+    })
+    .authorization((allow) => [
+      allow.ownerDefinedIn("reportedByCognitoUserId").identityClaim("sub").to(["read"]),
+      allow.groupDefinedIn("managerGroup").to(["read"]),
+      allow.groups(["lineup-platform-owners"]).to(["read", "update"])
     ])
 });
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
 import { formatRole, useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import { formatBillingStatus } from "../lib/billing.js";
@@ -50,6 +50,7 @@ function DevelopmentRoleSwitcher({ currentWorkspace }) {
 
 export default function AppLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const authSession = useAuthSession();
   const currentWorkspace = useCurrentWorkspace();
@@ -89,8 +90,9 @@ export default function AppLayout() {
                 <NavLink to="/training-library">Training Library</NavLink>
                 <NavLink to="/quizzes">Quizzes</NavLink>
                 <NavLink to="/my-progress">My Progress</NavLink>
-                <NavLink to="/report-issue">Report Issue</NavLink>
+                <NavLink to="/report-issue" state={{ from: location.pathname }}>Report Issue</NavLink>
                 {hasPlatformAccess ? <NavLink to="/platform">Platform Control</NavLink> : null}
+                {authSession.platformRole === "platform_owner" ? <NavLink to="/platform/support">Support Inbox</NavLink> : null}
               </>
             ) : currentWorkspace.isActiveMember ? (
               <>
@@ -104,10 +106,15 @@ export default function AppLayout() {
                 <NavLink to="/manager/invite-team">Invite Team</NavLink>
                 {isOwnerOrAdmin(currentWorkspace.role) ? <NavLink to="/manager/billing">Billing</NavLink> : null}
                 <NavLink to="/manager/settings">Settings</NavLink>
+                <NavLink to="/report-issue" state={{ from: location.pathname }}>Report Issue</NavLink>
                 {hasPlatformAccess ? <NavLink to="/platform">Platform Control</NavLink> : null}
+                {authSession.platformRole === "platform_owner" ? <NavLink to="/platform/support">Support Inbox</NavLink> : null}
               </>
             ) : hasPlatformAccess ? (
-              <NavLink to="/platform">Platform Control</NavLink>
+              <>
+                <NavLink to="/platform">Platform Control</NavLink>
+                {authSession.platformRole === "platform_owner" ? <NavLink to="/platform/support">Support Inbox</NavLink> : null}
+              </>
             ) : null
           ) : (
             <>

@@ -904,6 +904,43 @@ Infrastructure ownership is separate from this screen. AWS root, GitHub, Stripe,
 docs/platform-ownership.md
 ```
 
+## Pilot Support Workflow
+
+Every active restaurant user can open `/report-issue` from the navigation and submit a problem or feature request. The backend verifies that the reporter has an active Membership in the selected restaurant before creating a `SupportTicket`.
+
+Automatically captured context includes:
+
+- restaurant, user, and restaurant role
+- page where the problem was reported
+- browser and viewport information
+- submission time
+- a unique `LU-...` reference number
+- rule-based severity, triage summary, and suggested diagnostic checks
+
+Platform Owners can open `/platform/support` to review tickets across restaurant workspaces, add internal resolution notes, and move a ticket to Investigating, Waiting, or Resolved. Platform Developers cannot open this inbox because reports can contain customer information.
+
+Testing support intake:
+
+1. Sign in as a restaurant Staff user.
+2. Open `Report Issue` from the navigation.
+3. Submit an access problem such as `Staff cannot see the dinner menu`.
+4. Confirm a reference number appears and the ticket is listed under `Your Reports`.
+5. Sign out and sign in as a Platform Owner.
+6. Open `/platform/support`.
+7. Confirm the ticket shows the correct restaurant, reporter, role, route, and suggested checks.
+8. Add resolution notes and mark the ticket Investigating, then Resolved.
+9. Sign back in as the reporter and confirm the status changed.
+10. Confirm a Platform Developer cannot access `/platform/support`.
+
+Optional real-time email alerts require these Amplify build environment variables and an Amazon SES-verified sender:
+
+```text
+LINE_UP_FROM_EMAIL
+LINE_UP_SUPPORT_EMAIL
+```
+
+If email is not configured, ticket creation still succeeds and the ticket appears in Platform Support. The current automatic triage is intentionally rule-based; an AI model can replace or enhance it later without changing the support ticket workflow.
+
 ## Production Hardening Still Needed
 
 Current security level:

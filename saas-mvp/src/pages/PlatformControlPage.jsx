@@ -84,6 +84,7 @@ export default function PlatformControlPage() {
           <p>Manage company access and review workspace health without mixing company roles with restaurant roles.</p>
         </div>
         {workspace.isActiveMember ? <Link className="secondary-button" to="/manager">Restaurant Dashboard</Link> : null}
+        {isPlatformOwner ? <Link className="primary-button" to="/platform/support">Open Support Inbox</Link> : null}
       </div>
 
       {message ? <p className="form-message page-message">{message}</p> : null}
