@@ -371,8 +371,8 @@ export default function ManagerQuizzesPage() {
       <div className="dashboard-header">
         <div>
           <p className="eyebrow">Quizzes</p>
-          <h1>Create Quiz</h1>
-          <p>Generate draft quiz questions from published training pages, then review them before staff sees them.</p>
+          <h1>Automated Quiz Builder</h1>
+          <p>Generate quiz drafts from manager-entered tech sheets and training pages, then edit every question before staff sees it.</p>
         </div>
       </div>
 
@@ -380,7 +380,10 @@ export default function ManagerQuizzesPage() {
 
       <div className="content-manager-grid">
         <form className="form-card" onSubmit={submitQuiz}>
-          <h2>Quiz Setup</h2>
+            <h2>Quiz Setup</h2>
+            <p className="helper-text">
+              Choose a topic or training page, then let Line Up draft questions from the information managers already entered.
+            </p>
 
           <label>
             Quiz title
@@ -434,7 +437,7 @@ export default function ManagerQuizzesPage() {
           </button>
 
           <button className="secondary-button full-width" type="button" onClick={generateQuestions} disabled={isWorking || (!selectedQuiz && !quizForm.title)}>
-            Generate Questions from Training Material
+            Generate Questions from Tech Sheets
           </button>
         </form>
 
@@ -477,7 +480,7 @@ export default function ManagerQuizzesPage() {
           <div>
             <p className="eyebrow">Generated Drafts</p>
             <h2>Review Questions Before Saving</h2>
-            <p>Generated questions are drafts. Managers can edit the prompt, choices, answer, and explanation before saving.</p>
+            <p>Generated questions are drafts. Managers can edit the prompt, choices, correct answer, and explanation before saving.</p>
           </div>
           <button className="secondary-button" type="button" onClick={addManualDraftQuestion}>
             Add Manual Draft

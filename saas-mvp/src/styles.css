@@ -1953,6 +1953,74 @@ code {
   box-shadow: none;
 }
 
+.checkbox-card-group {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+}
+
+.checkbox-card-group legend {
+  margin-bottom: 8px;
+  color: var(--color-primary);
+  font-weight: 800;
+}
+
+.checkbox-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  padding: 12px;
+  background: rgba(164, 182, 154, 0.12);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+}
+
+.checkbox-card input {
+  margin-top: 4px;
+}
+
+.checkbox-card strong,
+.checkbox-card small {
+  display: block;
+}
+
+.checkbox-card small {
+  margin-top: 3px;
+  color: var(--color-muted);
+}
+
+.certification-card {
+  align-content: start;
+  gap: 12px;
+}
+
+.certification-card .progress-track {
+  background: rgba(31, 61, 46, 0.12);
+}
+
+.certification-requirement-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.certification-requirement-list div {
+  display: grid;
+  gap: 2px;
+  padding: 10px;
+  background: rgba(255, 253, 248, 0.78);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.certification-requirement-list strong {
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
 .staff-library-sections,
 .library-section {
   display: grid;

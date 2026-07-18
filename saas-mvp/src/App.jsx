@@ -8,6 +8,7 @@ import LandingPage from "./pages/LandingPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import ManagedSetupPage from "./pages/ManagedSetupPage.jsx";
 import ManagerBillingPage from "./pages/ManagerBillingPage.jsx";
+import ManagerCertificationsPage from "./pages/ManagerCertificationsPage.jsx";
 import ManagerContentPage from "./pages/ManagerContentPage.jsx";
 import ManagerDashboard from "./pages/ManagerDashboard.jsx";
 import ManagerImportPage from "./pages/ManagerImportPage.jsx";
@@ -18,6 +19,7 @@ import MyProgressPage from "./pages/MyProgressPage.jsx";
 import PlatformControlPage from "./pages/PlatformControlPage.jsx";
 import PlatformSupportPage from "./pages/PlatformSupportPage.jsx";
 import ReportIssuePage from "./pages/ReportIssuePage.jsx";
+import StaffCertificationsPage from "./pages/StaffCertificationsPage.jsx";
 import StaffLibrary from "./pages/StaffLibrary.jsx";
 import StaffQuizzesPage from "./pages/StaffQuizzesPage.jsx";
 import TrialPage from "./pages/TrialPage.jsx";
@@ -114,6 +116,14 @@ export default function App() {
           }
         />
         <Route
+          path="/manager/certifications"
+          element={
+            <ProtectedRoute allowedRoles={managerRoles}>
+              <ManagerCertificationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/manager/invite-team"
           element={
             <ProtectedRoute allowedRoles={managerRoles}>
@@ -150,6 +160,14 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={activeMemberRoles}>
               <MyProgressPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/certifications"
+          element={
+            <ProtectedRoute allowedRoles={activeMemberRoles}>
+              <StaffCertificationsPage />
             </ProtectedRoute>
           }
         />

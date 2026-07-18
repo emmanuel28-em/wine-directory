@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import { formatBillingStatus, isTrialExpired } from "../lib/billing.js";
+import { listCertificationsForRestaurant } from "../lib/certifications.js";
 import { listCollectionsForRestaurant } from "../lib/collections.js";
 import { isOwnerOrAdmin } from "../lib/permissions.js";
 import { listQuizzesForRestaurant } from "../lib/quizzes.js";
@@ -24,7 +25,8 @@ const emptyOverview = {
   publishedPages: 0,
   members: 0,
   quizzes: 0,
-  publishedQuizzes: 0
+  publishedQuizzes: 0,
+  certifications: 0
 };
 
 export default function ManagerDashboard() {
@@ -44,11 +46,12 @@ export default function ManagerDashboard() {
 
       try {
         const restaurantId = workspace.restaurant.id;
-        const [collections, pages, members, quizzes] = await Promise.all([
+        const [collections, pages, members, quizzes, certifications] = await Promise.all([
           listCollectionsForRestaurant(restaurantId),
           listTrainingDocsForRestaurant(restaurantId),
           listTeamMembersForRestaurant(restaurantId),
-          listQuizzesForRestaurant(restaurantId)
+          listQuizzesForRestaurant(restaurantId),
+          listCertificationsForRestaurant(restaurantId)
         ]);
 
         if (!isCurrent) return;
@@ -59,7 +62,8 @@ export default function ManagerDashboard() {
           publishedPages: pages.filter((item) => item.status === "published").length,
           members: members.filter((item) => item.membership?.status === "active").length,
           quizzes: quizzes.length,
-          publishedQuizzes: quizzes.filter((item) => item.isPublished).length
+          publishedQuizzes: quizzes.filter((item) => item.isPublished).length,
+          certifications: certifications.filter((item) => item.status === "published").length
         });
       } catch (error) {
         if (isCurrent) setOverviewMessage(error.message || "Your restaurant summary could not be loaded.");
@@ -103,6 +107,13 @@ export default function ManagerDashboard() {
         complete: overview.publishedQuizzes > 0,
         to: "/manager/quizzes",
         action: "Create a quiz"
+      },
+      {
+        title: "Create a certification",
+        description: "Bundle quizzes into a named staff mastery goal, such as Wine Certified or Service Ready.",
+        complete: overview.certifications > 0,
+        to: "/manager/certifications",
+        action: "Create certification"
       }
     ],
     [overview]
@@ -180,7 +191,7 @@ export default function ManagerDashboard() {
                   <h2>Set up Line Up in four simple steps</h2>
                   <p>{completedSteps} of {gettingStartedSteps.length} complete</p>
                 </div>
-                <div className="progress-track" aria-label={`${completedSteps} of 4 steps complete`}>
+                <div className="progress-track" aria-label={`${completedSteps} of ${gettingStartedSteps.length} steps complete`}>
                   <span style={{ width: `${(completedSteps / gettingStartedSteps.length) * 100}%` }} />
                 </div>
               </div>
@@ -234,6 +245,11 @@ export default function ManagerDashboard() {
                 <span>Results</span>
                 <h3>Check staff readiness</h3>
                 <p>Review quiz scores and see where the team may need more training.</p>
+              </Link>
+              <Link className="home-action" to="/manager/certifications">
+                <span>Mastery</span>
+                <h3>Create certifications</h3>
+                <p>Name the skills staff need to master and choose which quizzes count toward each one.</p>
               </Link>
             </div>
           </section>

@@ -29,6 +29,8 @@ The app currently includes:
 - Team Management
 - restaurant logo upload
 - quiz builder
+- automated draft quiz questions from manager-entered training pages
+- manager-created certifications
 - staff quiz taking
 - staff and manager quiz progress
 - Training Page source file attachments
@@ -314,7 +316,7 @@ On `/manager/content`, test the manager workflow:
 10. Create a draft Training Page.
 11. Confirm staff cannot see the draft page.
 
-Testable Staff Knowledge is saved for future quiz generation. Example:
+Testable Staff Knowledge powers automatic quiz drafts. Example:
 
 ```json
 [
@@ -327,7 +329,44 @@ Testable Staff Knowledge is saved for future quiz generation. Example:
 ]
 ```
 
-This does not generate quizzes yet. It only stores structured facts so quizzes can be built later.
+Managers can use those facts on `/manager/quizzes` to generate editable draft questions.
+
+## Automated Quizzes And Certifications
+
+Managers can visit:
+
+```text
+/manager/quizzes
+```
+
+Quiz workflow:
+
+1. Create or select a quiz.
+2. Choose a Training Category or Training Page if the quiz should focus on one topic.
+3. Click `Generate Questions from Tech Sheets`.
+4. Review the draft questions.
+5. Edit prompts, answer choices, correct answers, and explanations.
+6. Save the draft questions to the quiz.
+7. Publish the quiz when staff should see it.
+
+The generator uses published Training Pages from that restaurant only. It looks for Testable Staff Knowledge first, then useful structured fields such as allergens, ingredients, talking points, service notes, wine region, grape, producer, vintage, cocktail details, and food category.
+
+Managers can create certifications at:
+
+```text
+/manager/certifications
+```
+
+Certification workflow:
+
+1. Publish at least one quiz.
+2. Create a certification name such as `BTG Wine Certified`, `Cocktail Ready`, or `Dinner Menu Certified`.
+3. Choose which published quizzes are required.
+4. Publish the certification.
+5. Staff can see certification progress at `/certifications`.
+6. Managers can see which staff members are certified or still in progress.
+
+Certifications are calculated from passed quiz attempts. A staff member earns a certification after passing every quiz attached to that certification.
 
 ## Import Existing Training Content
 
@@ -402,12 +441,14 @@ To test tenant separation:
 - `/manager/billing` protected Billing page for Account Owners and Admins
 - `/manager/content` protected content management page for Account Owners, Admins, and Managers
 - `/manager/quizzes` protected quiz builder for Account Owners, Admins, and Managers
+- `/manager/certifications` protected certification builder for Account Owners, Admins, and Managers
 - `/manager/staff-progress` protected quiz results page for Account Owners, Admins, and Managers
 - `/manager/settings` protected Workspace Settings and Team Management page
 - `/manager/invite-team` protected invite team page
 - `/training-library` protected staff-facing Training Library for all active members
 - `/staff` same staff-facing Training Library
 - `/quizzes` protected staff quiz page
+- `/certifications` protected staff certification progress page
 - `/my-progress` protected personal quiz history page
 - `/report-issue` protected issue reporting placeholder
 

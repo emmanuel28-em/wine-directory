@@ -429,6 +429,26 @@ const schema = a.schema({
       allow.groupDefinedIn("managerGroup").to(["read"])
     ]),
 
+  // A Certification is a manager-created mastery goal.
+  // Example: "BTG Wine Certified" can require staff to pass selected wine quizzes.
+  Certification: a
+    .model({
+      restaurantId: a.id().required(),
+      name: a.string().required(),
+      description: a.string(),
+      category: a.string(),
+      status: a.enum(["draft", "published", "archived"]),
+      requiredQuizIdsJson: a.string(),
+      createdBy: a.id(),
+      updatedBy: a.id(),
+      tenantGroup: a.string(),
+      managerGroup: a.string()
+    })
+    .authorization((allow) => [
+      allow.groupDefinedIn("tenantGroup").to(["read"]),
+      allow.groupDefinedIn("managerGroup").to(["create", "update", "delete"])
+    ]),
+
   // A SupportTicket captures a restaurant user's problem or feature request.
   // Creation runs through a backend function that verifies active membership.
   SupportTicket: a

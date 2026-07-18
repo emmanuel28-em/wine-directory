@@ -71,6 +71,7 @@ function NavigationLinks({ authSession, currentWorkspace, hasPlatformAccess, loc
       <>
         <NavLink to="/training-library">Library</NavLink>
         <NavLink to="/quizzes">Quizzes</NavLink>
+        <NavLink to="/certifications">Certifications</NavLink>
         <NavLink to="/my-progress">My progress</NavLink>
       </>
     );
@@ -83,6 +84,7 @@ function NavigationLinks({ authSession, currentWorkspace, hasPlatformAccess, loc
         <NavLink to="/manager/content">Training</NavLink>
         <NavLink to="/manager/invite-team">Team</NavLink>
         <NavLink to="/manager/quizzes">Quizzes</NavLink>
+        <NavLink to="/manager/certifications">Certifications</NavLink>
         <NavLink to="/manager/staff-progress">Results</NavLink>
       </>
     );
