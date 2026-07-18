@@ -255,6 +255,10 @@ textarea {
   display: none;
 }
 
+.bottom-nav {
+  display: none;
+}
+
 .nav-button {
   padding: 8px 12px;
   color: var(--color-muted);
@@ -857,6 +861,71 @@ textarea {
 
 .plan-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.public-pricing-grid,
+.billing-plan-list {
+  display: grid;
+  gap: 14px;
+}
+
+.public-pricing-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: min(940px, 100%);
+  margin: 28px auto 0;
+}
+
+.pricing-summary-card strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--color-primary);
+  font-size: 1.45rem;
+}
+
+.pricing-footnote {
+  max-width: 760px;
+  margin: 18px auto 0;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.billing-plan-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 14px;
+  color: var(--color-text);
+  background: rgba(164, 182, 154, 0.12);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  cursor: pointer;
+}
+
+.billing-plan-option.is-selected {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(31, 61, 46, 0.1);
+}
+
+.billing-plan-option input {
+  width: auto;
+  min-height: auto;
+  margin-top: 5px;
+}
+
+.billing-plan-option strong,
+.billing-plan-option small {
+  display: block;
+}
+
+.billing-plan-option small {
+  color: var(--color-muted);
+}
+
+.billing-user-count {
+  height: auto;
+  min-height: 54px;
+  border-radius: 16px;
 }
 
 .content-manager-grid {
@@ -2497,6 +2566,42 @@ code {
     grid-column: 1 / -1;
   }
 
+  .app-shell {
+    padding-bottom: 76px;
+  }
+
+  .bottom-nav {
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    padding: 8px;
+    background: rgba(255, 253, 248, 0.96);
+    border: 1px solid var(--color-border);
+    border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(31, 61, 46, 0.16);
+    backdrop-filter: blur(12px);
+  }
+
+  .bottom-nav a {
+    display: grid;
+    min-height: 42px;
+    place-items: center;
+    color: var(--color-muted);
+    font-size: 0.78rem;
+    font-weight: 900;
+    border-radius: 12px;
+  }
+
+  .bottom-nav a.active {
+    color: #fff;
+    background: var(--color-primary);
+  }
+
   .hero-page {
     display: block;
   }
@@ -2509,6 +2614,7 @@ code {
   .dashboard-grid,
   .library-preview,
   .plan-grid,
+  .public-pricing-grid,
   .problem-list,
   .solution-grid,
   .solution-showcase,
@@ -2660,7 +2766,8 @@ code {
   .home-account-bar,
   .home-success-panel,
   .setup-help-strip,
-  .import-next-steps {
+  .import-next-steps,
+  .billing-action-stack {
     align-items: stretch;
     flex-direction: column;
   }
@@ -2692,6 +2799,36 @@ code {
 
   .story-section {
     padding: 72px 0;
+  }
+
+  .staff-library-filter-panel {
+    position: static;
+  }
+
+  .staff-library-tabs {
+    margin-right: -16px;
+    margin-left: -16px;
+    padding: 0 16px 4px;
+  }
+
+  .training-card,
+  .form-card,
+  .operator-section,
+  .stat-card {
+    border-radius: 14px;
+  }
+
+  .operator-section {
+    padding: 18px;
+  }
+
+  .quiz-question,
+  .review-question {
+    padding: 12px;
+  }
+
+  .quiz-choice {
+    min-height: 48px;
   }
 
   .centered-copy {

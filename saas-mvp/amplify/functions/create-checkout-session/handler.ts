@@ -14,6 +14,7 @@ type CheckoutEvent = {
     stripeCustomerId?: string;
     trialEndsAt?: string;
     requestedByRole?: string;
+    selectedPlan?: string;
   };
 };
 
@@ -68,7 +69,26 @@ async function getRestaurant(restaurantId: string) {
   return result.Item || null;
 }
 
-async function saveCustomerId({ restaurantId, stripeCustomerId, billingEmail }: { restaurantId: string; stripeCustomerId: string; billingEmail: string }) {
+function getPlanPriceId(selectedPlan?: string) {
+  const plan = selectedPlan === "growth" || selectedPlan === "pro" ? selectedPlan : "starter";
+
+  if (plan === "growth") return process.env.STRIPE_PRICE_ID_GROWTH || "";
+  if (plan === "pro") return process.env.STRIPE_PRICE_ID_PRO || "";
+
+  return process.env.STRIPE_PRICE_ID_STARTER || process.env.STRIPE_PRICE_ID_MONTHLY || "";
+}
+
+async function saveBillingSetup({
+  restaurantId,
+  stripeCustomerId,
+  billingEmail,
+  selectedPlan
+}: {
+  restaurantId: string;
+  stripeCustomerId: string;
+  billingEmail: string;
+  selectedPlan: string;
+}) {
   await dynamo.send(
     new UpdateItemCommand({
       TableName: getRestaurantTableName(),
@@ -77,13 +97,19 @@ async function saveCustomerId({ restaurantId, stripeCustomerId, billingEmail }: 
           S: restaurantId
         }
       },
-      UpdateExpression: "SET stripeCustomerId = :customerId, billingEmail = :billingEmail, subscriptionStatus = if_not_exists(subscriptionStatus, :trialing)",
+      UpdateExpression: "SET stripeCustomerId = :customerId, billingEmail = :billingEmail, #plan = :plan, subscriptionStatus = if_not_exists(subscriptionStatus, :trialing)",
+      ExpressionAttributeNames: {
+        "#plan": "plan"
+      },
       ExpressionAttributeValues: {
         ":customerId": {
           S: stripeCustomerId
         },
         ":billingEmail": {
           S: billingEmail
+        },
+        ":plan": {
+          S: selectedPlan
         },
         ":trialing": {
           S: "trialing"
@@ -141,7 +167,8 @@ async function updateStripeCustomerMetadata(customerId: string, restaurantId: st
 
 export const handler = async (event: CheckoutEvent) => {
   const secretKey = process.env.STRIPE_SECRET_KEY || "";
-  const priceId = process.env.STRIPE_PRICE_ID_MONTHLY || "";
+  const selectedPlan = event.arguments.selectedPlan === "growth" || event.arguments.selectedPlan === "pro" ? event.arguments.selectedPlan : "starter";
+  const priceId = getPlanPriceId(selectedPlan);
   const appBaseUrl = process.env.LINE_UP_APP_BASE_URL || "";
   const { restaurantId, stripeCustomerId } = event.arguments;
 
@@ -151,7 +178,7 @@ export const handler = async (event: CheckoutEvent) => {
       checkoutUrl: "",
       stripeCustomerId: stripeCustomerId || "",
       status: "notConfigured",
-      error: "Stripe is not configured. Set STRIPE_SECRET_KEY, STRIPE_PRICE_ID_MONTHLY, and LINE_UP_APP_BASE_URL."
+      error: "Stripe is not configured. Set STRIPE_SECRET_KEY, STRIPE_PRICE_ID_STARTER, STRIPE_PRICE_ID_GROWTH, STRIPE_PRICE_ID_PRO, and LINE_UP_APP_BASE_URL."
     };
   }
 
@@ -187,7 +214,7 @@ export const handler = async (event: CheckoutEvent) => {
     const savedCustomerId = restaurant.stripeCustomerId?.S || "";
     const customerId = savedCustomerId || (await createStripeCustomer({ restaurantId, restaurantName, billingEmail }));
     await updateStripeCustomerMetadata(customerId, restaurantId);
-    await saveCustomerId({ restaurantId, stripeCustomerId: customerId, billingEmail });
+    await saveBillingSetup({ restaurantId, stripeCustomerId: customerId, billingEmail, selectedPlan });
 
     const checkoutBody = new URLSearchParams();
     const cleanBaseUrl = appBaseUrl.replace(/\/$/, "");
@@ -201,7 +228,9 @@ export const handler = async (event: CheckoutEvent) => {
     checkoutBody.set("success_url", `${cleanBaseUrl}/manager/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`);
     checkoutBody.set("cancel_url", `${cleanBaseUrl}/manager/billing?checkout=cancelled`);
     checkoutBody.set("metadata[restaurantId]", restaurantId);
+    checkoutBody.set("metadata[selectedPlan]", selectedPlan);
     checkoutBody.set("subscription_data[metadata][restaurantId]", restaurantId);
+    checkoutBody.set("subscription_data[metadata][selectedPlan]", selectedPlan);
     checkoutBody.set("subscription_data[trial_settings][end_behavior][missing_payment_method]", "cancel");
 
     if (trialEndUnix) {

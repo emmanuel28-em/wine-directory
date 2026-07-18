@@ -12,6 +12,34 @@ import {
   isTrialExpired,
   updateBillingEmail
 } from "../lib/billing.js";
+import { listTeamMembersForRestaurant } from "../lib/settings.js";
+
+const pricingPlans = [
+  {
+    id: "starter",
+    name: "Starter",
+    price: "$99",
+    limit: "Up to 20 users",
+    bestFor: "Good for small restaurants",
+    includedUsers: 20
+  },
+  {
+    id: "growth",
+    name: "Growth",
+    price: "$199",
+    limit: "Up to 50 users",
+    bestFor: "Most independent restaurants",
+    includedUsers: 50
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    price: "$349",
+    limit: "Up to 100 users",
+    bestFor: "Larger restaurants and groups",
+    includedUsers: 100
+  }
+];
 
 function formatDate(value) {
   if (!value) {
@@ -33,14 +61,39 @@ export default function ManagerBillingPage() {
   const workspace = useCurrentWorkspace();
   const [searchParams] = useSearchParams();
   const [billingEmail, setBillingEmail] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState("starter");
+  const [activeUserCount, setActiveUserCount] = useState(0);
   const [isWorking, setIsWorking] = useState(false);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
     if (workspace.restaurant) {
       setBillingEmail(getInitialBillingEmail(workspace.restaurant));
+      setSelectedPlan(["starter", "growth", "pro"].includes(workspace.restaurant.plan) ? workspace.restaurant.plan : "starter");
     }
   }, [workspace.restaurant?.id, workspace.restaurant?.billingEmail, workspace.restaurant?.primaryContactEmail]);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    async function loadUserCount() {
+      if (workspace.status !== "ready") return;
+
+      try {
+        const members = await listTeamMembersForRestaurant(workspace.restaurant.id);
+        if (isCurrent) {
+          setActiveUserCount(members.filter((member) => member.membership?.status === "active").length);
+        }
+      } catch {
+        if (isCurrent) setActiveUserCount(0);
+      }
+    }
+
+    loadUserCount();
+    return () => {
+      isCurrent = false;
+    };
+  }, [workspace.status, workspace.restaurant?.id]);
 
   useEffect(() => {
     if (searchParams.get("checkout") === "success") {
@@ -120,7 +173,8 @@ export default function ManagerBillingPage() {
           ...workspace.restaurant,
           billingEmail: billingEmail || getInitialBillingEmail(workspace.restaurant),
           currentUserRole: workspace.role
-        }
+        },
+        selectedPlan
       });
 
       window.location.assign(checkoutUrl);
@@ -173,6 +227,8 @@ export default function ManagerBillingPage() {
   const shouldShowPortal = Boolean(restaurant.stripeCustomerId);
   const trialDaysRemaining = getTrialDaysRemaining(restaurant);
   const preservesTrial = checkoutPreservesTrial(restaurant);
+  const currentPlan = pricingPlans.find((plan) => plan.id === selectedPlan) || pricingPlans[0];
+  const overUserLimit = activeUserCount > currentPlan.includedUsers;
 
   return (
     <section className="page-section">
@@ -208,8 +264,8 @@ export default function ManagerBillingPage() {
 
         <article className="stat-card">
           <span>Plan</span>
-          <h2>{restaurant.plan === "trial" ? "Monthly" : restaurant.plan || "Monthly"}</h2>
-          <p>Monthly platform fee after trial.</p>
+          <h2>{currentPlan.name}</h2>
+          <p>{currentPlan.price}/month · {currentPlan.limit}</p>
         </article>
 
         <article className="stat-card">
@@ -249,10 +305,38 @@ export default function ManagerBillingPage() {
         </form>
 
         <section className="form-card">
-          <h2>Secure Payment Setup</h2>
+          <h2>Choose a Plan</h2>
           <p>
-            Line Up does not collect or store card details. Stripe Checkout handles payment information securely.
+            Pick the plan that fits this restaurant. Extra users above the plan limit can be billed at $3-$5 per user per month.
           </p>
+
+          <div className="billing-plan-list" role="list">
+            {pricingPlans.map((plan) => (
+              <label className={selectedPlan === plan.id ? "billing-plan-option is-selected" : "billing-plan-option"} key={plan.id}>
+                <input
+                  type="radio"
+                  name="plan"
+                  value={plan.id}
+                  checked={selectedPlan === plan.id}
+                  onChange={() => setSelectedPlan(plan.id)}
+                />
+                <span>
+                  <strong>{plan.name}</strong>
+                  <small>{plan.price}/month · {plan.limit}</small>
+                  <small>{plan.bestFor}</small>
+                </span>
+              </label>
+            ))}
+          </div>
+
+          <div className={overUserLimit ? "warning-banner" : "info-banner billing-user-count"}>
+            {activeUserCount} active user{activeUserCount === 1 ? "" : "s"} in this workspace. {overUserLimit
+              ? `${currentPlan.name} includes ${currentPlan.includedUsers}; extra users may be billed separately.`
+              : `${currentPlan.name} covers this team size.`}
+          </div>
+
+          <h2>Secure Payment Setup</h2>
+          <p>Line Up does not collect or store card details. Stripe Checkout handles payment information securely.</p>
 
           {shouldShowCheckout ? (
             <div className="billing-timing-note">

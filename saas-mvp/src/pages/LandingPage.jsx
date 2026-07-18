@@ -21,6 +21,12 @@ const solutionCards = [
   }
 ];
 
+const pricingCards = [
+  ["Starter", "$99/month", "Up to 20 users", "Good for small restaurants"],
+  ["Growth", "$199/month", "Up to 50 users", "Most independent restaurants"],
+  ["Pro", "$349/month", "Up to 100 users", "Larger restaurants and groups"]
+];
+
 export default function LandingPage() {
   return (
     <>
@@ -100,6 +106,19 @@ export default function LandingPage() {
             Google Docs, wine lists, cocktail specs, and SOPs.
           </p>
         </div>
+
+        <div className="public-pricing-grid">
+          {pricingCards.map(([name, price, limit, bestFor]) => (
+            <article className="quiet-card pricing-summary-card" key={name}>
+              <h3>{name}</h3>
+              <strong>{price}</strong>
+              <p>{limit}</p>
+              <p>{bestFor}</p>
+            </article>
+          ))}
+        </div>
+
+        <p className="pricing-footnote">Extra users can be added for $3-$5 per user per month depending on the account.</p>
 
         <div className="hook-actions">
           <Link className="primary-button hero-cta" to="/trial">

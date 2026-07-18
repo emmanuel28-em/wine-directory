@@ -270,7 +270,8 @@ const schema = a.schema({
       billingEmail: a.email().required(),
       stripeCustomerId: a.string(),
       trialEndsAt: a.datetime(),
-      requestedByRole: a.string()
+      requestedByRole: a.string(),
+      selectedPlan: a.string()
     })
     .returns(a.ref("CheckoutSessionResult"))
     .authorization((allow) => [allow.authenticated()])

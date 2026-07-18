@@ -94,6 +94,32 @@ function NavigationLinks({ authSession, currentWorkspace, hasPlatformAccess, loc
   return hasPlatformAccess ? <NavLink to="/platform">Administration</NavLink> : null;
 }
 
+function MobileBottomNav({ authSession, currentWorkspace }) {
+  if (authSession.status !== "authenticated" || currentWorkspace.isLoading || !currentWorkspace.isActiveMember) {
+    return null;
+  }
+
+  if (currentWorkspace.role === "staff") {
+    return (
+      <nav className="bottom-nav" aria-label="Staff quick navigation">
+        <NavLink to="/training-library">Library</NavLink>
+        <NavLink to="/quizzes">Assigned</NavLink>
+        <NavLink to="/certifications">Certs</NavLink>
+        <NavLink to="/my-progress">Progress</NavLink>
+      </nav>
+    );
+  }
+
+  return (
+    <nav className="bottom-nav" aria-label="Manager quick navigation">
+      <NavLink end to="/manager">Home</NavLink>
+      <NavLink to="/manager/content">Training</NavLink>
+      <NavLink to="/manager/assignments">Assign</NavLink>
+      <NavLink to="/manager/staff-progress">Results</NavLink>
+    </nav>
+  );
+}
+
 export default function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -171,6 +197,8 @@ export default function AppLayout() {
       <main>
         <Outlet />
       </main>
+
+      <MobileBottomNav authSession={authSession} currentWorkspace={currentWorkspace} />
     </div>
   );
 }

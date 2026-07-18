@@ -117,7 +117,7 @@ export async function updateBillingEmail({ restaurantId, billingEmail }) {
   );
 }
 
-export async function createCheckoutSessionForRestaurant({ restaurant }) {
+export async function createCheckoutSessionForRestaurant({ restaurant, selectedPlan = "starter" }) {
   requireRestaurantId(restaurant?.id);
   const dataClient = getDataClient();
   const billingEmail = restaurant.billingEmail || restaurant.primaryContactEmail;
@@ -132,7 +132,8 @@ export async function createCheckoutSessionForRestaurant({ restaurant }) {
     billingEmail,
     stripeCustomerId: restaurant.stripeCustomerId || "",
     trialEndsAt: restaurant.trialEndsAt || null,
-    requestedByRole: restaurant.currentUserRole || ""
+    requestedByRole: restaurant.currentUserRole || "",
+    selectedPlan
   });
 
   if (result.errors?.length) {
@@ -148,6 +149,7 @@ export async function createCheckoutSessionForRestaurant({ restaurant }) {
       id: restaurant.id,
       stripeCustomerId: result.data.stripeCustomerId,
       billingEmail,
+      plan: selectedPlan,
       subscriptionStatus: restaurant.subscriptionStatus || "trialing"
     });
   }

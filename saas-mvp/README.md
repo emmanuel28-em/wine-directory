@@ -162,7 +162,9 @@ VITE_APP_BASE_URL
 LINE_UP_APP_BASE_URL
 LINE_UP_FROM_EMAIL
 STRIPE_SECRET_KEY
-STRIPE_PRICE_ID_MONTHLY
+STRIPE_PRICE_ID_STARTER
+STRIPE_PRICE_ID_GROWTH
+STRIPE_PRICE_ID_PRO
 STRIPE_WEBHOOK_SECRET
 ```
 
@@ -702,23 +704,28 @@ Required Stripe environment variables:
 
 ```text
 STRIPE_SECRET_KEY=sk_test_...
-STRIPE_PRICE_ID_MONTHLY=price_...
+STRIPE_PRICE_ID_STARTER=price_...
+STRIPE_PRICE_ID_GROWTH=price_...
+STRIPE_PRICE_ID_PRO=price_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 LINE_UP_APP_BASE_URL=http://localhost:5173
 VITE_APP_BASE_URL=http://localhost:5173
 ```
 
-How to create the Stripe Price ID:
+How to create the Stripe Price IDs:
 
 1. In Stripe, create a Product for Line Up.
-2. Add a recurring monthly Price.
-3. Copy the Price ID, which starts with `price_`.
-4. Use that value for `STRIPE_PRICE_ID_MONTHLY`.
+2. Add three recurring monthly Prices:
+   - Starter: $99/month, up to 20 users.
+   - Growth: $199/month, up to 50 users.
+   - Pro: $349/month, up to 100 users.
+3. Copy each Price ID, which starts with `price_`.
+4. Use those values for `STRIPE_PRICE_ID_STARTER`, `STRIPE_PRICE_ID_GROWTH`, and `STRIPE_PRICE_ID_PRO`.
 
 How to configure Stripe Checkout:
 
 1. Set `STRIPE_SECRET_KEY`.
-2. Set `STRIPE_PRICE_ID_MONTHLY`.
+2. Set `STRIPE_PRICE_ID_STARTER`, `STRIPE_PRICE_ID_GROWTH`, and `STRIPE_PRICE_ID_PRO`.
 3. Set `LINE_UP_APP_BASE_URL` to the app URL users should return to after Checkout.
 4. Restart/redeploy the Amplify backend.
 
