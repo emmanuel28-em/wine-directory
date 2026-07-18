@@ -520,6 +520,33 @@ textarea {
   align-items: start;
 }
 
+.platform-access-form {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(220px, 0.6fr) auto;
+  gap: 14px;
+  align-items: end;
+}
+
+.platform-access-form .primary-button {
+  margin-bottom: 0;
+}
+
+.platform-workspace-status {
+  display: grid;
+  gap: 4px;
+  min-width: 150px;
+  text-align: right;
+}
+
+.platform-workspace-status strong {
+  color: var(--color-primary);
+  text-transform: capitalize;
+}
+
+.platform-workspace-status span {
+  color: var(--color-muted);
+}
+
 .pilot-checklist-section {
   display: grid;
   gap: 20px;
@@ -1667,8 +1694,13 @@ code {
   .starter-template-grid,
   .import-workspace-grid,
   .starter-category-grid,
-  .content-filter-bar {
+  .content-filter-bar,
+  .platform-access-form {
     grid-template-columns: 1fr;
+  }
+
+  .platform-workspace-status {
+    text-align: left;
   }
 
   .import-guidance-card {

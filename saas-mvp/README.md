@@ -875,6 +875,35 @@ It also includes File Assets and Managed Setup Requests.
 
 The frontend now loads the current user's active role connection first, then uses that restaurant's `restaurantId` for Training Category and Training Page queries.
 
+## Platform Ownership And Developer Access
+
+Line Up now keeps company access separate from restaurant access:
+
+- `Platform Owner` is a Line Up company role. It can open `/platform`, view restaurant account metadata, and grant or remove platform access.
+- `Platform Developer` can open the internal platform area, but cannot list customer workspaces or read restaurant training content by default.
+- `Account Owner`, `Admin`, `Manager`, and `Staff` remain roles inside one restaurant workspace.
+
+The first Platform Owner is bootstrapped through AWS after deployment. It cannot be selected during public signup. Once the first owner signs out and back in, they can grant access to other users who already have a Line Up login.
+
+Testing platform access:
+
+1. Deploy the backend so Cognito creates `lineup-platform-owners` and `lineup-platform-developers`.
+2. Follow `docs/platform-ownership.md` to add the first Platform Owner.
+3. Sign out and back in.
+4. Open `/platform`.
+5. Confirm the owner can see workspace metadata but not customer training pages.
+6. Have a developer create their own Line Up login.
+7. Grant that email `Platform Developer` access.
+8. Have the developer sign out and back in.
+9. Confirm the developer can open `/platform` but cannot see the restaurant account list or manage access.
+10. Invite the developer to a dedicated test restaurant when they need to test manager/staff workflows.
+
+Infrastructure ownership is separate from this screen. AWS root, GitHub, Stripe, the domain, billing, MFA, recovery methods, and production secrets must be controlled and transferred at the provider/account level. See:
+
+```text
+docs/platform-ownership.md
+```
+
 ## Production Hardening Still Needed
 
 Current security level:
@@ -918,6 +947,7 @@ Remaining security limitations:
 - Published-only staff content visibility is a product-level filter; tenant access is backend-enforced.
 - Dynamic group authorization protects restaurant boundaries, while the trusted UI and backend functions enforce the intended owner/admin/manager workflow.
 - Storage path access is still broadly authenticated at the S3 access-rule level, with app-layer tenant checks before upload/list/delete.
+- Platform support impersonation is not implemented. Future customer support access should require restaurant approval, a reason, expiration, and an audit log.
 
 What must be done before opening beyond a controlled first-client pilot:
 

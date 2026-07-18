@@ -5,5 +5,8 @@ import { defineAuth } from "@aws-amplify/backend";
 export const auth = defineAuth({
   loginWith: {
     email: true
-  }
+  },
+  // These are Line Up company roles, not restaurant roles. Restaurant access
+  // continues to use the restaurant-specific groups created during onboarding.
+  groups: ["lineup-platform-owners", "lineup-platform-developers"]
 });

@@ -4,6 +4,7 @@ import { createCheckoutSession } from "../functions/create-checkout-session/reso
 import { sendInviteEmail } from "../functions/send-invite-email/resource";
 import { provisionTrialWorkspace } from "../functions/provision-trial-workspace/resource";
 import { inviteAccess } from "../functions/invite-access/resource";
+import { platformAccess } from "../functions/platform-access/resource";
 
 const schema = a.schema({
   InviteEmailResult: a.customType({
@@ -57,6 +58,30 @@ const schema = a.schema({
     role: a.string(),
     status: a.string()
   }),
+
+  PlatformAccessResult: a.customType({
+    success: a.boolean(),
+    error: a.string(),
+    currentRole: a.string(),
+    usersJson: a.string()
+  }),
+
+  getPlatformAccess: a
+    .query()
+    .returns(a.ref("PlatformAccessResult"))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(platformAccess)),
+
+  managePlatformAccess: a
+    .mutation()
+    .arguments({
+      email: a.email().required(),
+      role: a.string().required(),
+      action: a.string().required()
+    })
+    .returns(a.ref("PlatformAccessResult"))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(platformAccess)),
 
   provisionTrialWorkspace: a
     .mutation()
@@ -128,7 +153,10 @@ const schema = a.schema({
       // Everyone in this restaurant can read its profile. Only its manager
       // group can make profile changes; workspace creation happens in Lambda.
       allow.groupDefinedIn("tenantGroup").to(["read"]),
-      allow.groupDefinedIn("managerGroup").to(["update"])
+      allow.groupDefinedIn("managerGroup").to(["update"]),
+      // Platform owners can inspect workspace status during support, transfer,
+      // and billing operations. This does not grant access to training content.
+      allow.groups(["lineup-platform-owners"]).to(["read"])
     ]),
 
   // A UserProfile stores app-specific user information.

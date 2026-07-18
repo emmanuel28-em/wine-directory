@@ -1,38 +1,48 @@
-import { getCurrentUser, signOut as amplifySignOut } from "aws-amplify/auth";
+import { fetchAuthSession, getCurrentUser, signOut as amplifySignOut } from "aws-amplify/auth";
 import { Hub } from "aws-amplify/utils";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useAmplifySetup } from "../amplify/AmplifySetupProvider.jsx";
 
 const AuthSessionContext = createContext(null);
 
+function readPlatformRole(payload = {}) {
+  const groups = Array.isArray(payload["cognito:groups"]) ? payload["cognito:groups"] : [];
+  if (groups.includes("lineup-platform-owners")) return "platform_owner";
+  if (groups.includes("lineup-platform-developers")) return "platform_developer";
+  return "";
+}
+
 export function AuthSessionProvider({ children }) {
   const amplifySetup = useAmplifySetup();
   const [session, setSession] = useState({
     status: "checking",
-    user: null
+    user: null,
+    platformRole: ""
   });
 
   async function refreshSession() {
     if (amplifySetup.status !== "ready") {
       setSession({
         status: amplifySetup.status === "missing" ? "missing-config" : "checking",
-        user: null
+        user: null,
+        platformRole: ""
       });
       return;
     }
 
     try {
       // This asks Cognito directly whether there is a real signed-in user.
-      const user = await getCurrentUser();
-      setSession({ status: "authenticated", user });
+      const [user, authTokens] = await Promise.all([getCurrentUser(), fetchAuthSession()]);
+      const platformRole = readPlatformRole(authTokens.tokens?.accessToken?.payload);
+      setSession({ status: "authenticated", user, platformRole });
     } catch {
-      setSession({ status: "unauthenticated", user: null });
+      setSession({ status: "unauthenticated", user: null, platformRole: "" });
     }
   }
 
   async function signOut() {
     await amplifySignOut();
-    setSession({ status: "unauthenticated", user: null });
+    setSession({ status: "unauthenticated", user: null, platformRole: "" });
   }
 
   useEffect(() => {

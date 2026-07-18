@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import AppLayout from "./components/AppLayout.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import PlatformRoute from "./components/PlatformRoute.jsx";
 import AcceptInvitePage from "./pages/AcceptInvitePage.jsx";
 import InviteTeamPage from "./pages/InviteTeamPage.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
@@ -14,6 +15,7 @@ import ManagerOnboardingPage from "./pages/ManagerOnboardingPage.jsx";
 import ManagerQuizzesPage from "./pages/ManagerQuizzesPage.jsx";
 import ManagerStaffProgressPage from "./pages/ManagerStaffProgressPage.jsx";
 import MyProgressPage from "./pages/MyProgressPage.jsx";
+import PlatformControlPage from "./pages/PlatformControlPage.jsx";
 import ComingSoonPage from "./pages/placeholders/ComingSoonPage.jsx";
 import StaffLibrary from "./pages/StaffLibrary.jsx";
 import StaffQuizzesPage from "./pages/StaffQuizzesPage.jsx";
@@ -30,6 +32,14 @@ export default function App() {
         <Route path="/managed-setup" element={<ManagedSetupPage />} />
         <Route path="/accept-invite" element={<AcceptInvitePage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/platform"
+          element={
+            <PlatformRoute>
+              <PlatformControlPage />
+            </PlatformRoute>
+          }
+        />
         <Route
           path="/manager"
           element={

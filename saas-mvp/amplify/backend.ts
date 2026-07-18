@@ -8,6 +8,7 @@ import { createCheckoutSession } from "./functions/create-checkout-session/resou
 import { sendInviteEmail } from "./functions/send-invite-email/resource";
 import { provisionTrialWorkspace } from "./functions/provision-trial-workspace/resource";
 import { inviteAccess } from "./functions/invite-access/resource";
+import { platformAccess } from "./functions/platform-access/resource";
 import { stripeWebhook } from "./functions/stripe-webhook/resource";
 import { storage } from "./storage/resource";
 
@@ -19,6 +20,7 @@ const backend = defineBackend({
   createCheckoutSession,
   data,
   inviteAccess,
+  platformAccess,
   provisionTrialWorkspace,
   sendInviteEmail,
   stripeWebhook,
@@ -65,6 +67,7 @@ backend.inviteAccess.addEnvironment("RESTAURANT_TABLE_NAME", restaurantTable.tab
 backend.inviteAccess.addEnvironment("USER_PROFILE_TABLE_NAME", userProfileTable.tableName);
 backend.inviteAccess.addEnvironment("MEMBERSHIP_TABLE_NAME", membershipTable.tableName);
 backend.inviteAccess.addEnvironment("INVITE_TABLE_NAME", inviteTable.tableName);
+backend.platformAccess.addEnvironment("USER_POOL_ID", backend.auth.resources.userPool.userPoolId);
 
 backend.provisionTrialWorkspace.resources.lambda.addToRolePolicy(
   new PolicyStatement({
@@ -78,6 +81,21 @@ backend.inviteAccess.resources.lambda.addToRolePolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
     actions: ["cognito-idp:CreateGroup", "cognito-idp:AdminAddUserToGroup", "cognito-idp:AdminRemoveUserFromGroup", "cognito-idp:AdminGetUser"],
+    resources: [backend.auth.resources.userPool.userPoolArn]
+  })
+);
+
+backend.platformAccess.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      "cognito-idp:CreateGroup",
+      "cognito-idp:AdminAddUserToGroup",
+      "cognito-idp:AdminRemoveUserFromGroup",
+      "cognito-idp:AdminListGroupsForUser",
+      "cognito-idp:ListUsers",
+      "cognito-idp:ListUsersInGroup"
+    ],
     resources: [backend.auth.resources.userPool.userPoolArn]
   })
 );

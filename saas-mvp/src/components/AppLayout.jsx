@@ -53,6 +53,7 @@ export default function AppLayout() {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const authSession = useAuthSession();
   const currentWorkspace = useCurrentWorkspace();
+  const hasPlatformAccess = ["platform_owner", "platform_developer"].includes(authSession.platformRole);
 
   async function handleLogout() {
     setIsSigningOut(true);
@@ -81,14 +82,17 @@ export default function AppLayout() {
 
         <nav className="main-nav" aria-label="Main navigation">
           {authSession.status === "authenticated" ? (
-            currentWorkspace.isLoading ? null : currentWorkspace.role === "staff" ? (
+            currentWorkspace.isLoading ? (
+              hasPlatformAccess ? <NavLink to="/platform">Platform Control</NavLink> : null
+            ) : currentWorkspace.role === "staff" ? (
               <>
                 <NavLink to="/training-library">Training Library</NavLink>
                 <NavLink to="/quizzes">Quizzes</NavLink>
                 <NavLink to="/my-progress">My Progress</NavLink>
                 <NavLink to="/report-issue">Report Issue</NavLink>
+                {hasPlatformAccess ? <NavLink to="/platform">Platform Control</NavLink> : null}
               </>
-            ) : (
+            ) : currentWorkspace.isActiveMember ? (
               <>
                 <NavLink to="/manager">Dashboard</NavLink>
                 <NavLink to="/manager/onboarding">Setup</NavLink>
@@ -100,8 +104,11 @@ export default function AppLayout() {
                 <NavLink to="/manager/invite-team">Invite Team</NavLink>
                 {isOwnerOrAdmin(currentWorkspace.role) ? <NavLink to="/manager/billing">Billing</NavLink> : null}
                 <NavLink to="/manager/settings">Settings</NavLink>
+                {hasPlatformAccess ? <NavLink to="/platform">Platform Control</NavLink> : null}
               </>
-            )
+            ) : hasPlatformAccess ? (
+              <NavLink to="/platform">Platform Control</NavLink>
+            ) : null
           ) : (
             <>
               <NavLink to="/">Home</NavLink>
@@ -126,6 +133,8 @@ export default function AppLayout() {
           <span>
             Signed in as <strong>{authSession.user?.signInDetails?.loginId || authSession.user?.username}</strong>
             {currentWorkspace.role ? <> · {formatRole(currentWorkspace.role)}</> : null}
+            {authSession.platformRole === "platform_owner" ? <> · Platform Owner</> : null}
+            {authSession.platformRole === "platform_developer" ? <> · Platform Developer</> : null}
           </span>
           <DevelopmentRoleSwitcher currentWorkspace={currentWorkspace} />
         </div>

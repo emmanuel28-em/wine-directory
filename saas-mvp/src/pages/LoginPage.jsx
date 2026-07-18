@@ -31,7 +31,7 @@ export default function LoginPage() {
   // If someone already has a valid session, do not show the signup form again.
   // This avoids Amplify's "There is already a signed in user" message.
   if (authSession.status === "authenticated") {
-    return <Navigate to="/manager" replace />;
+    return <Navigate to={authSession.platformRole ? "/platform" : "/manager"} replace />;
   }
 
   return (
