@@ -59,7 +59,7 @@ export default function ManagerBillingPage() {
         }
 
         if (nextWorkspace?.restaurant?.stripeSubscriptionId) {
-          setMessage("Billing is connected. Your workspace subscription is ready.");
+          setMessage("Billing is connected. Your Line Up subscription is ready.");
           return;
         }
 
@@ -180,7 +180,7 @@ export default function ManagerBillingPage() {
         <div>
           <p className="eyebrow">Billing</p>
           <h1>Billing</h1>
-          <p>Manage the Line Up trial and Stripe billing setup for {restaurant.name}.</p>
+          <p>Review the Line Up trial, plan, and payment details for {restaurant.name}.</p>
         </div>
         <Link className="secondary-button" to="/manager">
           Dashboard
@@ -203,7 +203,7 @@ export default function ManagerBillingPage() {
         <article className="stat-card">
           <span>Restaurant</span>
           <h2>{restaurant.name}</h2>
-          <p>{restaurant.city || restaurant.address || "Restaurant workspace"}</p>
+          <p>{restaurant.city || restaurant.address || "Restaurant account"}</p>
         </article>
 
         <article className="stat-card">

@@ -165,7 +165,7 @@ export default function InviteTeamPage() {
           <p className="eyebrow">Invite Team</p>
           <h1>Invite your team</h1>
           <p>
-            Invite managers, chefs, servers, bartenders, backservers, cooks, or anyone who needs access to this restaurant’s training workspace.
+            Invite managers, chefs, servers, bartenders, backservers, cooks, or anyone who needs access to this restaurant’s training.
           </p>
         </div>
       </div>

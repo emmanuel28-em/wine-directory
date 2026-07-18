@@ -198,9 +198,9 @@ export default function AcceptInvitePage() {
     <section className="page-section narrow-page">
       <div className="section-heading">
         <p className="eyebrow">Accept Invite</p>
-        <h1>Join a Line Up workspace</h1>
+        <h1>Join your restaurant on Line Up</h1>
         <p>
-          For privacy, sign in or create an account first. Then Line Up will verify the invite and connect you to the correct restaurant workspace.
+          Sign in or create an account with the email that received the invitation. Line Up will connect you to the correct restaurant.
         </p>
       </div>
 

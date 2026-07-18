@@ -22,7 +22,7 @@ function groupDocsByCollectionAndType(docs, collections) {
     const collection = collectionMap.get(doc.collectionId);
     const collectionKey = collection?.id || "unassigned";
     const collectionName = collection?.name || "Unassigned";
-    const collectionDescription = collection?.description || "Training pages that are not inside a Training Category yet.";
+    const collectionDescription = collection?.description || "Training pages that have not been placed in a library section yet.";
     const typeKey = doc.type || "custom";
 
     if (!groups.has(collectionKey)) {
@@ -113,7 +113,7 @@ export default function StaffLibrary() {
         <div>
           <p className="eyebrow">Staff library</p>
           <h1>{workspace.restaurant?.name || "Training Library"}</h1>
-          <p>Training Categories are the sections. Training Pages are the actual things staff studies.</p>
+          <p>Everything your team needs to study, organized by your restaurant.</p>
         </div>
         <button className="secondary-button" type="button" onClick={loadStaffLibrary}>
           Refresh
@@ -126,10 +126,10 @@ export default function StaffLibrary() {
 
       {workspace.status === "empty" || workspace.status === "error" ? (
         <div className="form-card">
-          <h2>Library setup needed</h2>
+          <h2>Training library unavailable</h2>
           <p>{workspace.message || message}</p>
           <Link className="primary-button full-width" to="/trial">
-            Create Trial Workspace
+            Return home
           </Link>
         </div>
       ) : null}
@@ -145,7 +145,7 @@ export default function StaffLibrary() {
           {groupedContent.map((collectionGroup) => (
             <section className="library-section collection-section" key={collectionGroup.id}>
               <div className="section-heading compact-heading">
-                <p className="eyebrow">Training Category</p>
+                <p className="eyebrow">Library section</p>
                 <h2>{collectionGroup.name}</h2>
                 <p>{collectionGroup.description}</p>
               </div>
@@ -256,8 +256,11 @@ export default function StaffLibrary() {
 
             <article className="stat-card" id="report-issue">
               <span>Report Issue</span>
-              <h2>Report an issue coming next</h2>
-              <p>Staff will be able to flag outdated or confusing training pages for managers.</p>
+              <h2>Something not right?</h2>
+              <p>Report outdated information or a problem using Line Up.</p>
+              <Link className="secondary-button card-action" to="/report-issue">
+                Get Help
+              </Link>
             </article>
           </div>
         </section>

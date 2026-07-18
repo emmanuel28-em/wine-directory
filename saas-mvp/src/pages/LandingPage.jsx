@@ -51,7 +51,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="story-section solution-section" id="solution">
+      <section className="story-section solution-section" id="how-it-works">
         <div className="story-copy centered-copy">
           <p className="eyebrow">The solution</p>
           <h2>One place to keep the team lined up.</h2>
@@ -96,7 +96,7 @@ export default function LandingPage() {
           <p className="eyebrow">Start simple</p>
           <h2>Start with a 30-day free trial.</h2>
           <p>
-            Build your own workspace, or ask for managed setup if you want help migrating menus,
+            Build your own training library, or ask for setup help if you want us to organize menus,
             Google Docs, wine lists, cocktail specs, and SOPs.
           </p>
         </div>
@@ -106,7 +106,7 @@ export default function LandingPage() {
             Start Your Free Trial
           </Link>
           <Link className="text-link" to="/managed-setup">
-            Request Done-For-You Setup
+            Get Setup Help
           </Link>
         </div>
       </section>

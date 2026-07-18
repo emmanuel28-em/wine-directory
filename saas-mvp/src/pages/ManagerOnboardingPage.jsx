@@ -54,28 +54,28 @@ export default function ManagerOnboardingPage() {
     () => [
       {
         title: "Organize the library",
-        detail: collections.length > 0 ? `${collections.length} Training Categories created.` : "Choose the sections this restaurant needs.",
+        detail: collections.length > 0 ? `${collections.length} library sections created.` : "Choose the sections this restaurant needs.",
         complete: collections.length > 0,
         to: "#starter-categories",
-        action: "Choose Categories"
+        action: "Choose sections"
       },
       {
         title: "Add real training material",
-        detail: docs.length > 0 ? `${docs.length} Training Pages added.` : "Paste menu notes or create the first page.",
+        detail: docs.length > 0 ? `${docs.length} training pages added.` : "Paste menu notes or create the first page.",
         complete: docs.length > 0,
         to: "/manager/import",
-        action: "Import Material"
+        action: "Add training"
       },
       {
         title: "Invite the team",
-        detail: teamMembers.length > 1 ? `${teamMembers.length} active team members.` : "Invite one manager or staff member to test access.",
+        detail: teamMembers.length > 1 ? `${teamMembers.length} active team members.` : "Invite one manager or staff member.",
         complete: teamMembers.length > 1,
         to: "/manager/invite-team",
         action: "Invite Team"
       },
       {
         title: "Check readiness",
-        detail: quizzes.some((quiz) => quiz.isPublished) ? "A staff quiz is published." : "Create and publish one short quiz.",
+        detail: quizzes.some((quiz) => quiz.isPublished) ? "A staff quiz is published." : "Create and publish one short knowledge check.",
         complete: quizzes.some((quiz) => quiz.isPublished),
         to: "/manager/quizzes",
         action: "Create Quiz"
@@ -102,7 +102,7 @@ export default function ManagerOnboardingPage() {
     );
 
     if (toCreate.length === 0) {
-      setMessage("Those Training Categories already exist, or none are selected.");
+      setMessage("Those library sections already exist, or none are selected.");
       return;
     }
 
@@ -124,7 +124,7 @@ export default function ManagerOnboardingPage() {
       }
 
       await loadProgress();
-      setMessage(`${toCreate.length} Training Categor${toCreate.length === 1 ? "y was" : "ies were"} created.`);
+      setMessage(`${toCreate.length} library section${toCreate.length === 1 ? " was" : "s were"} created.`);
     } catch (error) {
       setMessage(error.message || "Could not create the starter categories.");
     } finally {
@@ -136,12 +136,12 @@ export default function ManagerOnboardingPage() {
     <section className="page-section">
       <div className="dashboard-header">
         <div>
-          <p className="eyebrow">Workspace setup</p>
-          <h1>Set up {workspace.restaurant?.name || "your restaurant"}</h1>
-          <p>Start small: organize the library, add real material, invite one person, and test one quiz.</p>
+          <p className="eyebrow">Getting started</p>
+          <h1>Get {workspace.restaurant?.name || "your restaurant"} ready</h1>
+          <p>Start with the training material you already have. You can improve and expand it at any time.</p>
         </div>
         <Link className="secondary-button" to="/manager">
-          Dashboard
+          Back home
         </Link>
       </div>
 
@@ -149,7 +149,7 @@ export default function ManagerOnboardingPage() {
 
       <section className="onboarding-progress-card">
         <div>
-          <p className="eyebrow">Setup progress</p>
+          <p className="eyebrow">Your progress</p>
           <h2>{completedCount} of {steps.length} steps complete</h2>
         </div>
         <div className="progress-track" aria-label={`${completedCount} of ${steps.length} setup steps complete`}>
@@ -175,9 +175,9 @@ export default function ManagerOnboardingPage() {
       <section className="operator-section" id="starter-categories">
         <div className="operator-section-heading">
           <div>
-            <p className="eyebrow">Step 1</p>
-            <h2>Choose starter Training Categories</h2>
-            <p>Use the restaurant's own language. You can rename, archive, or add categories later.</p>
+            <p className="eyebrow">Library sections</p>
+            <h2>Choose how your team finds training</h2>
+            <p>Use the words your restaurant already uses. You can rename, archive, or add sections later.</p>
           </div>
         </div>
 
@@ -204,15 +204,15 @@ export default function ManagerOnboardingPage() {
         </div>
 
         <button className="primary-button" type="button" onClick={createStarterCategories} disabled={isWorking}>
-          {isWorking ? "Creating..." : "Create Selected Categories"}
+          {isWorking ? "Creating..." : "Create selected sections"}
         </button>
       </section>
 
       {completedCount === steps.length ? (
         <section className="success-panel">
-          <p className="eyebrow">Ready for a staff test</p>
-          <h2>The core workspace is set up.</h2>
-          <p>Review the staff Training Library, then invite a small pilot group before opening access to the full team.</p>
+          <p className="eyebrow">Ready for your team</p>
+          <h2>Your training library is ready to use.</h2>
+          <p>Preview what staff will see, then invite the people who need access.</p>
           <Link className="primary-button" to="/training-library">
             Preview Training Library
           </Link>
@@ -221,4 +221,3 @@ export default function ManagerOnboardingPage() {
     </section>
   );
 }
-

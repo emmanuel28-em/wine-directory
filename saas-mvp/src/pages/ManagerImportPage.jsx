@@ -27,7 +27,7 @@ export default function ManagerImportPage() {
       try {
         setCollections(await listCollectionsForRestaurant(workspace.restaurant.id));
       } catch (error) {
-        setMessage(error.message || "Could not load Training Categories.");
+        setMessage(error.message || "Could not load your library sections.");
       }
     }
 
@@ -50,8 +50,8 @@ export default function ManagerImportPage() {
     setDrafts(parsedDrafts);
     setMessage(
       parsedDrafts.length === 1
-        ? "One draft is ready to review. If you expected more, place --- on its own line between items and try again."
-        : `${parsedDrafts.length} drafts are ready to review. Nothing has been saved yet.`
+        ? "One page is ready to review. If you expected more, place --- on its own line between items and try again."
+        : `${parsedDrafts.length} pages are ready to review. Nothing has been saved yet.`
     );
   }
 
@@ -107,7 +107,7 @@ export default function ManagerImportPage() {
       setDrafts([]);
       setSourceText("");
       setMessage(
-        `${createdCount} Training Page${createdCount === 1 ? " was" : "s were"} imported as drafts.${
+        `${createdCount} training page${createdCount === 1 ? " was" : "s were"} saved as a draft.${
           skippedCount ? ` ${skippedCount} possible duplicate${skippedCount === 1 ? " was" : "s were"} skipped.` : ""
         } Review and publish the new pages when they are ready for staff.`
       );
@@ -124,20 +124,19 @@ export default function ManagerImportPage() {
     <section className="page-section">
       <div className="dashboard-header">
         <div>
-          <p className="eyebrow">Import training material</p>
-          <h1>Turn existing notes into Training Pages</h1>
-          <p>Paste menu descriptions, tech sheets, cocktail specs, or SOPs. Review every draft before it reaches staff.</p>
+          <p className="eyebrow">Add training</p>
+          <h1>Paste the material you already have</h1>
+          <p>Line Up separates your notes into pages. You review everything before staff can see it.</p>
         </div>
         <Link className="secondary-button" to="/manager/content">
-          Manage Content
+          Back to training
         </Link>
       </div>
 
       <div className="workflow-strip">
-        <span>1. Paste</span>
-        <span>2. Review</span>
-        <span>3. Import drafts</span>
-        <span>4. Publish when approved</span>
+        <span>1. Paste your material</span>
+        <span>2. Check what Line Up found</span>
+        <span>3. Save as drafts</span>
       </div>
 
       {message ? <p className="form-message page-message">{message}</p> : null}
@@ -145,16 +144,16 @@ export default function ManagerImportPage() {
       <section className="operator-section">
         <div className="import-workspace-grid">
           <form className="form-card" onSubmit={(event) => event.preventDefault()}>
-            <h2>Paste Existing Material</h2>
+            <h2>Paste your notes</h2>
             <p className="helper-text">
               Line Up recognizes headings such as Menu Description, One Liner, Allergies, Ingredients, Producer,
               Varietal, Region, Glassware, Garnish, and Details.
             </p>
 
             <label>
-              Default Training Category optional
+              Library section optional
               <select value={defaultCollectionId} onChange={(event) => setDefaultCollectionId(event.target.value)}>
-                <option value="">Choose during review</option>
+                <option value="">Choose later</option>
                 {collections.map((collection) => (
                   <option key={collection.id} value={collection.id}>
                     {collection.name}
@@ -164,7 +163,7 @@ export default function ManagerImportPage() {
             </label>
 
             <label>
-              Restaurant notes or tech sheets
+              Menu notes, tech sheets, or procedures
               <textarea
                 className="import-textarea"
                 value={sourceText}
@@ -176,20 +175,20 @@ export default function ManagerImportPage() {
             <p className="helper-text">For unusual formats, put <strong>---</strong> on its own line between items.</p>
 
             <button className="primary-button full-width" type="button" onClick={reviewMaterial} disabled={isWorking}>
-              Review Import
+              Find training pages
             </button>
           </form>
 
           <aside className="form-card import-guidance-card">
-            <p className="eyebrow">Safe by default</p>
-            <h2>Nothing goes directly to staff</h2>
-            <p>Imported pages are always saved as drafts. A manager can edit each page, add testable knowledge, and publish it later.</p>
+            <p className="eyebrow">You stay in control</p>
+            <h2>Staff will not see anything yet</h2>
+            <p>Every page is saved as a draft. Review the details, add quiz facts, and publish it only when it is ready.</p>
             <h3>Best results</h3>
             <ul className="plain-list">
               <li>Keep the item name on its own line.</li>
               <li>Keep familiar headings from the original document.</li>
               <li>Review allergens and ingredients carefully.</li>
-              <li>Use a Training Category that matches the restaurant menu.</li>
+              <li>Choose a library section that matches the restaurant menu.</li>
             </ul>
           </aside>
         </div>
@@ -199,12 +198,12 @@ export default function ManagerImportPage() {
         <section className="operator-section">
           <div className="operator-section-heading">
             <div>
-              <p className="eyebrow">Draft review</p>
+              <p className="eyebrow">Review</p>
               <h2>Check what Line Up found</h2>
               <p>{selectedCount} of {drafts.length} drafts selected for import.</p>
             </div>
             <button className="primary-button" type="button" onClick={importDrafts} disabled={isWorking || selectedCount === 0}>
-              {isWorking ? "Importing..." : `Import ${selectedCount} Draft${selectedCount === 1 ? "" : "s"}`}
+              {isWorking ? "Saving..." : `Save ${selectedCount} Draft${selectedCount === 1 ? "" : "s"}`}
             </button>
           </div>
 
@@ -218,7 +217,7 @@ export default function ManagerImportPage() {
                       checked={draft.selected}
                       onChange={(event) => updateDraft(index, "selected", event.target.checked)}
                     />
-                    Import this page
+                    Save this page
                   </label>
                   <button className="quiet-danger-button" type="button" onClick={() => removeDraft(index)}>
                     Remove
@@ -231,7 +230,7 @@ export default function ManagerImportPage() {
                     <input value={draft.title} onChange={(event) => updateDraft(index, "title", event.target.value)} required />
                   </label>
                   <label>
-                    Content Type
+                    Training type
                     <select value={draft.contentType} onChange={(event) => updateDraft(index, "contentType", event.target.value)}>
                       <option value="foodItem">Food Item</option>
                       <option value="wine">Wine</option>
@@ -244,7 +243,7 @@ export default function ManagerImportPage() {
                 </div>
 
                 <label>
-                  Training Category
+                  Library section
                   <select value={draft.collectionId} onChange={(event) => updateDraft(index, "collectionId", event.target.value)}>
                     <option value="">Unassigned</option>
                     {collections.map((collection) => (
@@ -256,12 +255,12 @@ export default function ManagerImportPage() {
                 </label>
 
                 <label>
-                  One-Liner
+                  Short description
                   <textarea value={draft.summary} onChange={(event) => updateDraft(index, "summary", event.target.value)} />
                 </label>
 
                 <label>
-                  Full Notes
+                  Training details
                   <textarea className="large-textarea" value={draft.body} onChange={(event) => updateDraft(index, "body", event.target.value)} />
                 </label>
 

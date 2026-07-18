@@ -39,7 +39,7 @@ function getFriendlySignupError(error, fallbackMessage) {
   const errorName = error?.name || "";
 
   if (errorName === "UsernameExistsException") {
-    return "An account already exists for this email. Sign in instead, then create the restaurant workspace.";
+    return "An account already exists for this email. Sign in to continue.";
   }
 
   if (errorName === "InvalidPasswordException") {
@@ -92,7 +92,7 @@ export default function TrialPage() {
       await authSession.refreshSession();
       navigate("/manager/onboarding", { replace: true });
     } catch (error) {
-      setMessage(error.message || "Could not create the trial workspace.");
+      setMessage(error.message || "We could not finish setting up your restaurant.");
     } finally {
       setIsWorking(false);
     }
@@ -105,7 +105,7 @@ export default function TrialPage() {
     });
 
     if (!signInResult.isSignedIn) {
-      throw new Error("Sign in needs another step before the workspace can be created.");
+      throw new Error("Your sign-in needs one more step before the restaurant can be created.");
     }
 
     const user = await getCurrentUser();
@@ -186,15 +186,14 @@ export default function TrialPage() {
       <section className="page-section narrow-page">
         <div className="section-heading">
           <p className="eyebrow">30-day free trial</p>
-          <h1>Create a restaurant workspace</h1>
+          <h1>Finish setting up your restaurant</h1>
           <p>
-            You are already signed in. Create the restaurant workspace for this account,
-            or log out first if you want to use a different email.
+            You are already signed in. Tell us about the restaurant you want to train.
           </p>
         </div>
 
         <form className="form-card" onSubmit={createWorkspaceForSignedInUser}>
-          <h2>Account Owner Info</h2>
+          <h2>About you</h2>
 
           <div className="field-pair">
             <label>
@@ -220,7 +219,7 @@ export default function TrialPage() {
             </select>
           </label>
 
-          <h2>Restaurant Info</h2>
+          <h2>About the restaurant</h2>
 
           <label>
             Restaurant Name
@@ -248,7 +247,7 @@ export default function TrialPage() {
           </div>
 
           <button className="primary-button full-width" type="submit" disabled={isWorking}>
-            {isWorking ? "Creating workspace..." : "Create Workspace"}
+            {isWorking ? "Setting up your restaurant..." : "Start free trial"}
           </button>
 
           {message ? <p className="form-message">{message}</p> : null}
@@ -261,15 +260,15 @@ export default function TrialPage() {
     <section className="page-section narrow-page">
       <div className="section-heading">
         <p className="eyebrow">30-day free trial</p>
-        <h1>Start your restaurant training workspace</h1>
+        <h1>Set up training for your restaurant</h1>
         <p>
-          Create your Account Owner login and restaurant workspace. No card is required today.
+          Create your account and tell us about your restaurant. No card is required today.
         </p>
       </div>
 
       {phase === "signup" ? (
         <form className="form-card" onSubmit={startTrial}>
-          <h2>Account Owner Info</h2>
+          <h2>About you</h2>
 
           <div className="field-pair">
             <label>
@@ -306,7 +305,7 @@ export default function TrialPage() {
             <span className="helper-text">At least 8 characters with uppercase, lowercase, a number, and a symbol.</span>
           </label>
 
-          <h2>Restaurant Info</h2>
+          <h2>About the restaurant</h2>
 
           <label>
             Restaurant Name
@@ -351,7 +350,7 @@ export default function TrialPage() {
           <h2>Confirm Email</h2>
           <p>
             We sent a confirmation code to <strong>{form.email}</strong>. Enter it to finish
-            creating the trial workspace.
+            setting up your restaurant.
           </p>
 
           <label>

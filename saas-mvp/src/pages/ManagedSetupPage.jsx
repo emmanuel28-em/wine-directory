@@ -103,7 +103,7 @@ export default function ManagedSetupPage() {
       setMessage(
         workspace.status === "ready"
           ? "Thanks. We received your setup request and files. We’ll review them and follow up."
-          : "Thanks. We received your setup request. We’ll follow up by email; secure file upload becomes available after you create a workspace."
+          : "Thanks. We received your setup request. We’ll follow up by email; secure file upload becomes available after you create an account."
       );
     } catch (error) {
       setMessage(error.message || "Could not submit this managed setup request.");
@@ -216,7 +216,7 @@ export default function ManagedSetupPage() {
         <label>
           File uploads
           <span className="helper-text">
-            Uploads are available for signed-in restaurant workspaces. Public uploads are disabled for safety.
+            Uploads are available after you sign in to your restaurant account. Public uploads are disabled for safety.
           </span>
           <input
             type="file"

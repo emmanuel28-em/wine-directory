@@ -40,21 +40,16 @@ export default function LoginPage() {
         <p className="eyebrow">Secure login</p>
         <h1>Sign in to Line Up</h1>
         <p>
-          Access your restaurant workspace. Joining from an invite? Use the email address your manager invited.
+          Access your restaurant's training. Joining from an invite? Use the email address your manager invited.
         </p>
       </div>
 
       {amplifySetup.status === "missing" ? (
         <div className="form-card">
-          <h2>Secure login is not connected yet</h2>
+          <h2>Sign in is temporarily unavailable</h2>
           <p>
-            Line Up needs its cloud connection before real signup can work on this computer.
+            Please try again shortly. If the problem continues, contact Line Up support.
           </p>
-          <ol className="setup-list">
-            <li>Start the local cloud sandbox from the project folder.</li>
-            <li>Wait for the connection file to be created.</li>
-            <li>Restart the local website if the login form does not appear.</li>
-          </ol>
         </div>
       ) : (
         <div className="auth-card">

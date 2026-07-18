@@ -100,7 +100,7 @@ export default function ReportIssuePage() {
       <div className="section-heading">
         <p className="eyebrow">Support</p>
         <h1>Report a problem or request</h1>
-        <p>Tell us what happened. Line Up automatically includes safe workspace and browser details to help diagnose it.</p>
+        <p>Tell us what happened. Line Up includes safe restaurant and browser details so we can help faster.</p>
       </div>
 
       {message ? <p className="form-message page-message">{message}</p> : null}

@@ -278,8 +278,8 @@ export default function WorkspaceSettingsPage() {
       <div className="dashboard-header">
         <div>
           <p className="eyebrow">Settings</p>
-          <h1>Workspace Settings</h1>
-          <p>Manage restaurant details, team access, pending invites, and your account profile.</p>
+          <h1>Restaurant settings</h1>
+          <p>Update restaurant details, team access, invitations, and your account.</p>
         </div>
         <Link className="secondary-button" to="/manager/invite-team">
           Invite Team
@@ -349,7 +349,7 @@ export default function WorkspaceSettingsPage() {
                 {logoUrl ? (
                   <img className="workspace-logo-preview" src={logoUrl} alt={`${workspace.restaurant.name} logo`} />
                 ) : (
-                  <p className="empty-panel">Upload a logo to personalize this workspace.</p>
+                  <p className="empty-panel">Upload a logo to personalize your restaurant's Line Up account.</p>
                 )}
 
                 {canEditRestaurant ? (
@@ -369,17 +369,17 @@ export default function WorkspaceSettingsPage() {
             </div>
           </section>
 
-          <section className="operator-section">
+          <section className="operator-section" id="team">
             <div className="operator-section-heading">
               <div>
                 <p className="eyebrow">Team Management</p>
                 <h2>Team Members</h2>
-                <p>Manage active access for this restaurant workspace.</p>
+                <p>See who can access this restaurant and adjust their role when needed.</p>
               </div>
             </div>
 
             {teamMembers.length === 0 ? (
-              <p className="empty-panel">This workspace has no team members yet.</p>
+              <p className="empty-panel">No team members have joined yet.</p>
             ) : (
               <div className="operator-table">
                 {teamMembers.map((member) => {
@@ -436,7 +436,7 @@ export default function WorkspaceSettingsPage() {
               <div>
                 <p className="eyebrow">Pending Invites</p>
                 <h2>Invites</h2>
-                <p>Email invites use the same secure invite links. Manual copy-link backup stays available.</p>
+                <p>See invitations that have not been accepted yet.</p>
               </div>
               {isAdminOrManager(workspace.role) ? (
                 <Link className="secondary-button" to="/manager/invite-team">

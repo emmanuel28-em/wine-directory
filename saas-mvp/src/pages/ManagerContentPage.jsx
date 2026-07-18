@@ -289,7 +289,7 @@ export default function ManagerContentPage() {
     event.preventDefault();
 
     if (workspace.status !== "ready") {
-      setMessage("Create a restaurant workspace before adding Training Categories.");
+      setMessage("Finish setting up your restaurant before adding library sections.");
       return;
     }
 
@@ -305,9 +305,9 @@ export default function ManagerContentPage() {
       });
       await refreshRestaurantContent(workspace.restaurant.id);
       resetCategoryForm();
-      setMessage(editingCategoryId ? "Training Category updated." : "Training Category created.");
+      setMessage(editingCategoryId ? "Library section updated." : "Library section created.");
     } catch (error) {
-      setMessage(error.message || "Could not save the Training Category.");
+      setMessage(error.message || "Could not save the library section.");
     } finally {
       setIsWorking(false);
     }
@@ -326,7 +326,7 @@ export default function ManagerContentPage() {
       await refreshRestaurantContent(workspace.restaurant.id);
       setMessage(`${category.name} was archived.`);
     } catch (error) {
-      setMessage(error.message || "Could not archive the Training Category.");
+      setMessage(error.message || "Could not archive the library section.");
     } finally {
       setIsWorking(false);
     }
@@ -336,7 +336,7 @@ export default function ManagerContentPage() {
     event.preventDefault();
 
     if (workspace.status !== "ready") {
-      setMessage("Create a restaurant workspace before adding Training Pages.");
+      setMessage("Finish setting up your restaurant before adding training pages.");
       return;
     }
 
@@ -483,7 +483,7 @@ export default function ManagerContentPage() {
 
   async function importExistingContent() {
     if (workspace.status !== "ready") {
-      setMessage("No restaurant workspace found for this account.");
+      setMessage("No restaurant was found for this account.");
       return;
     }
 
@@ -534,22 +534,31 @@ export default function ManagerContentPage() {
     <section className="page-section">
       <div className="dashboard-header">
         <div>
-          <p className="eyebrow">Manager content</p>
-          <h1>Training Library Setup</h1>
+          <p className="eyebrow">Training</p>
+          <h1>Manage your training library</h1>
           <p>
-            Build your restaurant training library in three steps: create categories, add pages, then mark what staff should know.
+            Add what your team needs to know, keep it organized, and choose when it becomes visible to staff.
           </p>
         </div>
-        <Link className="secondary-button" to="/manager">
-          Back to Dashboard
-        </Link>
+        <div className="header-actions">
+          <Link className="secondary-button" to="/training-library">View as staff</Link>
+          <Link className="primary-button" to="/manager/import">Import material</Link>
+        </div>
       </div>
 
-      <div className="workflow-strip">
-        <span>1. Create category</span>
-        <span>2. Add training page</span>
-        <span>3. Add testable staff knowledge</span>
-        <span>4. Publish to staff library</span>
+      <div className="content-start-options" aria-label="Ways to manage training">
+        <Link to="/manager/import">
+          <strong>Import existing material</strong>
+          <span>Best for menus, tech sheets, cocktail specs, and procedures you already have.</span>
+        </Link>
+        <a href="#training-page-form">
+          <strong>Create one page</strong>
+          <span>Add or update a single dish, drink, wine, procedure, or service standard.</span>
+        </a>
+        <a href="#library-sections">
+          <strong>Organize sections</strong>
+          <span>Choose how staff browse the library, using your restaurant's own language.</span>
+        </a>
       </div>
 
       {workspace.status === "loading" || isWorking ? <div className="empty-panel">Working...</div> : null}
@@ -558,65 +567,48 @@ export default function ManagerContentPage() {
 
       {workspace.status === "empty" || workspace.status === "error" ? (
         <div className="form-card">
-          <h2>Workspace setup needed</h2>
+          <h2>Restaurant access needed</h2>
           <p>{workspace.message}</p>
           <Link className="primary-button full-width" to="/trial">
-            Create Trial Workspace
+            Continue restaurant setup
           </Link>
         </div>
       ) : null}
 
       {workspace.status === "ready" ? (
         <>
-          <section className="operator-section">
+          {canImportOriginalContent ? <section className="operator-section">
             <div className="operator-section-heading">
               <div>
-                <p className="eyebrow">Import</p>
-                <h2>Import Existing Training Content</h2>
+                <p className="eyebrow">Rezdora library</p>
+                <h2>Bring in the existing Rezdora training</h2>
                 <p>
-                  Bring the training content from the original static site into this restaurant workspace as published
-                  Training Categories and Training Pages. The import checks for matching title and type so clicking twice
-                  does not create duplicate pages.
+                  Add the training material already prepared for Rezdora. Line Up checks for matching pages so the same
+                  material is not added twice.
                 </p>
               </div>
             </div>
 
-            {canImportOriginalContent ? (
               <div className="import-panel">
                 <div>
                   <h3>Original Rezdora Training Library</h3>
                   <p>
-                    This imports wines, cocktails, food items, and pasta tasting content into the active Rezdora workspace
-                    connected to your logged-in account.
+                    Add wines, cocktails, food items, and pasta tasting material to this restaurant.
                   </p>
                 </div>
                 <button className="primary-button" type="button" onClick={importExistingContent} disabled={isWorking}>
-                  Import Existing Training Content
+                  Add Rezdora Training
                 </button>
               </div>
-            ) : (
-              <div className="import-panel">
-                <div>
-                  <h3>Already have menus or tech sheets?</h3>
-                  <p>
-                    Paste multiple menu descriptions, wine notes, cocktail specs, or SOPs and review them before they
-                    become Training Pages.
-                  </p>
-                </div>
-                <Link className="primary-button" to="/manager/import">
-                  Import Existing Material
-                </Link>
-              </div>
-            )}
-          </section>
+          </section> : null}
 
-          <section className="operator-section">
+          <section className="operator-section" id="library-sections">
             <div className="operator-section-heading">
               <div>
-                <p className="eyebrow">Section 1</p>
-                <h2>Organize Your Training Library</h2>
+                <p className="eyebrow">Library sections</p>
+                <h2>Organize how staff find information</h2>
                 <p>
-                  Create categories that match how your restaurant already trains. Examples: Dinner Menu, Lunch Menu,
+                  Create sections that match how your restaurant already trains. Examples: Dinner Menu, Lunch Menu,
                   Antipasti, Primi, BTG Wines, Cocktails, SOPs, Opening Sidework, Steps of Service.
                 </p>
               </div>
@@ -624,10 +616,10 @@ export default function ManagerContentPage() {
 
             <div className="content-manager-grid">
               <form className="form-card" onSubmit={submitCategory}>
-                <h3>{editingCategoryId ? "Edit Training Category" : "Create Training Category"}</h3>
+                <h3>{editingCategoryId ? "Edit section" : "Create a section"}</h3>
 
                 <label>
-                  Category Name
+                  Section name
                   <input
                     name="name"
                     value={categoryForm.name}
@@ -663,23 +655,23 @@ export default function ManagerContentPage() {
                 </label>
 
                 <button className="primary-button full-width" type="submit" disabled={isWorking}>
-                  {editingCategoryId ? "Save Training Category" : "Create Training Category"}
+                  {editingCategoryId ? "Save section" : "Create section"}
                 </button>
                 <button className="secondary-button full-width" type="button" onClick={resetCategoryForm}>
-                  Clear Category Form
+                  Clear form
                 </button>
               </form>
 
               <section className="data-list-panel">
                 <div className="data-list-heading">
-                  <h3>Training Categories</h3>
+                  <h3>Your library sections</h3>
                   <button className="secondary-button" type="button" onClick={loadContentPage} disabled={isWorking}>
                     Refresh
                   </button>
                 </div>
 
                 {categories.length === 0 ? (
-                  <p className="empty-panel">Start by creating a Training Category, like Dinner Menu, BTG Wines, Cocktails, or SOPs.</p>
+                  <p className="empty-panel">Create your first section, such as Dinner Menu, BTG Wines, Cocktails, or Opening Procedures.</p>
                 ) : (
                   <div className="operator-card-list">
                     {categories.map((category) => (
@@ -709,8 +701,8 @@ export default function ManagerContentPage() {
           <section className="operator-section">
             <div className="operator-section-heading">
               <div>
-                <p className="eyebrow">Section 2</p>
-                <h2>Add Staff Training Material</h2>
+                <p className="eyebrow">Training pages</p>
+                <h2>Add something for your team to study</h2>
                 <p>
                   Add the actual information your staff needs to study. This can be a dish tech sheet, wine note,
                   cocktail spec, SOP, menu item, service procedure, or pasted notes from Google Docs.
@@ -743,7 +735,7 @@ export default function ManagerContentPage() {
                 </label>
 
                 <label>
-                  Training Category
+                  Library section
                   <select name="collectionId" value={form.collectionId} onChange={updateForm}>
                     <option value="">Unassigned</option>
                     {categories
@@ -759,7 +751,7 @@ export default function ManagerContentPage() {
 
               <div className="field-pair">
                 <label>
-                  Content Type
+                  Training type
                   <select name="contentType" value={form.contentType} onChange={updateForm}>
                     <option value="foodItem">Food Item</option>
                     <option value="wine">Wine</option>
@@ -774,18 +766,18 @@ export default function ManagerContentPage() {
                 </label>
 
                 <label>
-                  Status
+                  Visibility
                   <select name="status" value={form.status} onChange={updateForm}>
-                    <option value="draft">Draft</option>
-                    <option value="published">Published</option>
+                    <option value="draft">Draft — managers only</option>
+                    <option value="published">Published — visible to staff</option>
                     <option value="archived">Archived</option>
                   </select>
                 </label>
               </div>
 
               <label>
-                One-Liner
-                <span className="helper-text">The short version staff should remember.</span>
+                Short description
+                <span className="helper-text">The quick explanation staff should remember.</span>
                 <textarea
                   name="summary"
                   value={form.summary}
@@ -798,7 +790,7 @@ export default function ManagerContentPage() {
               </label>
 
               <label>
-                Full Notes
+                Training details
                 <span className="helper-text">Paste from Google Docs, Word, email, or your existing training docs.</span>
                 <textarea
                   className="large-textarea"
@@ -846,14 +838,14 @@ export default function ManagerContentPage() {
               <section className="knowledge-section">
                 <div className="operator-section-heading compact-operator-heading">
                   <div>
-                    <p className="eyebrow">Section 3</p>
-                    <h2>What Should Staff Be Tested On?</h2>
+                    <p className="eyebrow">Quiz facts</p>
+                    <h2>What should staff remember?</h2>
                     <p>
                       Add the key facts staff should know. Line Up uses these to generate useful quiz questions later.
                     </p>
                   </div>
                   <button className="secondary-button" type="button" onClick={() => setKnowledgeItems((items) => [...items, makeEmptyKnowledgeItem()])}>
-                    Add Another Testable Fact
+                    Add another fact
                   </button>
                 </div>
 
@@ -900,7 +892,7 @@ export default function ManagerContentPage() {
                         checked={item.quizEligible}
                         onChange={(event) => updateKnowledgeItem(index, "quizEligible", event.target.checked)}
                       />
-                      Testable: Yes
+                      Include in quizzes
                     </label>
 
                     <button className="quiet-danger-button" type="button" onClick={() => setKnowledgeItems((items) => items.filter((_, itemIndex) => itemIndex !== index))}>
@@ -913,8 +905,8 @@ export default function ManagerContentPage() {
               <section className="knowledge-section">
                 <div className="operator-section-heading compact-operator-heading">
                   <div>
-                    <p className="eyebrow">Source Files</p>
-                    <h2>Attach Source File</h2>
+                    <p className="eyebrow">Attachments</p>
+                    <h2>Add a file or image</h2>
                     <p>Upload the original menu, tech sheet, SOP, image, or document this training page came from.</p>
                   </div>
                 </div>
@@ -933,7 +925,7 @@ export default function ManagerContentPage() {
                     </label>
 
                     <button className="secondary-button" type="button" onClick={attachSourceFile} disabled={isWorking || !selectedSourceFile}>
-                      Attach Source File
+                      Add attachment
                     </button>
 
                     {editingDocFiles.length === 0 ? (
@@ -976,9 +968,9 @@ export default function ManagerContentPage() {
           <section className="operator-section">
             <div className="operator-section-heading">
               <div>
-                <p className="eyebrow">Training Page List</p>
-                <h2>Existing Training Pages</h2>
-                <p>Drafts stay hidden from staff. Published pages appear in the staff Training Library.</p>
+                <p className="eyebrow">Your library</p>
+                <h2>All training pages</h2>
+                <p>Drafts are only visible to managers. Published pages are visible to staff.</p>
               </div>
               <button className="secondary-button" type="button" onClick={loadContentPage} disabled={isWorking}>
                 Refresh
@@ -987,7 +979,7 @@ export default function ManagerContentPage() {
 
             <div className="content-filter-bar">
               <label>
-                Search Training Pages
+                Search pages
                 <input
                   type="search"
                   value={pageSearch}
