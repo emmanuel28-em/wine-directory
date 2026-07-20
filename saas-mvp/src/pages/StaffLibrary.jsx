@@ -332,6 +332,8 @@ export default function StaffLibrary() {
   const [sectionFilter, setSectionFilter] = useState(allFilter);
   const [subsectionFilter, setSubsectionFilter] = useState(allFilter);
   const [activeReviewDocId, setActiveReviewDocId] = useState("");
+  const [isBrowsePanelOpen, setIsBrowsePanelOpen] = useState(false);
+  const [activeReaderDocId, setActiveReaderDocId] = useState("");
   const [reviewQuestions, setReviewQuestions] = useState([]);
   const [reviewAnswers, setReviewAnswers] = useState({});
   const [reviewResult, setReviewResult] = useState(null);
@@ -453,6 +455,12 @@ export default function StaffLibrary() {
     .map((item) => item.doc);
   const groupedContent = groupDocsByCollectionAndType(filteredDocs, collections);
   const canManageLibrary = isAdminOrManager(workspace.role);
+  const activeReaderDoc = docs.find((doc) => doc.id === activeReaderDocId);
+  const activeReaderContent = activeReaderDoc ? parseContentJson(activeReaderDoc.contentJson) : null;
+  const activeReaderFiles = activeReaderDoc ? fileAssets.filter((fileAsset) => fileAsset.trainingDocId === activeReaderDoc.id) : [];
+  const activeReaderImage = activeReaderFiles.find((fileAsset) => filePreviewUrls[fileAsset.id]);
+  const activeSectionLabel = sectionFilter === allFilter ? "All" : sectionFilter.replace(" Menu", "");
+  const activeSubsectionLabel = subsectionFilter === allFilter ? "" : subsectionFilter;
 
   async function openAttachedResource(fileAsset) {
     try {
@@ -577,73 +585,15 @@ export default function StaffLibrary() {
 
       {workspace.status === "ready" && docs.length > 0 ? (
         <div className="staff-library-sections">
-          <section className="staff-library-filter-panel" aria-label="Training library filters">
+          <section className="staff-library-context-bar" aria-label="Current library view">
             <div>
-              <p className="eyebrow">Browse</p>
-              <h2 className="staff-library-tabs-title">Choose a training area</h2>
+              <p className="eyebrow">Viewing</p>
+              <h2>{activeSectionLabel}{activeSubsectionLabel ? ` · ${activeSubsectionLabel}` : ""}</h2>
+              <p>{filteredDocs.length} of {docs.length} published training pages</p>
             </div>
-
-            <div className="staff-library-tabs" aria-label="Training area tabs">
-              <button
-                className={sectionFilter === allFilter ? "library-tab active-library-tab" : "library-tab"}
-                type="button"
-                onClick={() => {
-                  setSectionFilter(allFilter);
-                  setSubsectionFilter(allFilter);
-                }}
-              >
-                All
-              </button>
-              {availableSections.map((section) => (
-                <button
-                  className={sectionFilter === section ? "library-tab active-library-tab" : "library-tab"}
-                  type="button"
-                  key={section}
-                  onClick={() => {
-                    setSectionFilter(section);
-                    setSubsectionFilter(allFilter);
-                  }}
-                >
-                  {section.replace(" Menu", "")}
-                </button>
-              ))}
-            </div>
-
-            {availableSubsections.length > 0 ? (
-              <div className="quick-filter-row" aria-label="Menu subsection tabs">
-                <button
-                  className={subsectionFilter === allFilter ? "filter-chip active-filter-chip" : "filter-chip"}
-                  type="button"
-                  onClick={() => setSubsectionFilter(allFilter)}
-                >
-                  All
-                </button>
-                {availableSubsections.map((subsection) => (
-                  <button
-                    className={subsectionFilter === subsection ? "filter-chip active-filter-chip" : "filter-chip"}
-                    type="button"
-                    key={subsection}
-                    onClick={() => setSubsectionFilter(subsection)}
-                  >
-                    {subsection}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-
-            <label className="staff-library-search">
-              Search anything
-              <input
-                type="search"
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Try antipasta, Nebbiolo, dairy, cocktail, course 1..."
-              />
-            </label>
-
-            <p className="library-result-count">
-              Showing {filteredDocs.length} of {docs.length} published training pages.
-            </p>
+            <button className="secondary-button" type="button" onClick={() => setIsBrowsePanelOpen(true)}>
+              Browse / Search
+            </button>
           </section>
 
           {filteredDocs.length === 0 ? (
@@ -691,6 +641,9 @@ export default function StaffLibrary() {
                           <h2>{doc.title}</h2>
                           <p className="card-category">{doc.category || "Uncategorized"}</p>
                           <p>{content.summary || "No one-liner yet."}</p>
+                          <button className="secondary-button card-action" type="button" onClick={() => setActiveReaderDocId(doc.id)}>
+                            Open large view
+                          </button>
 
                           {content.body ? (
                             <details className="study-notes">
@@ -839,6 +792,209 @@ export default function StaffLibrary() {
               ))}
             </section>
           ))}
+
+          <nav className="staff-library-bottom-tabs" aria-label="Training sections">
+            <button
+              className={sectionFilter === allFilter ? "staff-bottom-tab active-staff-bottom-tab" : "staff-bottom-tab"}
+              type="button"
+              onClick={() => {
+                setSectionFilter(allFilter);
+                setSubsectionFilter(allFilter);
+              }}
+            >
+              All
+            </button>
+            {availableSections.slice(0, 5).map((section) => (
+              <button
+                className={sectionFilter === section ? "staff-bottom-tab active-staff-bottom-tab" : "staff-bottom-tab"}
+                type="button"
+                key={section}
+                onClick={() => {
+                  setSectionFilter(section);
+                  setSubsectionFilter(allFilter);
+                }}
+              >
+                {section.replace(" Menu", "")}
+              </button>
+            ))}
+            <button className="staff-bottom-tab" type="button" onClick={() => setIsBrowsePanelOpen(true)}>
+              More
+            </button>
+          </nav>
+        </div>
+      ) : null}
+
+      {isBrowsePanelOpen ? (
+        <div className="staff-library-sheet-backdrop" role="presentation" onClick={() => setIsBrowsePanelOpen(false)}>
+          <section className="staff-library-sheet" role="dialog" aria-modal="true" aria-label="Browse training library" onClick={(event) => event.stopPropagation()}>
+            <div className="staff-library-sheet-heading">
+              <div>
+                <p className="eyebrow">Browse</p>
+                <h2>Choose what to study</h2>
+              </div>
+              <button className="secondary-button" type="button" onClick={() => setIsBrowsePanelOpen(false)}>
+                Close
+              </button>
+            </div>
+
+            <div className="staff-library-tabs" aria-label="Training area tabs">
+              <button
+                className={sectionFilter === allFilter ? "library-tab active-library-tab" : "library-tab"}
+                type="button"
+                onClick={() => {
+                  setSectionFilter(allFilter);
+                  setSubsectionFilter(allFilter);
+                }}
+              >
+                All
+              </button>
+              {availableSections.map((section) => (
+                <button
+                  className={sectionFilter === section ? "library-tab active-library-tab" : "library-tab"}
+                  type="button"
+                  key={section}
+                  onClick={() => {
+                    setSectionFilter(section);
+                    setSubsectionFilter(allFilter);
+                  }}
+                >
+                  {section.replace(" Menu", "")}
+                </button>
+              ))}
+            </div>
+
+            {availableSubsections.length > 0 ? (
+              <div className="quick-filter-row" aria-label="Menu subsection tabs">
+                <button
+                  className={subsectionFilter === allFilter ? "filter-chip active-filter-chip" : "filter-chip"}
+                  type="button"
+                  onClick={() => setSubsectionFilter(allFilter)}
+                >
+                  All
+                </button>
+                {availableSubsections.map((subsection) => (
+                  <button
+                    className={subsectionFilter === subsection ? "filter-chip active-filter-chip" : "filter-chip"}
+                    type="button"
+                    key={subsection}
+                    onClick={() => setSubsectionFilter(subsection)}
+                  >
+                    {subsection}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+
+            <label className="staff-library-search">
+              Search anything
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Try antipasta, Nebbiolo, dairy, cocktail, course 1..."
+              />
+            </label>
+
+            <div className="form-button-row">
+              <button className="primary-button" type="button" onClick={() => setIsBrowsePanelOpen(false)}>
+                Show {filteredDocs.length} pages
+              </button>
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() => {
+                  setSectionFilter(allFilter);
+                  setSubsectionFilter(allFilter);
+                  setSearchTerm("");
+                }}
+              >
+                Clear filters
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {activeReaderDoc ? (
+        <div className="staff-reader-backdrop" role="presentation" onClick={() => setActiveReaderDocId("")}>
+          <section className="staff-reader" role="dialog" aria-modal="true" aria-label={`${activeReaderDoc.title} large view`} onClick={(event) => event.stopPropagation()}>
+            <div className="staff-reader-heading">
+              <div>
+                <p className="eyebrow">{typeLabels[activeReaderDoc.type] || activeReaderDoc.type}</p>
+                <h2>{activeReaderDoc.title}</h2>
+                <p>{activeReaderDoc.category || "Uncategorized"}</p>
+              </div>
+              <button className="secondary-button" type="button" onClick={() => setActiveReaderDocId("")}>
+                Close
+              </button>
+            </div>
+
+            {activeReaderImage ? (
+              <img className="staff-reader-image" src={filePreviewUrls[activeReaderImage.id]} alt={`${activeReaderDoc.title} photo`} />
+            ) : null}
+
+            {activeReaderContent?.summary ? (
+              <div className="info-block">
+                <h3>One-liner</h3>
+                <p>{activeReaderContent.summary}</p>
+              </div>
+            ) : null}
+
+            {activeReaderContent?.body ? (
+              <div className="info-block">
+                <h3>Full Notes</h3>
+                <p className="preserve-lines">{activeReaderContent.body}</p>
+              </div>
+            ) : null}
+
+            {activeReaderContent?.details ? (
+              <div className="info-block">
+                <h3>Extra Training Notes</h3>
+                <p>{activeReaderContent.details}</p>
+              </div>
+            ) : null}
+
+            {activeReaderContent?.ingredients ? (
+              <div className="info-block">
+                <h3>Ingredients</h3>
+                <p className="preserve-lines">{activeReaderContent.ingredients}</p>
+              </div>
+            ) : null}
+
+            {activeReaderContent?.allergens ? (
+              <div className="info-block">
+                <h3>Allergens</h3>
+                <p>{activeReaderContent.allergens}</p>
+              </div>
+            ) : null}
+
+            {activeReaderContent?.talkingPoints ? (
+              <div className="info-block">
+                <h3>Talking Points</h3>
+                <p>{activeReaderContent.talkingPoints}</p>
+              </div>
+            ) : null}
+
+            {activeReaderContent?.serviceNotes ? (
+              <div className="info-block">
+                <h3>Service Notes</h3>
+                <p>{activeReaderContent.serviceNotes}</p>
+              </div>
+            ) : null}
+
+            {activeReaderFiles.length > 0 ? (
+              <div className="info-block">
+                <h3>Attached Resources</h3>
+                <div className="attachment-list">
+                  {activeReaderFiles.map((fileAsset) => (
+                    <button className="secondary-button" type="button" key={fileAsset.id} onClick={() => openAttachedResource(fileAsset)}>
+                      View {fileAsset.fileName}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </section>
         </div>
       ) : null}
 

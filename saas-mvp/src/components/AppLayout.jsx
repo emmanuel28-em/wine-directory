@@ -94,8 +94,12 @@ function NavigationLinks({ authSession, currentWorkspace, hasPlatformAccess, loc
   return hasPlatformAccess ? <NavLink to="/platform">Administration</NavLink> : null;
 }
 
-function MobileBottomNav({ authSession, currentWorkspace }) {
+function MobileBottomNav({ authSession, currentWorkspace, location }) {
   if (authSession.status !== "authenticated" || currentWorkspace.isLoading || !currentWorkspace.isActiveMember) {
+    return null;
+  }
+
+  if (location.pathname === "/training-library") {
     return null;
   }
 
@@ -198,7 +202,7 @@ export default function AppLayout() {
         <Outlet />
       </main>
 
-      <MobileBottomNav authSession={authSession} currentWorkspace={currentWorkspace} />
+      <MobileBottomNav authSession={authSession} currentWorkspace={currentWorkspace} location={location} />
     </div>
   );
 }
