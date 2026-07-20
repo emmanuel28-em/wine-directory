@@ -2109,20 +2109,17 @@ code {
 
 .staff-library-filter-panel {
   display: grid;
-  gap: 14px;
-  position: sticky;
-  top: 86px;
-  z-index: 5;
-  padding: 18px;
+  gap: 10px;
+  padding: 12px;
   background: var(--color-card);
   border: 1px solid var(--color-border);
-  border-radius: 18px;
-  box-shadow: var(--shadow-card);
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgba(31, 42, 36, 0.08);
 }
 
 .staff-library-tabs-title {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1rem;
 }
 
 .staff-library-tabs {
@@ -2135,11 +2132,11 @@ code {
 
 .library-tab {
   flex: 0 0 auto;
-  min-height: 46px;
-  padding: 0 18px;
+  min-height: 38px;
+  padding: 0 13px;
   color: var(--color-primary);
   font: inherit;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 900;
   background: #fff;
   border: 1px solid var(--color-border);
@@ -2164,8 +2161,8 @@ code {
 
 .staff-library-search input {
   width: 100%;
-  min-height: 52px;
-  padding: 0 16px;
+  min-height: 42px;
+  padding: 0 14px;
   color: var(--color-text);
   font: inherit;
   background: #fff;
@@ -2186,11 +2183,11 @@ code {
 }
 
 .filter-chip {
-  min-height: 40px;
-  padding: 0 14px;
+  min-height: 34px;
+  padding: 0 12px;
   color: var(--color-primary);
   font: inherit;
-  font-size: 0.9rem;
+  font-size: 0.84rem;
   font-weight: 850;
   background: rgba(164, 182, 154, 0.16);
   border: 1px solid rgba(31, 61, 46, 0.12);
@@ -2803,6 +2800,11 @@ code {
 
   .staff-library-filter-panel {
     position: static;
+  }
+
+  .staff-library-filter-panel .eyebrow,
+  .staff-library-tabs-title {
+    display: none;
   }
 
   .staff-library-tabs {
