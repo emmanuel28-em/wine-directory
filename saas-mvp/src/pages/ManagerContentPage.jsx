@@ -924,7 +924,7 @@ export default function ManagerContentPage() {
                   <div>
                     <p className="eyebrow">Attachments</p>
                     <h2>Add a file or image</h2>
-                    <p>Upload the original menu, tech sheet, SOP, image, or document this training page came from.</p>
+                    <p>Upload the original menu, tech sheet, SOP, image, or document this training page came from. JPG, PNG, WebP, and GIF images show on staff cards.</p>
                   </div>
                 </div>
 
@@ -936,10 +936,11 @@ export default function ManagerContentPage() {
                       Choose file
                       <input
                         type="file"
-                        accept=".pdf,image/*,.doc,.docx,.txt,.csv,.xls,.xlsx"
+                        accept=".pdf,image/*,.heic,.heif,.doc,.docx,.txt,.csv,.xls,.xlsx"
                         onChange={(event) => setSelectedSourceFile(event.target.files?.[0] || null)}
                       />
                     </label>
+                    <p className="helper-text">HEIC iPhone photos can be attached, but some browsers cannot preview them. Use JPG or PNG when you want the image to show directly on the staff card.</p>
 
                     <button className="secondary-button" type="button" onClick={attachSourceFile} disabled={isWorking || !selectedSourceFile}>
                       Add attachment

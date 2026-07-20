@@ -9,6 +9,8 @@ const allowedTypes = [
   "image/png",
   "image/webp",
   "image/gif",
+  "image/heic",
+  "image/heif",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "text/plain",
@@ -16,6 +18,45 @@ const allowedTypes = [
   "application/vnd.ms-excel",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 ];
+
+const allowedExtensions = [
+  ".pdf",
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".webp",
+  ".gif",
+  ".heic",
+  ".heif",
+  ".doc",
+  ".docx",
+  ".txt",
+  ".csv",
+  ".xls",
+  ".xlsx"
+];
+
+const previewableImageExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
+
+function getFileExtension(fileName) {
+  const cleanName = String(fileName || "").toLowerCase();
+  const dotIndex = cleanName.lastIndexOf(".");
+  return dotIndex >= 0 ? cleanName.slice(dotIndex) : "";
+}
+
+function hasAllowedExtension(file) {
+  return allowedExtensions.includes(getFileExtension(file?.name));
+}
+
+export function isPreviewableImageFileAsset(fileAsset) {
+  const fileType = String(fileAsset?.fileType || "").toLowerCase();
+  const fileName = fileAsset?.fileName || fileAsset?.name || fileAsset?.storageKey || "";
+
+  return (
+    ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(fileType) ||
+    previewableImageExtensions.includes(getFileExtension(fileName))
+  );
+}
 
 function assertNoErrors(result, fallbackMessage) {
   if (result.errors?.length) {
@@ -43,7 +84,7 @@ function assertAllowedFile(file) {
     throw new Error("Choose a file to upload.");
   }
 
-  if (file.type && !allowedTypes.includes(file.type)) {
+  if (file.type && !allowedTypes.includes(file.type) && !hasAllowedExtension(file)) {
     throw new Error("This file type is not supported yet. Upload a PDF, image, Word doc, text, CSV, or spreadsheet.");
   }
 }

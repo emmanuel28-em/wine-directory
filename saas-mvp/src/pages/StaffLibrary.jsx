@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import { listCollectionsForRestaurant } from "../lib/collections.js";
-import { getFileAssetUrl, listFileAssetsForRestaurant } from "../lib/fileAssets.js";
+import { getFileAssetUrl, isPreviewableImageFileAsset, listFileAssetsForRestaurant } from "../lib/fileAssets.js";
 import { isAdminOrManager } from "../lib/permissions.js";
 import { listTrainingDocsForRestaurant, parseContentJson } from "../lib/trainingDocs.js";
 import {
@@ -324,6 +324,7 @@ export default function StaffLibrary() {
   const [collections, setCollections] = useState([]);
   const [docs, setDocs] = useState([]);
   const [fileAssets, setFileAssets] = useState([]);
+  const [filePreviewUrls, setFilePreviewUrls] = useState({});
   const [acknowledgements, setAcknowledgements] = useState([]);
   const [reviewingDocId, setReviewingDocId] = useState("");
   const [message, setMessage] = useState("");
@@ -371,9 +372,47 @@ export default function StaffLibrary() {
       setCollections([]);
       setDocs([]);
       setFileAssets([]);
+      setFilePreviewUrls({});
       setAcknowledgements([]);
     }
   }, [workspace.status, workspace.restaurant?.id]);
+
+  useEffect(() => {
+    if (workspace.status !== "ready" || fileAssets.length === 0) {
+      setFilePreviewUrls({});
+      return;
+    }
+
+    let shouldUpdate = true;
+
+    async function loadImagePreviews() {
+      const previewableFiles = fileAssets.filter(isPreviewableImageFileAsset);
+
+      const previewEntries = await Promise.all(
+        previewableFiles.map(async (fileAsset) => {
+          try {
+            const url = await getFileAssetUrl({
+              fileAsset,
+              restaurantId: workspace.restaurant.id
+            });
+            return [fileAsset.id, url];
+          } catch {
+            return null;
+          }
+        })
+      );
+
+      if (shouldUpdate) {
+        setFilePreviewUrls(Object.fromEntries(previewEntries.filter(Boolean)));
+      }
+    }
+
+    loadImagePreviews();
+
+    return () => {
+      shouldUpdate = false;
+    };
+  }, [fileAssets, workspace.status, workspace.restaurant?.id]);
 
   const collectionMap = new Map(collections.map((collection) => [collection.id, collection]));
   const decoratedDocs = docs.map((doc) => {
@@ -631,10 +670,18 @@ export default function StaffLibrary() {
                     {typeGroup.docs.map((doc) => {
                       const content = parseContentJson(doc.contentJson);
                       const attachedFiles = fileAssets.filter((fileAsset) => fileAsset.trainingDocId === doc.id);
+                      const primaryImage = attachedFiles.find((fileAsset) => filePreviewUrls[fileAsset.id]);
                       const acknowledgement = acknowledgements.find((item) => item.trainingDocId === doc.id);
 
                       return (
                         <article className="training-card" key={doc.id}>
+                          {primaryImage ? (
+                            <img
+                              className="training-card-image"
+                              src={filePreviewUrls[primaryImage.id]}
+                              alt={`${doc.title} photo`}
+                            />
+                          ) : null}
                           <span className="type-pill">{typeLabels[doc.type] || doc.type}</span>
                           {canManageLibrary ? (
                             <Link className="manager-edit-link" to={`/manager/content?edit=${doc.id}#training-page-form`}>
