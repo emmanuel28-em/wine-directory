@@ -965,6 +965,94 @@ textarea {
   color: var(--color-muted);
 }
 
+.platform-account-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.platform-account-card {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  box-shadow: 0 16px 34px rgba(31, 42, 36, 0.07);
+}
+
+.platform-account-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.platform-account-heading h4,
+.platform-account-owner strong,
+.platform-ai-card h4 {
+  margin: 0;
+  color: var(--color-primary);
+}
+
+.platform-account-heading p,
+.platform-account-owner small,
+.platform-account-meta,
+.platform-ai-card p {
+  margin: 4px 0 0;
+  color: var(--color-muted);
+}
+
+.platform-account-owner {
+  display: grid;
+  gap: 3px;
+  padding: 14px;
+  background: rgba(164, 182, 154, 0.16);
+  border: 1px solid rgba(164, 182, 154, 0.35);
+  border-radius: 16px;
+}
+
+.platform-account-owner span {
+  color: var(--color-muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.platform-account-meta,
+.platform-account-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.platform-account-meta span,
+.platform-account-stats span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  background: rgba(255, 253, 248, 0.72);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+}
+
+.platform-account-stats strong {
+  margin-right: 5px;
+  color: var(--color-primary);
+}
+
+.platform-ai-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.platform-ai-card {
+  padding: 18px;
+  background: linear-gradient(180deg, var(--color-card), rgba(164, 182, 154, 0.13));
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+}
+
 .platform-reminder-card {
   border-color: rgba(200, 107, 74, 0.45);
   background: linear-gradient(180deg, var(--color-card), rgba(200, 107, 74, 0.1));
@@ -2819,6 +2907,23 @@ code {
   .support-resolution-row {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .platform-account-heading,
+  .platform-account-meta,
+  .platform-account-stats {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .platform-account-meta span,
+  .platform-account-stats span {
+    justify-content: space-between;
+    border-radius: 14px;
+  }
+
+  .platform-ai-grid {
+    grid-template-columns: 1fr;
   }
 
   .support-reporter {

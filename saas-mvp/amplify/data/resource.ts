@@ -201,7 +201,11 @@ const schema = a.schema({
       // A person can read and edit their own profile. Managers can read team
       // profiles for the roster and progress screens.
       allow.ownerDefinedIn("cognitoUserId").identityClaim("sub").to(["read", "update"]),
-      allow.groupDefinedIn("managerGroup").to(["read"])
+      allow.groupDefinedIn("managerGroup").to(["read"]),
+      // Platform Owners need account-holder visibility for customer support,
+      // ownership transfer, and business operations. This does not grant staff
+      // or restaurant-manager access across tenants.
+      allow.groups(["lineup-platform-owners"]).to(["read"])
     ]),
 
   // A Membership connects a user to a restaurant and gives them a role.
@@ -220,7 +224,10 @@ const schema = a.schema({
       // Staff can read only their own membership. Managers can read the
       // restaurant roster. Membership changes are handled by backend functions.
       allow.ownerDefinedIn("cognitoUserId").identityClaim("sub").to(["read"]),
-      allow.groupDefinedIn("managerGroup").to(["read"])
+      allow.groupDefinedIn("managerGroup").to(["read"]),
+      // Platform Owners can review account seats and roles across customer
+      // workspaces from Platform Control.
+      allow.groups(["lineup-platform-owners"]).to(["read"])
     ]),
 
   // An Invite lets a manager invite someone into one restaurant workspace.

@@ -16,10 +16,68 @@ function roleLabel(role) {
   return role === "platform_owner" ? "Platform Owner" : "Platform Developer";
 }
 
+function restaurantRoleLabel(role) {
+  const labels = {
+    owner: "Account Owner",
+    admin: "Admin",
+    manager: "Manager",
+    staff: "Staff"
+  };
+  return labels[role] || "Team Member";
+}
+
+function formatDate(value) {
+  if (!value) return "Not set";
+  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
+}
+
+function isActiveStatus(status) {
+  return status === "active";
+}
+
+async function listAllRecords(model, options = {}) {
+  const records = [];
+  let nextToken;
+
+  do {
+    const result = await model.list({ ...options, limit: 1000, nextToken });
+    if (result.errors?.length) throw new Error(result.errors.map((error) => error.message).join(" "));
+    records.push(...(result.data || []));
+    nextToken = result.nextToken;
+  } while (nextToken);
+
+  return records;
+}
+
+function buildWorkspaceSummary({ restaurant, memberships, profilesById }) {
+  const workspaceMemberships = memberships.filter((membership) => membership.restaurantId === restaurant.id);
+  const activeMemberships = workspaceMemberships.filter((membership) => isActiveStatus(membership.status));
+  const ownerMembership =
+    activeMemberships.find((membership) => membership.role === "owner") ||
+    workspaceMemberships.find((membership) => membership.role === "owner");
+  const ownerProfile = ownerMembership ? profilesById.get(ownerMembership.userProfileId) : null;
+  const roleCounts = activeMemberships.reduce(
+    (counts, membership) => ({ ...counts, [membership.role]: (counts[membership.role] || 0) + 1 }),
+    { owner: 0, admin: 0, manager: 0, staff: 0 }
+  );
+
+  return {
+    restaurant,
+    accountHolderName: restaurant.primaryContactName || ownerProfile?.name || "No account holder set",
+    accountHolderEmail: restaurant.primaryContactEmail || restaurant.billingEmail || ownerProfile?.email || "No account email",
+    billingEmail: restaurant.billingEmail || restaurant.primaryContactEmail || ownerProfile?.email || "No billing email",
+    activeMemberCount: activeMemberships.length,
+    disabledMemberCount: workspaceMemberships.filter((membership) => membership.status === "disabled").length,
+    pendingMemberCount: workspaceMemberships.filter((membership) => membership.status === "invited").length,
+    roleCounts
+  };
+}
+
 export default function PlatformControlPage() {
   const authSession = useAuthSession();
   const workspace = useCurrentWorkspace();
   const [restaurants, setRestaurants] = useState([]);
+  const [workspaceSummaries, setWorkspaceSummaries] = useState([]);
   const [platformUsers, setPlatformUsers] = useState([]);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("platform_developer");
@@ -39,9 +97,20 @@ export default function PlatformControlPage() {
       setPlatformUsers(parseUsers(accessResult.data.usersJson));
 
       if (isPlatformOwner) {
-        const restaurantResult = await client.models.Restaurant.list({ limit: 1000 });
-        if (restaurantResult.errors?.length) throw new Error(restaurantResult.errors.map((error) => error.message).join(" "));
-        setRestaurants((restaurantResult.data || []).sort((left, right) => left.name.localeCompare(right.name)));
+        const [restaurantRecords, membershipRecords, profileRecords] = await Promise.all([
+          listAllRecords(client.models.Restaurant),
+          listAllRecords(client.models.Membership),
+          listAllRecords(client.models.UserProfile)
+        ]);
+        const sortedRestaurants = restaurantRecords.sort((left, right) => left.name.localeCompare(right.name));
+        const profilesById = new Map(profileRecords.map((profile) => [profile.id, profile]));
+
+        setRestaurants(sortedRestaurants);
+        setWorkspaceSummaries(
+          sortedRestaurants.map((restaurant) =>
+            buildWorkspaceSummary({ restaurant, memberships: membershipRecords, profilesById })
+          )
+        );
       }
     } catch (error) {
       setMessage(error.message || "Platform Control could not be loaded.");
@@ -101,6 +170,11 @@ export default function PlatformControlPage() {
             <span>Customer workspaces</span>
             <h2>{isPlatformOwner ? restaurants.length : "Private"}</h2>
             <p>{isPlatformOwner ? "Workspace metadata visible to Platform Owners." : "Developers do not receive customer access by default."}</p>
+          </article>
+          <article className="stat-card">
+            <span>Active members</span>
+            <h2>{isPlatformOwner ? workspaceSummaries.reduce((total, summary) => total + summary.activeMemberCount, 0) : "Private"}</h2>
+            <p>{isPlatformOwner ? "Total active seats across all restaurant accounts." : "Only Platform Owners can review customer seat counts."}</p>
           </article>
           <article className="stat-card">
             <span>Recommended testing</span>
@@ -173,21 +247,67 @@ export default function PlatformControlPage() {
             <div className="section-heading compact-heading">
               <p className="eyebrow">Workspace Overview</p>
               <h2>Restaurant accounts</h2>
-              <p>This view contains account status only. Restaurant training libraries remain tenant-protected.</p>
+              <p>Review account holders, billing status, and active seats. Training libraries remain tenant-protected.</p>
             </div>
-            <div className="operator-list">
-              {restaurants.map((restaurant) => (
-                <article className="operator-list-card" key={restaurant.id}>
-                  <div>
-                    <h4>{restaurant.name}</h4>
-                    <p>{restaurant.primaryContactEmail || restaurant.billingEmail || "No contact email"}</p>
+            <div className="platform-account-grid">
+              {workspaceSummaries.map((summary) => (
+                <article className="platform-account-card" key={summary.restaurant.id}>
+                  <div className="platform-account-heading">
+                    <div>
+                      <h4>{summary.restaurant.name}</h4>
+                      <p>{summary.restaurant.website || summary.restaurant.city || "No website or city set"}</p>
+                    </div>
+                    <div className="platform-workspace-status">
+                      <strong>{summary.restaurant.subscriptionStatus || summary.restaurant.status || "trial"}</strong>
+                      <span>{summary.restaurant.plan || "No plan selected"}</span>
+                    </div>
                   </div>
-                  <div className="platform-workspace-status">
-                    <strong>{restaurant.subscriptionStatus || restaurant.status || "trial"}</strong>
-                    <span>{restaurant.plan || "No plan selected"}</span>
+
+                  <div className="platform-account-owner">
+                    <span>Account holder</span>
+                    <strong>{summary.accountHolderName}</strong>
+                    <small>{summary.accountHolderEmail}</small>
+                  </div>
+
+                  <div className="platform-account-meta">
+                    <span>Billing email: {summary.billingEmail}</span>
+                    <span>Trial ends: {formatDate(summary.restaurant.trialEndsAt)}</span>
+                  </div>
+
+                  <div className="platform-account-stats">
+                    <span><strong>{summary.activeMemberCount}</strong> active</span>
+                    <span><strong>{summary.roleCounts.owner}</strong> {restaurantRoleLabel("owner")}</span>
+                    <span><strong>{summary.roleCounts.admin + summary.roleCounts.manager}</strong> leaders</span>
+                    <span><strong>{summary.roleCounts.staff}</strong> staff</span>
                   </div>
                 </article>
               ))}
+            </div>
+          </section>
+
+          <section className="setup-steps">
+            <div className="section-heading compact-heading">
+              <p className="eyebrow">Future AI Operations</p>
+              <h2>Business helper map</h2>
+              <p>These are not connected yet. This is the control-room layout for later AI agents that help you run Line Up.</p>
+            </div>
+            <div className="platform-ai-grid">
+              <article className="platform-ai-card">
+                <h4>Customer Support AI</h4>
+                <p>Summarize support tickets, suggest fixes, and spot repeated onboarding problems.</p>
+              </article>
+              <article className="platform-ai-card">
+                <h4>Billing Support AI</h4>
+                <p>Explain plan status, trial timing, failed payments, and renewal questions.</p>
+              </article>
+              <article className="platform-ai-card">
+                <h4>Import Assistant AI</h4>
+                <p>Turn menus, tech sheets, and SOPs into clean draft training pages for manager review.</p>
+              </article>
+              <article className="platform-ai-card">
+                <h4>Product Insights AI</h4>
+                <p>Surface which restaurants are active, stuck, growing, or likely to need your help.</p>
+              </article>
             </div>
           </section>
         </>
