@@ -152,6 +152,25 @@ function inferContentType(fields) {
   return "custom";
 }
 
+function inferCategory({ contentType, sourceText }) {
+  const normalized = sourceText.toLowerCase();
+
+  if (normalized.includes("antipasta") || normalized.includes("antipasti")) return "Antipasta";
+  if (normalized.includes("primi")) return "Primi";
+  if (normalized.includes("secondi")) return "Secondi";
+  if (normalized.includes("verdure")) return "Verdure";
+
+  const courseMatch = normalized.match(/\bcourse\s*([1-9])\b/);
+  if (courseMatch) return `Course ${courseMatch[1]}`;
+
+  if (contentType === "wine" && (normalized.includes("btg") || normalized.includes("glass"))) return "BTG Wines";
+  if (contentType === "wine" && (normalized.includes("pairing") || normalized.includes("course"))) return "Wine Pairing";
+  if (contentType === "cocktail") return "Cocktails";
+  if (contentType === "sop") return "SOP";
+
+  return "";
+}
+
 function firstParagraph(value) {
   return (value || "").split(/\n\s*\n/)[0].trim();
 }
@@ -211,7 +230,7 @@ function toDraft(parsedBlock, index) {
     collectionId: "",
     contentType,
     title: parsedBlock.title,
-    category: "",
+    category: inferCategory({ contentType, sourceText: parsedBlock.sourceText }),
     status: "draft",
     tags,
     summary,
@@ -233,4 +252,3 @@ export function parseBulkTrainingMaterial(sourceText) {
 
   return splitIntoBlocks(sourceText).map(parseBlock).map(toDraft);
 }
-

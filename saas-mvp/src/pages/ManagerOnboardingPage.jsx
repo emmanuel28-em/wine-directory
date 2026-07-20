@@ -7,9 +7,13 @@ import { listTeamMembersForRestaurant } from "../lib/settings.js";
 import { listTrainingDocsForRestaurant } from "../lib/trainingDocs.js";
 
 const starterCategories = [
-  { name: "Current Menu", description: "Current dishes and menu descriptions.", categoryType: "foodMenu" },
-  { name: "Wine", description: "BTG, pairing, and bottle training.", categoryType: "wine" },
-  { name: "Cocktails", description: "Current cocktail specs and talking points.", categoryType: "cocktail" },
+  { name: "Dinner Menu", description: "Dinner dishes, sections, allergies, and service notes.", categoryType: "foodMenu" },
+  { name: "Lunch Menu", description: "Lunch dishes, sections, allergies, and service notes.", categoryType: "foodMenu" },
+  { name: "Brunch Menu", description: "Brunch dishes, sections, allergies, and service notes.", categoryType: "foodMenu" },
+  { name: "Pasta Tasting", description: "Courses, pairings, talking points, and readiness checks.", categoryType: "tastingMenuCourse" },
+  { name: "BTG Wines", description: "Current by-the-glass wines and tech sheets.", categoryType: "wine" },
+  { name: "Cocktails", description: "Current cocktail specs, allergens, garnish, and glassware.", categoryType: "cocktail" },
+  { name: "SOPs", description: "Procedures managers expect the team to follow.", categoryType: "sop" },
   { name: "Service Standards", description: "Steps of service and hospitality expectations.", categoryType: "service" },
   { name: "Opening & Closing", description: "Opening, closing, and sidework procedures.", categoryType: "sop" },
   { name: "New Hire Onboarding", description: "The first material every new team member studies.", categoryType: "onboarding" }
@@ -129,7 +133,7 @@ export default function ManagerOnboardingPage() {
         <div>
           <p className="eyebrow">Getting started</p>
           <h1>Let’s build your first training area</h1>
-          <p>Choose one place to begin. You will paste the material you already use on the next screen.</p>
+          <p>Choose the first section of the restaurant you want staff to study. You will paste the material you already use on the next screen.</p>
         </div>
         <Link className="secondary-button" to="/manager">
           Back home
@@ -168,7 +172,7 @@ export default function ManagerOnboardingPage() {
           <div>
             <p className="eyebrow">Library sections</p>
             <h2>What do you want to train first?</h2>
-            <p>Pick the material that changes most often or matters most before service. You can add every other area later.</p>
+            <p>Pick the material that changes most often or matters most before service. You can add more menus, beverages, and procedures later.</p>
           </div>
         </div>
 

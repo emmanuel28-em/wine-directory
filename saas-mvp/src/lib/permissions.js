@@ -1,7 +1,31 @@
 export const ownerRole = "owner";
+export const billingRoles = ["owner"];
 export const ownerAdminRoles = ["owner", "admin"];
 export const adminManagerRoles = ["owner", "admin", "manager"];
 export const activeMemberRoles = ["owner", "admin", "manager", "staff"];
+
+export const rolePermissionSummary = [
+  {
+    role: "owner",
+    label: "Account Owner",
+    description: "Handles billing, plan decisions, and final account control. This may be the owner, operator, or business contact."
+  },
+  {
+    role: "admin",
+    label: "Admin",
+    description: "Runs the workspace day to day. Best for GMs, AGMs, directors, or senior leaders who add training information, create quizzes, assign training, and manage team access."
+  },
+  {
+    role: "manager",
+    label: "Manager",
+    description: "Keeps training moving. Best for floor managers, wine leaders, bar leaders, head bartenders, and head somms."
+  },
+  {
+    role: "staff",
+    label: "Staff",
+    description: "Studies published training, takes quizzes, earns certifications, and tracks readiness before going live on the floor."
+  }
+];
 
 export function isOwner(role) {
   return role === ownerRole;
@@ -23,16 +47,44 @@ export function canManageContent(role) {
   return isAdminOrManager(role);
 }
 
+export function canManageBilling(role) {
+  return isOwner(role);
+}
+
+export function canEditRestaurantProfile(role) {
+  return isOwnerOrAdmin(role);
+}
+
+export function canManageTeamRoles(role) {
+  return role === "owner" || role === "admin";
+}
+
 export function canInviteRole(currentRole, invitedRole) {
   if (isOwner(currentRole)) {
     return ["admin", "manager", "staff"].includes(invitedRole);
   }
 
-  if (currentRole === "admin" || currentRole === "manager") {
+  if (currentRole === "admin") {
+    return ["manager", "staff"].includes(invitedRole);
+  }
+
+  if (currentRole === "manager") {
     return invitedRole === "staff";
   }
 
   return false;
+}
+
+export function getAssignableMemberRoles(currentRole) {
+  if (isOwner(currentRole)) {
+    return ["admin", "manager", "staff"];
+  }
+
+  if (currentRole === "admin") {
+    return ["manager", "staff"];
+  }
+
+  return [];
 }
 
 export function canViewStaffProgress(role) {

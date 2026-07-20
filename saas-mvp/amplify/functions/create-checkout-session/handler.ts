@@ -196,7 +196,7 @@ export const handler = async (event: CheckoutEvent) => {
     await requireRestaurantRole({
       identity: event.identity,
       restaurantId,
-      allowedRoles: ["owner", "admin"]
+      allowedRoles: ["owner"]
     });
     const restaurant = await getRestaurant(restaurantId);
 
@@ -222,6 +222,7 @@ export const handler = async (event: CheckoutEvent) => {
 
     checkoutBody.set("mode", "subscription");
     checkoutBody.set("customer", customerId);
+    checkoutBody.set("payment_method_collection", "always");
     checkoutBody.set("client_reference_id", restaurantId);
     checkoutBody.set("line_items[0][price]", priceId);
     checkoutBody.set("line_items[0][quantity]", "1");

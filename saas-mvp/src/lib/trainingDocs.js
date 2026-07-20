@@ -4,6 +4,7 @@ import { getWorkspaceGroups } from "./workspaceGroups.js";
 
 export const emptyTrainingDocForm = {
   collectionId: "",
+  sectionIds: [],
   contentType: "foodItem",
   title: "",
   category: "",
@@ -54,6 +55,11 @@ function assertNoErrors(result, fallbackMessage) {
 
 export function buildContentJson(form) {
   const testableStaffKnowledge = parseQuizFacts(form.quizFactsJson);
+  const sectionIds = Array.isArray(form.sectionIds)
+    ? form.sectionIds.filter(Boolean)
+    : form.collectionId
+      ? [form.collectionId]
+      : [];
 
   return JSON.stringify({
     tags: form.tags
@@ -61,6 +67,7 @@ export function buildContentJson(form) {
       .map((tag) => tag.trim())
       .filter(Boolean),
     contentType: form.contentType,
+    sectionIds,
     summary: form.summary.trim(),
     body: form.body.trim(),
     details: form.details.trim(),
@@ -92,6 +99,7 @@ export function parseContentJson(contentJson) {
   if (!contentJson) {
     return {
       tags: [],
+      sectionIds: [],
       summary: "",
       body: "",
       details: "",
@@ -107,6 +115,7 @@ export function parseContentJson(contentJson) {
   try {
     return {
       tags: [],
+      sectionIds: [],
       summary: "",
       body: "",
       details: "",
@@ -121,6 +130,7 @@ export function parseContentJson(contentJson) {
   } catch {
     return {
       tags: [],
+      sectionIds: [],
       summary: "",
       body: contentJson,
       details: contentJson,
@@ -136,9 +146,15 @@ export function parseContentJson(contentJson) {
 
 export function docToForm(doc) {
   const content = parseContentJson(doc.contentJson);
+  const sectionIds = Array.isArray(content.sectionIds) && content.sectionIds.length
+    ? content.sectionIds
+    : doc.collectionId
+      ? [doc.collectionId]
+      : [];
 
   return {
-    collectionId: doc.collectionId || "",
+    collectionId: sectionIds[0] || doc.collectionId || "",
+    sectionIds,
     contentType: content.contentType || modelTypeToContentType[doc.type] || "custom",
     title: doc.title || "",
     category: doc.category || "",
@@ -179,10 +195,17 @@ export async function listTrainingDocsForRestaurant(restaurantId) {
 export async function saveTrainingDoc({ form, editingDocId, restaurantId, userProfileId }) {
   requireRestaurantId(restaurantId);
   const dataClient = getDataClient();
+  const sectionIds = Array.isArray(form.sectionIds) && form.sectionIds.length
+    ? form.sectionIds
+    : form.collectionId
+      ? [form.collectionId]
+      : [];
   const payload = {
     restaurantId,
     ...getWorkspaceGroups(restaurantId),
-    collectionId: form.collectionId || null,
+    // Keep collectionId as the primary section for older queries, while sectionIds in contentJson
+    // lets a tech sheet appear in multiple places such as Lunch and Dinner.
+    collectionId: sectionIds[0] || null,
     type: contentTypeToModelType[form.contentType] || "custom",
     title: form.title.trim(),
     category: form.category.trim(),

@@ -27,6 +27,24 @@ const titleOptions = [
   "Other"
 ];
 
+const trialPlans = [
+  {
+    name: "Starter",
+    price: "$99/month",
+    limit: "Up to 20 users"
+  },
+  {
+    name: "Growth",
+    price: "$199/month",
+    limit: "Up to 50 users"
+  },
+  {
+    name: "Pro",
+    price: "$349/month",
+    limit: "Up to 100 users"
+  }
+];
+
 function getAccountOwnerName(form) {
   return `${form.firstName} ${form.lastName}`.trim();
 }
@@ -90,7 +108,7 @@ export default function TrialPage() {
       });
 
       await authSession.refreshSession();
-      navigate("/manager/onboarding", { replace: true });
+      navigate("/manager/billing?setup=trial", { replace: true });
     } catch (error) {
       setMessage(error.message || "We could not finish setting up your restaurant.");
     } finally {
@@ -121,7 +139,7 @@ export default function TrialPage() {
     });
 
     await authSession.refreshSession();
-    navigate("/manager/onboarding", { replace: true });
+    navigate("/manager/billing?setup=trial", { replace: true });
   }
 
   async function startTrial(event) {
@@ -243,11 +261,13 @@ export default function TrialPage() {
 
           <div className="trial-note">
             <strong>30-day free trial.</strong>
-            <p>No card is required today. Add a payment method before the trial ends to avoid an interruption.</p>
+            <p>
+              Next you will choose a plan and add a payment method through Stripe. You will not be charged until the trial ends.
+            </p>
           </div>
 
           <button className="primary-button full-width" type="submit" disabled={isWorking}>
-            {isWorking ? "Setting up your restaurant..." : "Start free trial"}
+            {isWorking ? "Setting up your restaurant..." : "Continue to Billing Setup"}
           </button>
 
           {message ? <p className="form-message">{message}</p> : null}
@@ -262,7 +282,7 @@ export default function TrialPage() {
         <p className="eyebrow">30-day free trial</p>
         <h1>Set up training for your restaurant</h1>
         <p>
-          Create your account and tell us about your restaurant. No card is required today.
+          Create your restaurant workspace, then add a secure payment method for the one-month free trial.
         </p>
       </div>
 
@@ -336,11 +356,23 @@ export default function TrialPage() {
 
           <div className="trial-note">
             <strong>30-day free trial.</strong>
-            <p>No card is required today. Add a payment method before the trial ends to avoid an interruption.</p>
+            <p>
+              Billing is handled by Stripe. The card is saved for after the trial, but the first month is free.
+            </p>
+          </div>
+
+          <div className="trial-plan-preview" aria-label="Available plans after trial">
+            {trialPlans.map((plan) => (
+              <article className="trial-plan-mini-card" key={plan.name}>
+                <strong>{plan.name}</strong>
+                <span>{plan.price}</span>
+                <small>{plan.limit}</small>
+              </article>
+            ))}
           </div>
 
           <button className="primary-button full-width" type="submit" disabled={isWorking}>
-            {isWorking ? "Creating account..." : "Start Free Trial"}
+            {isWorking ? "Creating account..." : "Create Account and Continue"}
           </button>
 
           {message ? <p className="form-message">{message}</p> : null}
@@ -365,7 +397,7 @@ export default function TrialPage() {
           </label>
 
           <button className="primary-button full-width" type="submit" disabled={isWorking}>
-            {isWorking ? "Confirming..." : "Confirm and Enter Dashboard"}
+            {isWorking ? "Confirming..." : "Confirm and Continue to Billing"}
           </button>
 
           {message ? <p className="form-message">{message}</p> : null}

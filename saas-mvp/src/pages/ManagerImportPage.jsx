@@ -87,6 +87,12 @@ export default function ManagerImportPage() {
     setDrafts((currentDrafts) => updateDraftAtIndex(currentDrafts, index, field, value));
   }
 
+  function updateSelectedDrafts(field, value) {
+    setDrafts((currentDrafts) =>
+      currentDrafts.map((draft) => (draft.selected ? { ...draft, [field]: value } : draft))
+    );
+  }
+
   function removeDraft(index) {
     setDrafts((currentDrafts) => currentDrafts.filter((_, draftIndex) => draftIndex !== index));
   }
@@ -123,7 +129,7 @@ export default function ManagerImportPage() {
         await saveTrainingDoc({
           form: {
             ...draft,
-            status: "draft"
+            status: draft.status || "draft"
           },
           editingDocId: null,
           restaurantId: workspace.restaurant.id,
@@ -240,9 +246,48 @@ export default function ManagerImportPage() {
               <h2>Check what Line Up found</h2>
               <p>{selectedCount} of {drafts.length} drafts selected for import.</p>
             </div>
-            <button className="primary-button" type="button" onClick={importDrafts} disabled={isWorking || selectedCount === 0}>
-              {isWorking ? "Saving..." : `Save ${selectedCount} Training Page${selectedCount === 1 ? "" : "s"}`}
-            </button>
+            <div className="import-review-actions">
+              <button className="secondary-button" type="button" onClick={() => updateSelectedDrafts("status", "draft")} disabled={isWorking || selectedCount === 0}>
+                Keep selected as drafts
+              </button>
+              <button className="secondary-button" type="button" onClick={() => updateSelectedDrafts("status", "published")} disabled={isWorking || selectedCount === 0}>
+                Publish selected
+              </button>
+              <button className="primary-button" type="button" onClick={importDrafts} disabled={isWorking || selectedCount === 0}>
+                {isWorking ? "Saving..." : `Save ${selectedCount} Training Page${selectedCount === 1 ? "" : "s"}`}
+              </button>
+            </div>
+          </div>
+
+          <div className="import-bulk-edit">
+            <label>
+              Move selected pages to section
+              <select
+                value={defaultCollectionId}
+                onChange={(event) => {
+                  setDefaultCollectionId(event.target.value);
+                  updateSelectedDrafts("collectionId", event.target.value);
+                }}
+              >
+                <option value="">Unassigned</option>
+                {collections.map((collection) => (
+                  <option key={collection.id} value={collection.id}>
+                    {collection.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Set selected category
+              <input
+                type="text"
+                placeholder="Examples: Antipasta, Primi, Course 1, BTG"
+                onBlur={(event) => {
+                  if (event.target.value.trim()) updateSelectedDrafts("category", event.target.value);
+                  event.target.value = "";
+                }}
+              />
+            </label>
           </div>
 
           <div className="import-draft-list">
@@ -290,6 +335,15 @@ export default function ManagerImportPage() {
                       </option>
                     ))}
                   </select>
+                </label>
+
+                <label>
+                  Category
+                  <input
+                    value={draft.category}
+                    onChange={(event) => updateDraft(index, "category", event.target.value)}
+                    placeholder="Antipasta, Primi, Course 1, BTG Wines..."
+                  />
                 </label>
 
                 <label>

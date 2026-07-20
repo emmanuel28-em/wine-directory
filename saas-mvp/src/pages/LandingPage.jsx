@@ -118,7 +118,9 @@ export default function LandingPage() {
           ))}
         </div>
 
-        <p className="pricing-footnote">Extra users can be added for $3-$5 per user per month depending on the account.</p>
+        <p className="pricing-footnote">
+          Start with a one-month free trial. Payment is handled securely through Stripe, and extra users can be added for $3-$5 per user per month depending on the account.
+        </p>
 
         <div className="hook-actions">
           <Link className="primary-button hero-cta" to="/trial">

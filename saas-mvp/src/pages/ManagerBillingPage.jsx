@@ -229,14 +229,20 @@ export default function ManagerBillingPage() {
   const preservesTrial = checkoutPreservesTrial(restaurant);
   const currentPlan = pricingPlans.find((plan) => plan.id === selectedPlan) || pricingPlans[0];
   const overUserLimit = activeUserCount > currentPlan.includedUsers;
+  const isSetupFlow = searchParams.get("setup") === "trial";
+  const checkoutSucceeded = searchParams.get("checkout") === "success";
 
   return (
     <section className="page-section">
       <div className="dashboard-header">
         <div>
-          <p className="eyebrow">Billing</p>
-          <h1>Billing</h1>
-          <p>Review the Line Up trial, plan, and payment details for {restaurant.name}.</p>
+          <p className="eyebrow">{isSetupFlow ? "Step 2 of 3" : "Billing"}</p>
+          <h1>{isSetupFlow ? "Add payment method for your free trial" : "Billing"}</h1>
+          <p>
+            {isSetupFlow
+              ? `Choose the right plan for ${restaurant.name}. Stripe will save the payment method, and the first month stays free.`
+              : `Review the Line Up trial, plan, and payment details for ${restaurant.name}.`}
+          </p>
         </div>
         <Link className="secondary-button" to="/manager">
           Dashboard
@@ -249,11 +255,28 @@ export default function ManagerBillingPage() {
         </div>
       ) : subscriptionStatus === "trialing" ? (
         <div className="info-banner">
-          {trialDaysRemaining} day{trialDaysRemaining === 1 ? "" : "s"} remain in the free trial. Add a payment method now to avoid an interruption.
+          {isSetupFlow
+            ? `Your one-month free trial is active. Add a payment method now so service continues automatically after ${formatDate(restaurant.trialEndsAt)}.`
+            : `${trialDaysRemaining} day${trialDaysRemaining === 1 ? "" : "s"} remain in the free trial. Add a payment method now to avoid an interruption.`}
         </div>
       ) : null}
 
       {message ? <p className="form-message page-message">{message}</p> : null}
+
+      {checkoutSucceeded ? (
+        <section className="success-panel billing-next-step">
+          <div>
+            <p className="eyebrow">Billing connected</p>
+            <h2>Now build your training library</h2>
+            <p>
+              Start by importing existing menus, tech sheets, SOPs, or cocktail specs. Then invite leaders to help organize the workspace.
+            </p>
+          </div>
+          <Link className="primary-button" to="/manager/onboarding">
+            Continue Setup
+          </Link>
+        </section>
+      ) : null}
 
       <div className="dashboard-grid">
         <article className="stat-card">
@@ -336,14 +359,16 @@ export default function ManagerBillingPage() {
           </div>
 
           <h2>Secure Payment Setup</h2>
-          <p>Line Up does not collect or store card details. Stripe Checkout handles payment information securely.</p>
+          <p>
+            Line Up does not collect or store card details. Stripe Checkout handles payment information securely.
+          </p>
 
           {shouldShowCheckout ? (
             <div className="billing-timing-note">
               <strong>{preservesTrial ? "No charge today" : "Billing starts when checkout completes"}</strong>
               <p>
                 {preservesTrial
-                  ? `Your free trial remains active through ${formatDate(restaurant.trialEndsAt)}.`
+                  ? `Your free trial remains active through ${formatDate(restaurant.trialEndsAt)}. The subscription starts automatically after that date.`
                   : "Stripe requires at least 48 hours to preserve a trial end date, so payment begins immediately this close to or after expiration."}
               </p>
             </div>

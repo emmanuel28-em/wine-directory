@@ -3,7 +3,6 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import { archiveCollection, listCollectionsForRestaurant, saveCollection } from "../lib/collections.js";
 import { deleteFileAsset, getFileAssetUrl, listFileAssetsForRestaurant, uploadFileAsset } from "../lib/fileAssets.js";
-import { importExistingRestaurantContent } from "../lib/importExistingRestaurantContent.js";
 import {
   deleteTrainingDoc,
   docToForm,
@@ -121,28 +120,31 @@ function groupPagesByCategory(docs, categories) {
   const groups = new Map();
 
   docs.forEach((doc) => {
-    const key = doc.collectionId || "unassigned";
-    const category = categories.find((item) => item.id === doc.collectionId);
-    const groupName = category?.name || "Unassigned";
+    const content = parseContentJson(doc.contentJson);
+    const sectionIds = Array.isArray(content.sectionIds) && content.sectionIds.length
+      ? content.sectionIds
+      : doc.collectionId
+        ? [doc.collectionId]
+        : ["unassigned"];
 
-    if (!groups.has(key)) {
-      groups.set(key, {
-        id: key,
-        name: groupName,
-        pages: []
-      });
-    }
+    sectionIds.forEach((sectionId) => {
+      const key = sectionId || "unassigned";
+      const category = categories.find((item) => item.id === sectionId);
+      const groupName = category?.name || "Unassigned";
 
-    groups.get(key).pages.push(doc);
+      if (!groups.has(key)) {
+        groups.set(key, {
+          id: key,
+          name: groupName,
+          pages: []
+        });
+      }
+
+      groups.get(key).pages.push(doc);
+    });
   });
 
   return [...groups.values()];
-}
-
-function isOriginalRezdoraWorkspace(restaurant) {
-  const name = (restaurant?.name || "").trim().toLowerCase();
-  const slug = (restaurant?.slug || "").trim().toLowerCase();
-  return name === "rezdora" || slug === "rezdora";
 }
 
 export default function ManagerContentPage() {
@@ -225,6 +227,25 @@ export default function ManagerContentPage() {
       ...currentForm,
       [name]: value
     }));
+  }
+
+  function toggleSection(sectionId) {
+    setForm((currentForm) => {
+      const currentSectionIds = Array.isArray(currentForm.sectionIds)
+        ? currentForm.sectionIds
+        : currentForm.collectionId
+          ? [currentForm.collectionId]
+          : [];
+      const nextSectionIds = currentSectionIds.includes(sectionId)
+        ? currentSectionIds.filter((id) => id !== sectionId)
+        : [...currentSectionIds, sectionId];
+
+      return {
+        ...currentForm,
+        sectionIds: nextSectionIds,
+        collectionId: nextSectionIds[0] || ""
+      };
+    });
   }
 
   function updateCategoryForm(event) {
@@ -498,37 +519,6 @@ export default function ManagerContentPage() {
     }
   }
 
-  async function importExistingContent() {
-    if (workspace.status !== "ready") {
-      setMessage("No restaurant was found for this account.");
-      return;
-    }
-
-    if (!isOriginalRezdoraWorkspace(workspace.restaurant)) {
-      setMessage("This existing-content import is only available for the Rezdora workspace. Other restaurants can request managed setup.");
-      return;
-    }
-
-    setIsWorking(true);
-    setMessage("");
-
-    try {
-      const result = await importExistingRestaurantContent({
-        restaurantId: workspace.restaurant.id,
-        userProfileId: workspace.userProfile.id
-      });
-
-      await refreshRestaurantContent(workspace.restaurant.id);
-      setMessage(
-        `Import complete. Created ${result.createdCount} Training Pages and skipped ${result.skippedCount} existing pages.`
-      );
-    } catch (error) {
-      setMessage(error.message || "Could not import existing training content.");
-    } finally {
-      setIsWorking(false);
-    }
-  }
-
   const normalizedSearch = pageSearch.trim().toLowerCase();
   const filteredDocs = docs.filter((doc) => {
     const content = parseContentJson(doc.contentJson);
@@ -544,7 +534,6 @@ export default function ManagerContentPage() {
     return matchesSearch && matchesStatus && matchesType;
   });
   const groupedPages = groupPagesByCategory(filteredDocs, categories);
-  const canImportOriginalContent = workspace.status === "ready" && isOriginalRezdoraWorkspace(workspace.restaurant);
   const editingDocFiles = fileAssets.filter((fileAsset) => fileAsset.trainingDocId === editingDocId);
 
   return (
@@ -594,31 +583,6 @@ export default function ManagerContentPage() {
 
       {workspace.status === "ready" ? (
         <>
-          {canImportOriginalContent ? <section className="operator-section">
-            <div className="operator-section-heading">
-              <div>
-                <p className="eyebrow">Rezdora library</p>
-                <h2>Bring in the existing Rezdora training</h2>
-                <p>
-                  Add the training material already prepared for Rezdora. Line Up checks for matching pages so the same
-                  material is not added twice.
-                </p>
-              </div>
-            </div>
-
-              <div className="import-panel">
-                <div>
-                  <h3>Original Rezdora Training Library</h3>
-                  <p>
-                    Add wines, cocktails, food items, and pasta tasting material to this restaurant.
-                  </p>
-                </div>
-                <button className="primary-button" type="button" onClick={importExistingContent} disabled={isWorking}>
-                  Add Rezdora Training
-                </button>
-              </div>
-          </section> : null}
-
           <section className="operator-section" id="library-sections">
             <div className="operator-section-heading">
               <div>
@@ -716,13 +680,12 @@ export default function ManagerContentPage() {
           </section>
 
           <section className="operator-section">
-            <div className="operator-section-heading">
-              <div>
-                <p className="eyebrow">Training pages</p>
-                <h2>Add something for your team to study</h2>
+              <div className="operator-section-heading">
+                <div>
+                <p className="eyebrow">Tech sheets</p>
+                <h2>Create a new tech sheet</h2>
                 <p>
-                  Add the actual information your staff needs to study. This can be a dish tech sheet, wine note,
-                  cocktail spec, SOP, menu item, service procedure, or pasted notes from Google Docs.
+                  Write freely like a Google Doc, paste existing notes, choose where the page belongs, and add quiz facts when staff need to be tested.
                 </p>
               </div>
             </div>
@@ -742,8 +705,8 @@ export default function ManagerContentPage() {
             </div>
 
             <form className="form-card wide-form" id="training-page-form" onSubmit={submitPage}>
-              <h3>{editingDocId ? "Edit Training Page" : "Create Training Page"}</h3>
-              <p className="helper-text">Choose a starter above, then paste or type the information your staff needs.</p>
+              <h3>{editingDocId ? "Edit Tech Sheet" : "Create Tech Sheet"}</h3>
+              <p className="helper-text">Start with a title, paste or type the training notes, then choose every section where staff should find this page.</p>
 
               <div className="field-pair">
                 <label>
@@ -751,22 +714,6 @@ export default function ManagerContentPage() {
                   <input name="title" value={form.title} onChange={updateForm} placeholder="Uovo Raviolo" required />
                 </label>
 
-                <label>
-                  Library section
-                  <select name="collectionId" value={form.collectionId} onChange={updateForm}>
-                    <option value="">Unassigned</option>
-                    {categories
-                      .filter((category) => category.status !== "archived")
-                      .map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                  </select>
-                </label>
-              </div>
-
-              <div className="field-pair">
                 <label>
                   Training type
                   <select name="contentType" value={form.contentType} onChange={updateForm}>
@@ -781,7 +728,9 @@ export default function ManagerContentPage() {
                     <option value="custom">Custom</option>
                   </select>
                 </label>
+              </div>
 
+              <div className="field-pair">
                 <label>
                   Visibility
                   <select name="status" value={form.status} onChange={updateForm}>
@@ -790,11 +739,53 @@ export default function ManagerContentPage() {
                     <option value="archived">Archived</option>
                   </select>
                 </label>
+
+                <label>
+                  Quick category optional
+                  <input name="category" value={form.category} onChange={updateForm} placeholder="Antipasta, Primi, Course 1, Bar SOP..." />
+                </label>
               </div>
 
+              <section className="tech-sheet-sections">
+                <div>
+                  <h4>Where should this tech sheet appear?</h4>
+                  <p>Select every section where staff should find this page. Example: Lunch Menu and Dinner Menu.</p>
+                </div>
+
+                {categories.filter((category) => category.status !== "archived").length === 0 ? (
+                  <p className="empty-panel">Create library sections first, such as Lunch Menu, Dinner Menu, Cocktails, or SOPs.</p>
+                ) : (
+                  <div className="section-checkbox-grid">
+                    {categories
+                      .filter((category) => category.status !== "archived")
+                      .map((category) => {
+                        const selectedSections = Array.isArray(form.sectionIds)
+                          ? form.sectionIds
+                          : form.collectionId
+                            ? [form.collectionId]
+                            : [];
+
+                        return (
+                          <label className="section-checkbox-card" key={category.id}>
+                            <input
+                              type="checkbox"
+                              checked={selectedSections.includes(category.id)}
+                              onChange={() => toggleSection(category.id)}
+                            />
+                            <span>
+                              <strong>{category.name}</strong>
+                              <small>{category.description || categoryTypeLabels[category.categoryType] || "Library section"}</small>
+                            </span>
+                          </label>
+                        );
+                      })}
+                  </div>
+                )}
+              </section>
+
               <label>
-                Short description
-                <span className="helper-text">The quick explanation staff should remember.</span>
+                One-liner optional
+                <span className="helper-text">A short staff-facing summary. Leave blank if this is an SOP or longer note.</span>
                 <textarea
                   name="summary"
                   value={form.summary}
@@ -807,10 +798,10 @@ export default function ManagerContentPage() {
               </label>
 
               <label>
-                Training details
-                <span className="helper-text">Paste from Google Docs, Word, email, or your existing training docs.</span>
+                Tech sheet
+                <span className="helper-text">Write freely or paste from Google Docs, Word, email, PDFs you copied from, or existing manager notes.</span>
                 <textarea
-                  className="large-textarea"
+                  className="large-textarea tech-sheet-editor"
                   name="body"
                   value={form.body}
                   onChange={updateForm}
@@ -923,13 +914,13 @@ export default function ManagerContentPage() {
                 <div className="operator-section-heading compact-operator-heading">
                   <div>
                     <p className="eyebrow">Attachments</p>
-                    <h2>Add a file or image</h2>
-                    <p>Upload the original menu, tech sheet, SOP, image, or document this training page came from.</p>
+                    <h2>Add an image or file</h2>
+                    <p>Upload a dish photo, cocktail photo, wine label, SOP reference image, PDF, menu, or source document.</p>
                   </div>
                 </div>
 
                 {!editingDocId ? (
-                  <p className="helper-text">Save this Training Page first. Then edit it to attach PDFs, images, menus, or source docs.</p>
+                  <p className="helper-text">Save this Tech Sheet first. Then edit it to attach photos, PDFs, menus, SOPs, or source docs.</p>
                 ) : (
                   <>
                     <label>

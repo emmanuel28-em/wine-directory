@@ -145,7 +145,16 @@ export default function ManagerQuizzesPage() {
 
     if (source.category) {
       const selectedCollection = collections.find((collection) => collection.name === source.category);
-      return trainingDocs.filter((doc) => doc.collectionId === selectedCollection?.id || doc.category === source.category);
+      return trainingDocs.filter((doc) => {
+        const content = parseContentJson(doc.contentJson);
+        const sectionIds = Array.isArray(content.sectionIds) && content.sectionIds.length
+          ? content.sectionIds
+          : doc.collectionId
+            ? [doc.collectionId]
+            : [];
+
+        return sectionIds.includes(selectedCollection?.id) || doc.category === source.category;
+      });
     }
 
     return trainingDocs;

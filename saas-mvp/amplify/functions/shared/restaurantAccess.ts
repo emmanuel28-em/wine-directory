@@ -100,9 +100,8 @@ export async function requireRestaurantRole({
   const role = membership?.role?.S || "";
 
   if (!allowedRoles.includes(role)) {
-    throw new Error("You do not have permission to manage billing for this restaurant.");
+    throw new Error("You do not have permission to use this restaurant workspace feature.");
   }
 
   return { role, userProfileId };
 }
-

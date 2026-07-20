@@ -2,11 +2,18 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { formatRole, useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import { listInvitesForRestaurant, makeInviteLink, sendInviteEmailForInvite } from "../lib/invites.js";
-import { canInviteRole, isAdminOrManager, isOwner } from "../lib/permissions.js";
+import {
+  canEditRestaurantProfile,
+  canInviteRole,
+  canManageBilling,
+  isAdminOrManager,
+  rolePermissionSummary
+} from "../lib/permissions.js";
 import {
   canChangeMemberRole,
   canDisableMember,
   disableMember,
+  getAssignableMemberRoles,
   getRestaurantLogoUrl,
   listTeamMembersForRestaurant,
   revokeInvite,
@@ -15,8 +22,6 @@ import {
   updateRestaurantProfile,
   uploadRestaurantLogo
 } from "../lib/settings.js";
-
-const roleOptions = ["admin", "manager", "staff"];
 
 const emailStatusLabels = {
   notSent: "Not sent",
@@ -60,7 +65,9 @@ export default function WorkspaceSettingsPage() {
   const [isWorking, setIsWorking] = useState(false);
   const [message, setMessage] = useState("");
 
-  const canEditRestaurant = isOwner(workspace.role) || workspace.role === "admin";
+  const canEditRestaurant = canEditRestaurantProfile(workspace.role);
+  const canSeeBilling = canManageBilling(workspace.role);
+  const assignableRoles = getAssignableMemberRoles(workspace.role);
   const pendingInvites = invites.filter((invite) => invite.status === "pending");
 
   function fillRestaurantForm(restaurant) {
@@ -278,12 +285,19 @@ export default function WorkspaceSettingsPage() {
       <div className="dashboard-header">
         <div>
           <p className="eyebrow">Settings</p>
-          <h1>Restaurant settings</h1>
-          <p>Update restaurant details, team access, invitations, and your account.</p>
+          <h1>Workspace Settings</h1>
+          <p>Manage restaurant details, team access, invitations, and your account.</p>
         </div>
-        <Link className="secondary-button" to="/manager/invite-team">
-          Invite Team
-        </Link>
+        <div className="header-actions">
+          {canSeeBilling ? (
+            <Link className="secondary-button" to="/manager/billing">
+              Plan & billing
+            </Link>
+          ) : null}
+          <Link className="secondary-button" to="/manager/invite-team">
+            Invite Team
+          </Link>
+        </div>
       </div>
 
       {message ? <p className="form-message page-message">{message}</p> : null}
@@ -291,6 +305,25 @@ export default function WorkspaceSettingsPage() {
 
       {workspace.status === "ready" ? (
         <>
+          <section className="operator-section">
+            <div className="operator-section-heading">
+              <div>
+                <p className="eyebrow">Access levels</p>
+                <h2>Who can do what?</h2>
+                <p>Use Account Owner for billing and final control. Use Admins for GMs, AGMs, and directors. Use Managers for leaders who train the team.</p>
+              </div>
+            </div>
+
+            <div className="role-permission-grid">
+              {rolePermissionSummary.map((item) => (
+                <article className="role-permission-card" key={item.role}>
+                  <span className="type-pill">{item.label}</span>
+                  <p>{item.description}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+
           <section className="operator-section">
             <div className="operator-section-heading">
               <div>
@@ -411,7 +444,7 @@ export default function WorkspaceSettingsPage() {
                       <div className="card-actions">
                         {canEditRole ? (
                           <select value={member.membership.role} onChange={(event) => changeRole(member, event.target.value)} disabled={isWorking}>
-                            {roleOptions.map((role) => (
+                            {assignableRoles.map((role) => (
                               <option key={role} value={role}>
                                 {formatRole(role)}
                               </option>

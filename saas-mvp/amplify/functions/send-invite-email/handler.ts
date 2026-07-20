@@ -98,8 +98,13 @@ export const handler = async (event: InviteEmailEvent) => {
       allowedRoles: ["owner", "admin", "manager"]
     });
 
-    if (caller.role !== "owner" && role !== "staff") {
-      throw new Error("Only the Account Owner can email an Admin or Manager invite.");
+    const canSendInvite =
+      (caller.role === "owner" && ["admin", "manager", "staff"].includes(role)) ||
+      (caller.role === "admin" && ["manager", "staff"].includes(role)) ||
+      (caller.role === "manager" && role === "staff");
+
+    if (!canSendInvite) {
+      throw new Error("You do not have permission to email an invite for that role.");
     }
 
     await ses.send(

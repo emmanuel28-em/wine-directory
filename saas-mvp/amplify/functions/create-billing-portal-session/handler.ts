@@ -88,7 +88,7 @@ export const handler = async (event: BillingPortalEvent) => {
     await requireRestaurantRole({
       identity: event.identity,
       restaurantId,
-      allowedRoles: ["owner", "admin"]
+      allowedRoles: ["owner"]
     });
     const restaurant = await getRestaurant(restaurantId);
     const stripeCustomerId = restaurant?.stripeCustomerId?.S || "";

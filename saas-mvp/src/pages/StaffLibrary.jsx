@@ -22,12 +22,18 @@ const typeLabels = {
 const allFilter = "all";
 
 const collectionOrder = [
+  "Dinner Menu",
   "Lunch Menu",
   "Brunch Menu",
-  "Dinner Menu",
   "Cocktails",
+  "Pasta Tasting",
   "Pasta Tasting Menu",
   "BTG Wines",
+  "Wine Pairings",
+  "Wines",
+  "SOPs",
+  "Service Standards",
+  "Opening & Closing",
   "Food Items"
 ];
 
@@ -226,7 +232,9 @@ function getSectionLabel(doc, collection) {
   if (combined.includes("cocktail")) return "Cocktails";
   if (combined.includes("pasta") || combined.includes("pairing")) return "Pasta Tasting Menu";
   if (combined.includes("btg") || combined.includes("by-the-glass")) return "BTG Wines";
+  if (combined.includes("wine")) return "Wines";
   if (combined.includes("sop") || combined.includes("procedure")) return "SOPs";
+  if (combined.includes("service")) return "Service Standards";
 
   return name || "Unassigned";
 }
@@ -273,12 +281,10 @@ function docMatchesSearch(doc, collection, searchTerm) {
   return searchableText.includes(searchTerm);
 }
 
-function groupDocsByCollectionAndType(docs, collections) {
-  const collectionMap = new Map(collections.map((collection) => [collection.id, collection]));
+function groupDecoratedDocsByCollectionAndType(decoratedItems) {
   const groups = new Map();
 
-  docs.forEach((doc) => {
-    const collection = collectionMap.get(doc.collectionId);
+  decoratedItems.forEach(({ doc, collection }) => {
     const collectionKey = collection?.id || "unassigned";
     const collectionName = collection?.name || "Unassigned";
     const collectionDescription = collection?.description || "Training pages that have not been placed in a library section yet.";
@@ -299,7 +305,9 @@ function groupDocsByCollectionAndType(docs, collections) {
       collectionGroup.typeGroups.set(typeKey, []);
     }
 
-    collectionGroup.typeGroups.get(typeKey).push(doc);
+    if (!collectionGroup.typeGroups.get(typeKey).some((item) => item.id === doc.id)) {
+      collectionGroup.typeGroups.get(typeKey).push(doc);
+    }
   });
 
   return [...groups.values()]
@@ -376,14 +384,23 @@ export default function StaffLibrary() {
   }, [workspace.status, workspace.restaurant?.id]);
 
   const collectionMap = new Map(collections.map((collection) => [collection.id, collection]));
-  const decoratedDocs = docs.map((doc) => {
-    const collection = collectionMap.get(doc.collectionId);
-    return {
-      doc,
-      collection,
-      section: getSectionLabel(doc, collection),
-      subsection: getSubsectionLabel(doc)
-    };
+  const decoratedDocs = docs.flatMap((doc) => {
+    const content = parseContentJson(doc.contentJson);
+    const sectionIds = Array.isArray(content.sectionIds) && content.sectionIds.length
+      ? content.sectionIds
+      : doc.collectionId
+        ? [doc.collectionId]
+        : [""];
+
+    return sectionIds.map((sectionId) => {
+      const collection = collectionMap.get(sectionId);
+      return {
+        doc,
+        collection,
+        section: getSectionLabel(doc, collection),
+        subsection: getSubsectionLabel(doc)
+      };
+    });
   });
   const availableSections = [...new Set(decoratedDocs.map((item) => item.section).filter(Boolean))].sort((a, b) => {
     const orderA = collectionOrder.indexOf(a);
@@ -407,12 +424,16 @@ export default function StaffLibrary() {
     return safeOrderA - safeOrderB || a.localeCompare(b);
   });
   const normalizedSearch = normalizeValue(searchTerm);
-  const filteredDocs = decoratedDocs
+  const sectionCounts = decoratedDocs.reduce((counts, item) => {
+    counts[item.section] = (counts[item.section] || 0) + 1;
+    return counts;
+  }, {});
+  const filteredDecoratedDocs = decoratedDocs
     .filter((item) => sectionFilter === allFilter || item.section === sectionFilter)
     .filter((item) => subsectionFilter === allFilter || item.subsection === subsectionFilter)
-    .filter((item) => docMatchesSearch(item.doc, item.collection, normalizedSearch))
-    .map((item) => item.doc);
-  const groupedContent = groupDocsByCollectionAndType(filteredDocs, collections);
+    .filter((item) => docMatchesSearch(item.doc, item.collection, normalizedSearch));
+  const filteredDocs = [...new Map(filteredDecoratedDocs.map((item) => [item.doc.id, item.doc])).values()];
+  const groupedContent = groupDecoratedDocsByCollectionAndType(filteredDecoratedDocs);
   const canManageLibrary = isAdminOrManager(workspace.role);
 
   async function openAttachedResource(fileAsset) {
@@ -511,9 +532,21 @@ export default function StaffLibrary() {
           <h1>{workspace.restaurant?.name || "Training Library"}</h1>
           <p>Everything your team needs to study, organized by your restaurant.</p>
         </div>
-        <button className="secondary-button" type="button" onClick={loadStaffLibrary}>
-          Refresh
-        </button>
+        <div className="header-actions">
+          {canManageLibrary ? (
+            <>
+              <Link className="secondary-button" to="/manager/import">
+                Import material
+              </Link>
+              <Link className="primary-button" to="/manager/content#training-page-form">
+                Add page
+              </Link>
+            </>
+          ) : null}
+          <button className="secondary-button" type="button" onClick={loadStaffLibrary}>
+            Refresh
+          </button>
+        </div>
       </div>
 
       {workspace.status === "loading" ? (
@@ -553,7 +586,8 @@ export default function StaffLibrary() {
                   setSubsectionFilter(allFilter);
                 }}
               >
-                All
+                <span>All</span>
+                <small>{docs.length}</small>
               </button>
               {availableSections.map((section) => (
                 <button
@@ -565,7 +599,8 @@ export default function StaffLibrary() {
                     setSubsectionFilter(allFilter);
                   }}
                 >
-                  {section.replace(" Menu", "")}
+                  <span>{section.replace(" Menu", "")}</span>
+                  <small>{sectionCounts[section] || 0}</small>
                 </button>
               ))}
             </div>

@@ -1,6 +1,12 @@
 import { getUrl, uploadData } from "aws-amplify/storage";
 import { getDataClient } from "./dataClient.js";
-import { assertSameRestaurant, canInviteRole, isOwner, requireRestaurantId } from "./permissions.js";
+import {
+  assertSameRestaurant,
+  canInviteRole,
+  getAssignableMemberRoles,
+  isOwner,
+  requireRestaurantId
+} from "./permissions.js";
 
 function assertNoErrors(result, fallbackMessage) {
   if (result.errors?.length) {
@@ -24,15 +30,15 @@ function cleanPathPart(value) {
 }
 
 function canChangeMemberRole({ currentRole, targetMembership, nextRole }) {
-  if (!isOwner(currentRole)) {
-    return false;
-  }
-
   if (targetMembership.role === "owner") {
     return false;
   }
 
-  return ["admin", "manager", "staff"].includes(nextRole);
+  if (targetMembership.role === "admin" && !isOwner(currentRole)) {
+    return false;
+  }
+
+  return getAssignableMemberRoles(currentRole).includes(nextRole);
 }
 
 function canDisableMember({ currentRole, currentMembershipId, targetMembership }) {
@@ -48,7 +54,7 @@ function canDisableMember({ currentRole, currentMembershipId, targetMembership }
     return true;
   }
 
-  return currentRole === "admin" && targetMembership.role === "staff";
+  return currentRole === "admin" && ["manager", "staff"].includes(targetMembership.role);
 }
 
 async function getMembershipForRestaurant({ dataClient, membershipId, restaurantId }) {
@@ -238,4 +244,4 @@ export async function updateCurrentUserName({ userProfileId, name }) {
   );
 }
 
-export { canChangeMemberRole, canDisableMember, canInviteRole };
+export { canChangeMemberRole, canDisableMember, canInviteRole, getAssignableMemberRoles };

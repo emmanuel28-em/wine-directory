@@ -128,11 +128,17 @@ async function manageMember(event: InviteAccessEvent, identity: Awaited<ReturnTy
   let nextStatus = target.status?.S || "active";
 
   if (action === "changeRole") {
-    if (callerRole !== "owner") throw new Error("Only the Account Owner can change team roles.");
-    if (!["admin", "manager", "staff"].includes(event.arguments.role || "")) throw new Error("Choose a valid role.");
+    const requestedRole = event.arguments.role || "";
+    const canChangeRole =
+      (callerRole === "owner" && ["admin", "manager", "staff"].includes(requestedRole)) ||
+      (callerRole === "admin" && target.role?.S !== "admin" && ["manager", "staff"].includes(requestedRole));
+
+    if (!canChangeRole) throw new Error("You do not have permission to change this team role.");
     nextRole = event.arguments.role || "staff";
   } else {
-    const canDisable = callerRole === "owner" || (callerRole === "admin" && target.role?.S === "staff");
+    const canDisable =
+      callerRole === "owner" ||
+      (callerRole === "admin" && ["manager", "staff"].includes(target.role?.S || ""));
     if (!canDisable) throw new Error("You do not have permission to disable this team member.");
     nextStatus = "disabled";
   }

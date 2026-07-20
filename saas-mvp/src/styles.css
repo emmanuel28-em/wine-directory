@@ -298,6 +298,26 @@ textarea {
   margin: 16px auto 0;
 }
 
+.trial-countdown-banner {
+  display: flex;
+  width: min(1120px, calc(100% - 32px));
+  margin: 16px auto 0;
+  padding: 13px 16px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  color: var(--color-primary);
+  font-weight: 800;
+  background: rgba(164, 182, 154, 0.22);
+  border: 1px solid rgba(31, 61, 46, 0.16);
+  border-radius: 14px;
+}
+
+.trial-countdown-banner a {
+  color: var(--color-accent);
+  white-space: nowrap;
+}
+
 .user-strip {
   display: flex;
   flex-wrap: wrap;
@@ -889,6 +909,33 @@ textarea {
   text-align: center;
 }
 
+.trial-plan-preview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.trial-plan-mini-card {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+}
+
+.trial-plan-mini-card strong {
+  color: var(--color-primary);
+}
+
+.trial-plan-mini-card span {
+  font-weight: 900;
+}
+
+.trial-plan-mini-card small {
+  color: var(--color-muted);
+}
+
 .billing-plan-option {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -1294,6 +1341,81 @@ textarea {
   gap: 16px;
 }
 
+.import-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.import-bulk-edit {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.7fr) minmax(260px, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 16px;
+  background: rgba(164, 182, 154, 0.12);
+  border: 1px solid rgba(31, 61, 46, 0.12);
+  border-radius: 16px;
+}
+
+.tech-sheet-sections {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  background: rgba(164, 182, 154, 0.12);
+  border: 1px solid rgba(31, 61, 46, 0.12);
+  border-radius: 16px;
+}
+
+.tech-sheet-sections h4,
+.tech-sheet-sections p {
+  margin: 0;
+}
+
+.tech-sheet-sections p {
+  color: var(--color-muted);
+}
+
+.section-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.section-checkbox-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+}
+
+.section-checkbox-card input {
+  width: auto;
+  min-height: auto;
+  margin-top: 3px;
+}
+
+.section-checkbox-card span,
+.section-checkbox-card small {
+  display: block;
+}
+
+.section-checkbox-card small {
+  margin-top: 4px;
+  color: var(--color-muted);
+  line-height: 1.35;
+}
+
+.tech-sheet-editor {
+  min-height: 520px;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
 .onboarding-progress-card {
   display: grid;
   gap: 18px;
@@ -1324,6 +1446,27 @@ textarea {
 
 .billing-timing-note p {
   margin: 5px 0 0;
+  color: var(--color-muted);
+}
+
+.billing-next-step {
+  display: flex;
+  margin-bottom: 20px;
+  padding: 22px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  background: rgba(164, 182, 154, 0.16);
+  border: 1px solid rgba(31, 61, 46, 0.14);
+  border-radius: 18px;
+}
+
+.billing-next-step h2,
+.billing-next-step p {
+  margin: 0;
+}
+
+.billing-next-step p {
   color: var(--color-muted);
 }
 
@@ -1451,6 +1594,28 @@ textarea {
   margin-top: 5px;
   color: var(--color-muted);
   line-height: 1.4;
+}
+
+.role-permission-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.role-permission-card {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  padding: 18px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+}
+
+.role-permission-card p {
+  margin: 0;
+  color: var(--color-muted);
+  line-height: 1.5;
 }
 
 .success-panel {
@@ -2134,6 +2299,10 @@ code {
 }
 
 .library-tab {
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 8px;
   flex: 0 0 auto;
   min-height: 46px;
   padding: 0 18px;
@@ -2148,11 +2317,29 @@ code {
   white-space: nowrap;
 }
 
+.library-tab small {
+  display: inline-grid;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  background: rgba(164, 182, 154, 0.22);
+  border-radius: 999px;
+  place-items: center;
+}
+
 .library-tab:hover,
 .active-library-tab {
   color: #fff;
   background: var(--color-primary);
   border-color: var(--color-primary);
+}
+
+.library-tab:hover small,
+.active-library-tab small {
+  color: var(--color-primary);
+  background: #fff;
 }
 
 .staff-library-search {
@@ -2625,6 +2812,9 @@ code {
   .pilot-checklist,
   .starter-template-grid,
   .import-workspace-grid,
+  .import-bulk-edit,
+  .role-permission-grid,
+  .section-checkbox-grid,
   .starter-category-grid,
   .content-filter-bar,
   .platform-access-form,
@@ -2678,6 +2868,7 @@ code {
   }
 
   .field-pair,
+  .trial-plan-preview,
   .knowledge-card {
     grid-template-columns: 1fr;
   }
@@ -2767,6 +2958,8 @@ code {
   .home-success-panel,
   .setup-help-strip,
   .import-next-steps,
+  .trial-countdown-banner,
+  .billing-next-step,
   .billing-action-stack {
     align-items: stretch;
     flex-direction: column;

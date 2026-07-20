@@ -5,7 +5,7 @@ import { listTrainingAssignmentsForRestaurant } from "../lib/assignments.js";
 import { formatBillingStatus, isTrialExpired } from "../lib/billing.js";
 import { listCertificationsForRestaurant } from "../lib/certifications.js";
 import { listCollectionsForRestaurant } from "../lib/collections.js";
-import { isOwnerOrAdmin } from "../lib/permissions.js";
+import { canManageBilling } from "../lib/permissions.js";
 import { listQuizzesForRestaurant } from "../lib/quizzes.js";
 import { listTeamMembersForRestaurant } from "../lib/settings.js";
 import { listTrainingDocsForRestaurant } from "../lib/trainingDocs.js";
@@ -284,7 +284,7 @@ export default function ManagerDashboard() {
             <div className="home-account-actions">
               <Link to="/managed-setup">Get help importing</Link>
               <Link to="/manager/settings">Restaurant settings</Link>
-              {isOwnerOrAdmin(workspace.role) ? <Link to="/manager/billing">Plan & billing</Link> : null}
+              {canManageBilling(workspace.role) ? <Link to="/manager/billing">Plan & billing</Link> : null}
             </div>
           </section>
         </>

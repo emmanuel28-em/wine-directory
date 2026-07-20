@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
 import { formatRole, useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
-import { formatBillingStatus } from "../lib/billing.js";
-import { isOwnerOrAdmin } from "../lib/permissions.js";
+import { formatBillingStatus, getTrialDaysRemaining, hasActiveTrial } from "../lib/billing.js";
+import { canManageBilling } from "../lib/permissions.js";
 import AmplifySetupNotice from "./AmplifySetupNotice.jsx";
 
 function AccountMenu({ authSession, currentWorkspace, hasPlatformAccess, isSigningOut, onLogout }) {
@@ -34,7 +34,7 @@ function AccountMenu({ authSession, currentWorkspace, hasPlatformAccess, isSigni
             <NavLink to="/manager/import">Import training material</NavLink>
             <NavLink to="/manager/onboarding">Getting started</NavLink>
             <NavLink to="/manager/settings">Restaurant settings</NavLink>
-            {isOwnerOrAdmin(currentWorkspace.role) ? <NavLink to="/manager/billing">Plan & billing</NavLink> : null}
+            {canManageBilling(currentWorkspace.role) ? <NavLink to="/manager/billing">Plan & billing</NavLink> : null}
           </>
         ) : null}
 
@@ -81,6 +81,8 @@ function NavigationLinks({ authSession, currentWorkspace, hasPlatformAccess, loc
     return (
       <>
         <NavLink end to="/manager">Home</NavLink>
+        <NavLink to="/training-library">Library</NavLink>
+        <NavLink to="/manager/import">Import</NavLink>
         <NavLink to="/manager/content">Training</NavLink>
         <NavLink to="/manager/invite-team">Team</NavLink>
         <NavLink to="/manager/quizzes">Quizzes</NavLink>
@@ -113,7 +115,7 @@ function MobileBottomNav({ authSession, currentWorkspace }) {
   return (
     <nav className="bottom-nav" aria-label="Manager quick navigation">
       <NavLink end to="/manager">Home</NavLink>
-      <NavLink to="/manager/content">Training</NavLink>
+      <NavLink to="/manager/import">Import</NavLink>
       <NavLink to="/manager/assignments">Assign</NavLink>
       <NavLink to="/manager/staff-progress">Results</NavLink>
     </nav>
@@ -127,6 +129,12 @@ export default function AppLayout() {
   const authSession = useAuthSession();
   const currentWorkspace = useCurrentWorkspace();
   const hasPlatformAccess = ["platform_owner", "platform_developer"].includes(authSession.platformRole);
+  const shouldShowOwnerTrialBar =
+    authSession.status === "authenticated" &&
+    currentWorkspace.isActiveMember &&
+    canManageBilling(currentWorkspace.role) &&
+    hasActiveTrial(currentWorkspace.restaurant);
+  const trialDaysRemaining = shouldShowOwnerTrialBar ? getTrialDaysRemaining(currentWorkspace.restaurant) : 0;
 
   async function handleLogout() {
     setIsSigningOut(true);
@@ -188,7 +196,16 @@ export default function AppLayout() {
       {authSession.status === "authenticated" && currentWorkspace.isBillingPaused ? (
         <div className="warning-banner app-warning-banner">
           <span>{formatBillingStatus(currentWorkspace.restaurant)}. Update billing to keep your restaurant active.</span>
-          {isOwnerOrAdmin(currentWorkspace.role) ? <Link to="/manager/billing">Review billing</Link> : null}
+          {canManageBilling(currentWorkspace.role) ? <Link to="/manager/billing">Review billing</Link> : null}
+        </div>
+      ) : null}
+
+      {shouldShowOwnerTrialBar ? (
+        <div className="trial-countdown-banner">
+          <span>
+            Free trial: {trialDaysRemaining} day{trialDaysRemaining === 1 ? "" : "s"} left.
+          </span>
+          <Link to="/manager/billing?setup=trial">Set up billing</Link>
         </div>
       ) : null}
 

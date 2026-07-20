@@ -207,7 +207,10 @@ After submitting:
 4. The app creates the restaurant workspace.
 5. The app creates the account owner profile.
 6. The app connects the account owner to the workspace with the Account Owner role.
-7. You are redirected to `/manager/onboarding`.
+7. You are redirected to `/manager/billing?setup=trial` to choose a plan and add a payment method through Stripe.
+8. Stripe stores the card securely. Line Up does not collect or store card details.
+9. The restaurant can keep using the free trial until the trial end date.
+10. After billing setup, continue to `/manager/onboarding` to build the first training library.
 
 The Workspace Dashboard should show:
 
@@ -219,7 +222,7 @@ The Workspace Dashboard should show:
 
 ## Guided Restaurant Onboarding
 
-New Account Owners land at:
+After billing setup, new Account Owners continue at:
 
 ```text
 /manager/onboarding
@@ -662,7 +665,13 @@ Restaurant A vs Restaurant B settings safety:
 
 ## Testing Billing And Trial Status
 
-Billing uses Stripe Checkout. Line Up never collects card details directly.
+Billing uses Stripe Checkout. Line Up never collects card details directly. The intended customer flow is:
+
+1. Start the one-month free trial.
+2. Choose Starter, Growth, or Pro.
+3. Add a payment method through Stripe.
+4. Keep using the free trial until the trial end date.
+5. Billing starts automatically after the free trial if the Stripe subscription is active.
 
 Before testing, restart the Amplify sandbox after the billing schema/function changes:
 
@@ -678,27 +687,33 @@ npm run dev
 
 Account Owner billing test:
 
-1. Log in as an Account Owner.
-2. Go to `/manager`.
-3. Confirm the dashboard shows trial or subscription status.
-4. Go to `/manager/billing`.
-5. Confirm restaurant name, plan, subscription status, trial end date, and billing email appear.
-6. Change the billing email and save it.
-7. Click `Set Up Billing`.
-8. If Stripe is configured, you should be redirected to Stripe Checkout.
-9. If Stripe is not configured, you should see a clear setup error and remain in Line Up.
-10. Complete Checkout with a Stripe test card.
-11. Confirm the webhook updates the Restaurant subscription status if webhook forwarding is configured.
-12. Return to `/manager/billing`.
-13. Click `Manage Billing`.
-14. Confirm you are redirected to Stripe Customer Portal, or see a clear setup error if the portal is not configured.
+1. Create a new restaurant from `/trial`.
+2. Confirm the app redirects the Account Owner to `/manager/billing?setup=trial`.
+3. Confirm the setup copy says the first month is free and payment is handled by Stripe.
+4. Go to `/manager`.
+5. Confirm the Account Owner sees the free-trial countdown bar.
+6. Confirm Admin, Manager, and Staff users do not see the owner-only trial countdown bar.
+7. Go back to `/manager/billing`.
+8. Confirm restaurant name, plan, subscription status, trial end date, and billing email appear.
+9. Change the billing email and save it.
+10. Choose Starter, Growth, or Pro.
+11. Click `Add Payment Method`.
+12. If Stripe is configured, you should be redirected to Stripe Checkout.
+13. If Stripe is not configured, you should see a clear setup error and remain in Line Up.
+14. Complete Checkout with a Stripe test card.
+15. Confirm the webhook updates the Restaurant subscription status if webhook forwarding is configured.
+16. Return to `/manager/billing`.
+17. Click `Manage Billing`.
+18. Confirm you are redirected to Stripe Customer Portal, or see a clear setup error if the portal is not configured.
 
 Role test:
 
 1. Use the local development role switcher to change your role to `Staff`.
 2. Visit `/manager/billing`.
 3. Confirm Staff cannot access the billing page.
-4. Change your role back to Account Owner or Admin.
+4. Change your role to `Manager` or `Admin`.
+5. Confirm Manager/Admin cannot access the billing page.
+6. Change your role back to Account Owner.
 
 Required Stripe environment variables:
 
@@ -759,7 +774,8 @@ Local webhook testing:
 
 Billing enforcement:
 
-- Owner/Admin can always access `/manager/billing`.
+- Account Owner can access `/manager/billing`.
+- Admin, Manager, and Staff cannot access billing.
 - Settings and Dashboard remain reachable when billing needs attention.
 - Staff sees a clear subscription message if the workspace is paused.
 - Creating training pages, quizzes, uploads, and new invites is blocked when the trial is expired and there is no active subscription.

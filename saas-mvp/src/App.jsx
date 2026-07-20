@@ -25,7 +25,7 @@ import StaffLibrary from "./pages/StaffLibrary.jsx";
 import StaffQuizzesPage from "./pages/StaffQuizzesPage.jsx";
 import TrialPage from "./pages/TrialPage.jsx";
 import WorkspaceSettingsPage from "./pages/WorkspaceSettingsPage.jsx";
-import { activeMemberRoles, adminManagerRoles as managerRoles, ownerAdminRoles } from "./lib/permissions.js";
+import { activeMemberRoles, adminManagerRoles as managerRoles, billingRoles } from "./lib/permissions.js";
 
 export default function App() {
   return (
@@ -63,7 +63,7 @@ export default function App() {
         <Route
           path="/manager/billing"
           element={
-            <ProtectedRoute allowedRoles={ownerAdminRoles}>
+            <ProtectedRoute allowedRoles={billingRoles}>
               <ManagerBillingPage />
             </ProtectedRoute>
           }
