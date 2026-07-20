@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
 import { acceptInviteForUser, getPendingInviteByToken } from "../lib/invites.js";
+import { getPasswordPolicyError, passwordRuleText } from "../lib/passwordPolicy.js";
 
 const emptyForm = {
   firstName: "",
@@ -92,6 +93,12 @@ export default function AcceptInvitePage() {
     setMessage("");
 
     try {
+      const passwordError = getPasswordPolicyError(form.password);
+      if (passwordError) {
+        setMessage(passwordError);
+        return;
+      }
+
       const result = await signUp({
         username: form.email,
         password: form.password,
@@ -254,6 +261,7 @@ export default function AcceptInvitePage() {
               <label>
                 Password
                 <input name="password" type="password" value={form.password} onChange={updateForm} required />
+                {authMode === "signup" ? <span className="helper-text">{passwordRuleText}</span> : null}
               </label>
               <button className="primary-button full-width" type="submit" disabled={isWorking}>
                 {isWorking ? "Working..." : authMode === "signup" ? "Create Account" : "Sign In"}

@@ -2,6 +2,7 @@ import { confirmSignUp, getCurrentUser, signIn, signUp } from "aws-amplify/auth"
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
+import { getPasswordPolicyError, passwordRuleText } from "../lib/passwordPolicy.js";
 import { createTrialWorkspace } from "../lib/trialWorkspace.js";
 
 const emptyTrialForm = {
@@ -130,6 +131,12 @@ export default function TrialPage() {
     setMessage("");
 
     try {
+      const passwordError = getPasswordPolicyError(form.password);
+      if (passwordError) {
+        setMessage(passwordError);
+        return;
+      }
+
       const result = await signUp({
         username: getNormalizedEmail(form.email),
         password: form.password,
@@ -302,7 +309,7 @@ export default function TrialPage() {
               onChange={updateForm}
               required
             />
-            <span className="helper-text">At least 8 characters with uppercase, lowercase, a number, and a symbol.</span>
+            <span className="helper-text">{passwordRuleText}</span>
           </label>
 
           <h2>About the restaurant</h2>

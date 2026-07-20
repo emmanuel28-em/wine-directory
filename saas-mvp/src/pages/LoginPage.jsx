@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAmplifySetup } from "../amplify/AmplifySetupProvider.jsx";
 import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
+import { getPasswordPolicyError, passwordRuleText } from "../lib/passwordPolicy.js";
 
 const emptyForm = {
   email: "",
@@ -133,6 +134,12 @@ export default function LoginPage() {
     setMessage("");
 
     try {
+      const passwordError = getPasswordPolicyError(form.newPassword);
+      if (passwordError) {
+        setMessage(passwordError);
+        return;
+      }
+
       const result = await confirmSignIn({
         challengeResponse: form.newPassword
       });
@@ -175,6 +182,12 @@ export default function LoginPage() {
     setMessage("");
 
     try {
+      const passwordError = getPasswordPolicyError(form.newPassword);
+      if (passwordError) {
+        setMessage(passwordError);
+        return;
+      }
+
       await confirmResetPassword({
         username: normalizeEmail(form.email),
         confirmationCode: form.resetCode.trim(),
@@ -269,6 +282,7 @@ export default function LoginPage() {
           <label>
             New password
             <input name="newPassword" type="password" value={form.newPassword} onChange={updateForm} required />
+            <span className="helper-text">{passwordRuleText}</span>
           </label>
           <button className="primary-button full-width" type="submit" disabled={isWorking}>
             {isWorking ? "Saving..." : "Save Password and Continue"}
@@ -307,6 +321,7 @@ export default function LoginPage() {
           <label>
             New password
             <input name="newPassword" type="password" value={form.newPassword} onChange={updateForm} required />
+            <span className="helper-text">{passwordRuleText}</span>
           </label>
           <button className="primary-button full-width" type="submit" disabled={isWorking}>
             {isWorking ? "Updating..." : "Update Password"}
