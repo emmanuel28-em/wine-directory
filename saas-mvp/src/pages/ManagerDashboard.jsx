@@ -171,6 +171,19 @@ export default function ManagerDashboard() {
 
           {overviewMessage ? <p className="form-message page-message">{overviewMessage}</p> : null}
 
+          <section className="home-account-bar">
+            <div>
+              <span>Plan</span>
+              <strong>{formatBillingStatus(workspace.restaurant)}</strong>
+              <small>{workspace.restaurant?.trialEndsAt ? `Trial ends ${formatDate(workspace.restaurant.trialEndsAt)}` : ""}</small>
+            </div>
+            <div className="home-account-actions">
+              <Link to="/managed-setup">Get help importing</Link>
+              <Link to="/manager/settings">Restaurant settings</Link>
+              {isOwnerOrAdmin(workspace.role) ? <Link to="/manager/billing">Plan & billing</Link> : null}
+            </div>
+          </section>
+
           <section className="home-overview" aria-label="Restaurant overview">
             <Link to="/manager/content">
               <strong>{isLoadingOverview ? "..." : overview.publishedPages}</strong>
@@ -275,18 +288,6 @@ export default function ManagerDashboard() {
             </div>
           </section>
 
-          <section className="home-account-bar">
-            <div>
-              <span>Plan</span>
-              <strong>{formatBillingStatus(workspace.restaurant)}</strong>
-              <small>{workspace.restaurant?.trialEndsAt ? `Trial ends ${formatDate(workspace.restaurant.trialEndsAt)}` : ""}</small>
-            </div>
-            <div className="home-account-actions">
-              <Link to="/managed-setup">Get help importing</Link>
-              <Link to="/manager/settings">Restaurant settings</Link>
-              {isOwnerOrAdmin(workspace.role) ? <Link to="/manager/billing">Plan & billing</Link> : null}
-            </div>
-          </section>
         </>
       ) : null}
     </section>

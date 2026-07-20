@@ -825,8 +825,11 @@ textarea {
 }
 
 .home-account-bar {
-  padding: 18px 0 0;
-  border-top: 1px solid var(--color-border);
+  padding: 18px 20px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  box-shadow: 0 12px 36px rgba(31, 61, 46, 0.07);
 }
 
 .home-account-bar > div:first-child {
