@@ -107,6 +107,13 @@ export default function PlatformControlPage() {
             <h2>Dedicated Test Workspace</h2>
             <p>Invite developers into a non-customer restaurant workspace when they need to test staff or manager flows.</p>
           </article>
+          {isPlatformOwner ? (
+            <article className="stat-card platform-reminder-card">
+              <span>Owner Reminder</span>
+              <h2>Stripe cleanup</h2>
+              <p>Live payments are connected. Rotate the Stripe secret key after today's payment test, then finish the Stripe webhook secret so subscription status updates automatically.</p>
+            </article>
+          ) : null}
         </div>
       ) : null}
 

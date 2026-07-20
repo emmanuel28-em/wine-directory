@@ -965,6 +965,11 @@ textarea {
   color: var(--color-muted);
 }
 
+.platform-reminder-card {
+  border-color: rgba(200, 107, 74, 0.45);
+  background: linear-gradient(180deg, var(--color-card), rgba(200, 107, 74, 0.1));
+}
+
 .support-result-card {
   display: grid;
   grid-template-columns: auto auto 1fr;
