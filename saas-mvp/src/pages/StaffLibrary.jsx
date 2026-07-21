@@ -273,50 +273,34 @@ function docMatchesSearch(doc, collection, searchTerm) {
   return searchableText.includes(searchTerm);
 }
 
-function groupDocsByCollectionAndType(docs, collections) {
-  const collectionMap = new Map(collections.map((collection) => [collection.id, collection]));
+function groupStaffRows(items) {
   const groups = new Map();
 
-  docs.forEach((doc) => {
-    const collection = collectionMap.get(doc.collectionId);
-    const collectionKey = collection?.id || "unassigned";
-    const collectionName = collection?.name || "Unassigned";
-    const collectionDescription = collection?.description || "Training pages that have not been placed in a library section yet.";
-    const typeKey = doc.type || "custom";
+  items.forEach((item) => {
+    const rowName = item.subsection ? `${item.section} · ${item.subsection}` : item.section || "Training Library";
+    const rowDescription = item.collection?.description || "Training pages to review before service.";
 
-    if (!groups.has(collectionKey)) {
-      groups.set(collectionKey, {
-        id: collectionKey,
-        name: collectionName,
-        description: collectionDescription,
-        typeGroups: new Map()
+    if (!groups.has(rowName)) {
+      groups.set(rowName, {
+        id: rowName,
+        name: rowName,
+        description: rowDescription,
+        items: []
       });
     }
 
-    const collectionGroup = groups.get(collectionKey);
-
-    if (!collectionGroup.typeGroups.has(typeKey)) {
-      collectionGroup.typeGroups.set(typeKey, []);
-    }
-
-    collectionGroup.typeGroups.get(typeKey).push(doc);
+    groups.get(rowName).items.push(item);
   });
 
-  return [...groups.values()]
-    .sort((a, b) => {
-      const orderA = collectionOrder.indexOf(a.name);
-      const orderB = collectionOrder.indexOf(b.name);
-      const safeOrderA = orderA === -1 ? 999 : orderA;
-      const safeOrderB = orderB === -1 ? 999 : orderB;
-      return safeOrderA - safeOrderB || a.name.localeCompare(b.name);
-    })
-    .map((collectionGroup) => ({
-      ...collectionGroup,
-      typeGroups: [...collectionGroup.typeGroups.entries()].map(([type, typeDocs]) => ({
-      type,
-      docs: [...typeDocs].sort((a, b) => (a.category || "").localeCompare(b.category || "") || a.title.localeCompare(b.title))
-    }))
-    }));
+  return [...groups.values()].sort((left, right) => {
+    const leftBase = left.name.split(" · ")[0];
+    const rightBase = right.name.split(" · ")[0];
+    const sectionA = collectionOrder.indexOf(leftBase);
+    const sectionB = collectionOrder.indexOf(rightBase);
+    const safeSectionA = sectionA === -1 ? 999 : sectionA;
+    const safeSectionB = sectionB === -1 ? 999 : sectionB;
+    return safeSectionA - safeSectionB || left.name.localeCompare(right.name);
+  });
 }
 
 export default function StaffLibrary() {
@@ -332,7 +316,6 @@ export default function StaffLibrary() {
   const [sectionFilter, setSectionFilter] = useState(allFilter);
   const [subsectionFilter, setSubsectionFilter] = useState(allFilter);
   const [activeReviewDocId, setActiveReviewDocId] = useState("");
-  const [isBrowsePanelOpen, setIsBrowsePanelOpen] = useState(false);
   const [activeReaderDocId, setActiveReaderDocId] = useState("");
   const [reviewQuestions, setReviewQuestions] = useState([]);
   const [reviewAnswers, setReviewAnswers] = useState({});
@@ -448,12 +431,12 @@ export default function StaffLibrary() {
     return safeOrderA - safeOrderB || a.localeCompare(b);
   });
   const normalizedSearch = normalizeValue(searchTerm);
-  const filteredDocs = decoratedDocs
+  const filteredItems = decoratedDocs
     .filter((item) => sectionFilter === allFilter || item.section === sectionFilter)
     .filter((item) => subsectionFilter === allFilter || item.subsection === subsectionFilter)
-    .filter((item) => docMatchesSearch(item.doc, item.collection, normalizedSearch))
-    .map((item) => item.doc);
-  const groupedContent = groupDocsByCollectionAndType(filteredDocs, collections);
+    .filter((item) => docMatchesSearch(item.doc, item.collection, normalizedSearch));
+  const filteredDocs = filteredItems.map((item) => item.doc);
+  const visualRows = groupStaffRows(filteredItems);
   const canManageLibrary = isAdminOrManager(workspace.role);
   const activeReaderDoc = docs.find((doc) => doc.id === activeReaderDocId);
   const activeReaderContent = activeReaderDoc ? parseContentJson(activeReaderDoc.contentJson) : null;
@@ -584,140 +567,168 @@ export default function StaffLibrary() {
       ) : null}
 
       {workspace.status === "ready" && docs.length > 0 ? (
-        <div className="staff-library-sections">
-          <section className="staff-library-context-bar" aria-label="Current library view">
-            <div>
-              <p className="eyebrow">Viewing</p>
-              <h2>{activeSectionLabel}{activeSubsectionLabel ? ` · ${activeSubsectionLabel}` : ""}</h2>
-              <p>{filteredDocs.length} of {docs.length} published training pages</p>
-            </div>
-            <button className="secondary-button" type="button" onClick={() => setIsBrowsePanelOpen(true)}>
-              Browse / Search
-            </button>
-          </section>
+        <div className="staff-visual-library">
+          <aside className="staff-library-sidebar" aria-label="Browse training sections">
+            <label className="staff-sidebar-search">
+              <span>Search</span>
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search menu item, allergen, wine, SOP..."
+              />
+            </label>
 
-          {filteredDocs.length === 0 ? (
-            <div className="empty-panel">
-              No pages match those filters. Try clearing search or choosing another section.
-            </div>
-          ) : null}
+            <div className="sidebar-section">
+              <button
+                className={sectionFilter === allFilter ? "sidebar-filter is-active" : "sidebar-filter"}
+                type="button"
+                onClick={() => {
+                  setSectionFilter(allFilter);
+                  setSubsectionFilter(allFilter);
+                }}
+              >
+                <span>All pages</span>
+                <strong>{docs.length}</strong>
+              </button>
+              {availableSections.map((section) => {
+                const count = decoratedDocs.filter((item) => item.section === section).length;
 
-          {groupedContent.map((collectionGroup) => (
-            <section className="library-section collection-section" key={collectionGroup.id}>
-              <div className="section-heading compact-heading">
-                <p className="eyebrow">Library section</p>
-                <h2>{collectionGroup.name}</h2>
-                <p>{collectionGroup.description}</p>
+                return (
+                  <button
+                    className={sectionFilter === section ? "sidebar-filter is-active" : "sidebar-filter"}
+                    type="button"
+                    key={section}
+                    onClick={() => {
+                      setSectionFilter(section);
+                      setSubsectionFilter(allFilter);
+                    }}
+                  >
+                    <span>{section}</span>
+                    <strong>{count}</strong>
+                  </button>
+                );
+              })}
+            </div>
+
+            {availableSubsections.length > 0 ? (
+              <div className="sidebar-section">
+                <div className="sidebar-heading-row">
+                  <h2>Subsections</h2>
+                </div>
+                <button
+                  className={subsectionFilter === allFilter ? "sidebar-filter is-active" : "sidebar-filter"}
+                  type="button"
+                  onClick={() => setSubsectionFilter(allFilter)}
+                >
+                  <span>All</span>
+                  <strong>{filteredDocs.length}</strong>
+                </button>
+                {availableSubsections.map((subsection) => {
+                  const count = decoratedDocs.filter(
+                    (item) => (sectionFilter === allFilter || item.section === sectionFilter) && item.subsection === subsection
+                  ).length;
+
+                  return (
+                    <button
+                      className={subsectionFilter === subsection ? "sidebar-filter is-active" : "sidebar-filter"}
+                      type="button"
+                      key={subsection}
+                      onClick={() => setSubsectionFilter(subsection)}
+                    >
+                      <span>{subsection}</span>
+                      <strong>{count}</strong>
+                    </button>
+                  );
+                })}
               </div>
+            ) : null}
 
-              {collectionGroup.typeGroups.map((typeGroup) => (
-                <section className="library-section" key={`${collectionGroup.id}-${typeGroup.type}`}>
-                  <div className="type-heading">
-                    <h3>{typeLabels[typeGroup.type] || typeGroup.type}</h3>
+            <button
+              className="secondary-button full-width"
+              type="button"
+              onClick={() => {
+                setSectionFilter(allFilter);
+                setSubsectionFilter(allFilter);
+                setSearchTerm("");
+              }}
+            >
+              Clear filters
+            </button>
+          </aside>
+
+          <main className="staff-visual-main">
+            <section className="staff-library-context-bar" aria-label="Current library view">
+              <div>
+                <p className="eyebrow">Viewing</p>
+                <h2>{activeSectionLabel}{activeSubsectionLabel ? ` · ${activeSubsectionLabel}` : ""}</h2>
+                <p>{filteredDocs.length} of {docs.length} published training pages</p>
+              </div>
+            </section>
+
+            {filteredDocs.length === 0 ? (
+              <div className="empty-panel">
+                No pages match those filters. Try clearing search or choosing another section.
+              </div>
+            ) : null}
+
+            <div className="staff-visual-rows">
+              {visualRows.map((row) => (
+                <section className="staff-visual-row" key={row.id}>
+                  <div className="staff-visual-row-heading">
+                    <div>
+                      <h2>{row.name}</h2>
+                      <p>{row.description} · {row.items.length} page{row.items.length === 1 ? "" : "s"}</p>
+                    </div>
                   </div>
 
-                  <div className="library-preview">
-                    {typeGroup.docs.map((doc) => {
+                  <div className="staff-visual-track">
+                    {row.items.map(({ doc }) => {
                       const content = parseContentJson(doc.contentJson);
                       const attachedFiles = fileAssets.filter((fileAsset) => fileAsset.trainingDocId === doc.id);
                       const primaryImage = attachedFiles.find((fileAsset) => filePreviewUrls[fileAsset.id]);
                       const acknowledgement = acknowledgements.find((item) => item.trainingDocId === doc.id);
 
                       return (
-                        <article className="training-card" key={doc.id}>
-                          {primaryImage ? (
-                            <img
-                              className="training-card-image"
-                              src={filePreviewUrls[primaryImage.id]}
-                              alt={`${doc.title} photo`}
-                            />
-                          ) : null}
-                          <span className="type-pill">{typeLabels[doc.type] || doc.type}</span>
-                          {canManageLibrary ? (
-                            <Link className="manager-edit-link" to={`/manager/content?edit=${doc.id}#training-page-form`}>
-                              Edit / add photos
-                            </Link>
-                          ) : null}
-                          <h2>{doc.title}</h2>
-                          <p className="card-category">{doc.category || "Uncategorized"}</p>
-                          <p>{content.summary || "No one-liner yet."}</p>
-                          <button className="secondary-button card-action" type="button" onClick={() => setActiveReaderDocId(doc.id)}>
-                            Open large view
+                        <article className="staff-visual-card" key={`${row.id}-${doc.id}`}>
+                          <button className="staff-visual-open" type="button" onClick={() => setActiveReaderDocId(doc.id)}>
+                            <div className="staff-visual-media">
+                              {primaryImage ? (
+                                <img src={filePreviewUrls[primaryImage.id]} alt="" />
+                              ) : (
+                                <div className="staff-visual-fallback">
+                                  <span>{typeLabels[doc.type] || doc.type || "Training"}</span>
+                                </div>
+                              )}
+                              {acknowledgement ? <span className="reviewed-pill">Reviewed</span> : null}
+                            </div>
+                            <div className="staff-visual-copy">
+                              <span className="type-pill">{typeLabels[doc.type] || doc.type}</span>
+                              <h3>{doc.title}</h3>
+                              <p>{content.summary || doc.category || "Open this page to study the full training notes."}</p>
+                            </div>
                           </button>
-
-                          {content.body ? (
-                            <details className="study-notes">
-                              <summary>Full Notes</summary>
-                              <p className="preserve-lines">{content.body}</p>
-                            </details>
-                          ) : null}
-
-                          {content.details ? (
-                            <details className="study-notes">
-                              <summary>Extra Training Notes</summary>
-                              <p>{content.details}</p>
-                            </details>
-                          ) : null}
-
-                          {content.ingredients ? (
-                            <div className="info-block">
-                              <h3>Ingredients</h3>
-                              <p className="preserve-lines">{content.ingredients}</p>
-                            </div>
-                          ) : null}
-
-                          {content.allergens ? (
-                            <div className="info-block">
-                              <h3>Allergens</h3>
-                              <p>{content.allergens}</p>
-                            </div>
-                          ) : null}
-
-                          {content.talkingPoints ? (
-                            <div className="info-block">
-                              <h3>Talking Points</h3>
-                              <p>{content.talkingPoints}</p>
-                            </div>
-                          ) : null}
-
-                          {content.serviceNotes ? (
-                            <div className="info-block">
-                              <h3>Service Notes</h3>
-                              <p>{content.serviceNotes}</p>
-                            </div>
-                          ) : null}
-
-                          {attachedFiles.length > 0 ? (
-                            <div className="info-block">
-                              <h3>Attached Resources</h3>
-                              <div className="attachment-list">
-                                {attachedFiles.map((fileAsset) => (
-                                  <button className="secondary-button" type="button" key={fileAsset.id} onClick={() => openAttachedResource(fileAsset)}>
-                                    View {fileAsset.fileName}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          ) : null}
-
-                          <div className="training-review-action">
+                          <div className="staff-visual-actions">
+                            <button className="secondary-button" type="button" onClick={() => setActiveReaderDocId(doc.id)}>
+                              Open
+                            </button>
                             <button
                               className={acknowledgement ? "secondary-button" : "primary-button"}
                               type="button"
                               onClick={() => startReviewCheck(doc)}
                               disabled={reviewingDocId === doc.id}
                             >
-                              {acknowledgement ? "Retake review check" : "Start 5-question review"}
+                              {acknowledgement ? "Retake review" : "Review check"}
                             </button>
-                            <small>
-                              {acknowledgement
-                                ? `Reviewed ${new Date(acknowledgement.reviewedAt).toLocaleDateString()}`
-                                : `Answer ${reviewQuestionCount} questions to mark this page reviewed.`}
-                            </small>
+                            {canManageLibrary ? (
+                              <Link className="manager-edit-link" to={`/manager/content?edit=${doc.id}#training-page-form`}>
+                                Edit
+                              </Link>
+                            ) : null}
                           </div>
 
                           {activeReviewDocId === doc.id ? (
-                            <div className="inline-review-check">
+                            <div className="inline-review-check staff-visual-review">
                               <div>
                                 <p className="eyebrow">Review check</p>
                                 <h3>{doc.title}</h3>
@@ -746,17 +757,6 @@ export default function StaffLibrary() {
                                 <div className={reviewResult.passed ? "quiz-result quiz-result-pass" : "quiz-result quiz-result-review"}>
                                   <h3>{reviewResult.passed ? "Ready" : "Needs review"}</h3>
                                   <p>{reviewResult.message}</p>
-                                  {!reviewResult.passed ? (
-                                    <div className="result-answer-list">
-                                      {reviewQuestions.map((question, questionIndex) => (
-                                        <article key={`${question.prompt}-answer`}>
-                                          <strong>{question.prompt}</strong>
-                                          <p>Correct answer: {question.correctAnswer}</p>
-                                          {question.explanation ? <p>{question.explanation}</p> : null}
-                                        </article>
-                                      ))}
-                                    </div>
-                                  ) : null}
                                 </div>
                               ) : null}
 
@@ -790,128 +790,8 @@ export default function StaffLibrary() {
                   </div>
                 </section>
               ))}
-            </section>
-          ))}
-
-          <nav className="staff-library-bottom-tabs" aria-label="Training sections">
-            <button
-              className={sectionFilter === allFilter ? "staff-bottom-tab active-staff-bottom-tab" : "staff-bottom-tab"}
-              type="button"
-              onClick={() => {
-                setSectionFilter(allFilter);
-                setSubsectionFilter(allFilter);
-              }}
-            >
-              All
-            </button>
-            {availableSections.slice(0, 5).map((section) => (
-              <button
-                className={sectionFilter === section ? "staff-bottom-tab active-staff-bottom-tab" : "staff-bottom-tab"}
-                type="button"
-                key={section}
-                onClick={() => {
-                  setSectionFilter(section);
-                  setSubsectionFilter(allFilter);
-                }}
-              >
-                {section.replace(" Menu", "")}
-              </button>
-            ))}
-            <button className="staff-bottom-tab" type="button" onClick={() => setIsBrowsePanelOpen(true)}>
-              More
-            </button>
-          </nav>
-        </div>
-      ) : null}
-
-      {isBrowsePanelOpen ? (
-        <div className="staff-library-sheet-backdrop" role="presentation" onClick={() => setIsBrowsePanelOpen(false)}>
-          <section className="staff-library-sheet" role="dialog" aria-modal="true" aria-label="Browse training library" onClick={(event) => event.stopPropagation()}>
-            <div className="staff-library-sheet-heading">
-              <div>
-                <p className="eyebrow">Browse</p>
-                <h2>Choose what to study</h2>
-              </div>
-              <button className="secondary-button" type="button" onClick={() => setIsBrowsePanelOpen(false)}>
-                Close
-              </button>
             </div>
-
-            <div className="staff-library-tabs" aria-label="Training area tabs">
-              <button
-                className={sectionFilter === allFilter ? "library-tab active-library-tab" : "library-tab"}
-                type="button"
-                onClick={() => {
-                  setSectionFilter(allFilter);
-                  setSubsectionFilter(allFilter);
-                }}
-              >
-                All
-              </button>
-              {availableSections.map((section) => (
-                <button
-                  className={sectionFilter === section ? "library-tab active-library-tab" : "library-tab"}
-                  type="button"
-                  key={section}
-                  onClick={() => {
-                    setSectionFilter(section);
-                    setSubsectionFilter(allFilter);
-                  }}
-                >
-                  {section.replace(" Menu", "")}
-                </button>
-              ))}
-            </div>
-
-            {availableSubsections.length > 0 ? (
-              <div className="quick-filter-row" aria-label="Menu subsection tabs">
-                <button
-                  className={subsectionFilter === allFilter ? "filter-chip active-filter-chip" : "filter-chip"}
-                  type="button"
-                  onClick={() => setSubsectionFilter(allFilter)}
-                >
-                  All
-                </button>
-                {availableSubsections.map((subsection) => (
-                  <button
-                    className={subsectionFilter === subsection ? "filter-chip active-filter-chip" : "filter-chip"}
-                    type="button"
-                    key={subsection}
-                    onClick={() => setSubsectionFilter(subsection)}
-                  >
-                    {subsection}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-
-            <label className="staff-library-search">
-              Search anything
-              <input
-                type="search"
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Try antipasta, Nebbiolo, dairy, cocktail, course 1..."
-              />
-            </label>
-
-            <div className="form-button-row">
-              <button className="primary-button" type="button" onClick={() => setIsBrowsePanelOpen(false)}>
-                Show {filteredDocs.length} pages
-              </button>
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={() => {
-                  setSectionFilter(allFilter);
-                  setSubsectionFilter(allFilter);
-                  setSearchTerm("");
-                }}
-              >
-                Clear filters
-              </button>
-            </div>
-          </section>
+          </main>
         </div>
       ) : null}
 
