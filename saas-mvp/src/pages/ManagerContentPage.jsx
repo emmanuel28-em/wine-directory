@@ -2,7 +2,13 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import { archiveCollection, listCollectionsForRestaurant, saveCollection } from "../lib/collections.js";
-import { deleteFileAsset, getFileAssetUrl, listFileAssetsForRestaurant, uploadFileAsset } from "../lib/fileAssets.js";
+import {
+  deleteFileAsset,
+  getFileAssetUrl,
+  isPreviewableImageFileAsset,
+  listFileAssetsForRestaurant,
+  uploadFileAsset
+} from "../lib/fileAssets.js";
 import {
   deleteTrainingDoc,
   docToForm,
@@ -148,6 +154,52 @@ function getSectionCounts(docs, categories) {
   }));
 }
 
+function getVisualRowsForDocs(docs, categories, selectedSectionId) {
+  const visibleCategories = categories.filter((category) => category.status !== "archived");
+  const rows = [];
+
+  visibleCategories.forEach((category) => {
+    if (selectedSectionId !== "all" && selectedSectionId !== category.id) {
+      return;
+    }
+
+    const pages = docs.filter((doc) => getDocSectionIds(doc).includes(category.id));
+
+    if (pages.length) {
+      rows.push({
+        id: category.id,
+        name: category.name,
+        description: category.description || categoryTypeLabels[category.categoryType] || "Training section",
+        pages
+      });
+    }
+  });
+
+  if (selectedSectionId === "all") {
+    const unassignedPages = docs.filter((doc) => getDocSectionIds(doc).length === 0);
+
+    if (unassignedPages.length) {
+      rows.push({
+        id: "unassigned",
+        name: "Unassigned",
+        description: "Pages that still need a section",
+        pages: unassignedPages
+      });
+    }
+  }
+
+  if (rows.length === 0 && docs.length > 0) {
+    rows.push({
+      id: "results",
+      name: "Matching pages",
+      description: "Filtered results",
+      pages: docs
+    });
+  }
+
+  return rows;
+}
+
 function makeEmptyKnowledgeItem() {
   return {
     label: "",
@@ -191,6 +243,7 @@ export default function ManagerContentPage() {
   const [workspaceMode, setWorkspaceMode] = useState("list");
   const [showSectionForm, setShowSectionForm] = useState(false);
   const [saveState, setSaveState] = useState("Saved");
+  const [filePreviewUrls, setFilePreviewUrls] = useState({});
 
   async function refreshRestaurantContent(restaurantId) {
     const [nextCategories, nextDocs, nextFiles] = await Promise.all([
@@ -229,8 +282,46 @@ export default function ManagerContentPage() {
     if (workspace.status === "empty" || workspace.status === "error") {
       setCategories([]);
       setDocs([]);
+      setFileAssets([]);
+      setFilePreviewUrls({});
     }
   }, [workspace.status, workspace.restaurant?.id]);
+
+  useEffect(() => {
+    if (workspace.status !== "ready" || fileAssets.length === 0) {
+      setFilePreviewUrls({});
+      return;
+    }
+
+    let shouldUpdate = true;
+
+    async function loadImagePreviews() {
+      const previewableFiles = fileAssets.filter(isPreviewableImageFileAsset);
+      const previewEntries = await Promise.all(
+        previewableFiles.map(async (fileAsset) => {
+          try {
+            const url = await getFileAssetUrl({
+              fileAsset,
+              restaurantId: workspace.restaurant.id
+            });
+            return [fileAsset.id, url];
+          } catch {
+            return null;
+          }
+        })
+      );
+
+      if (shouldUpdate) {
+        setFilePreviewUrls(Object.fromEntries(previewEntries.filter(Boolean)));
+      }
+    }
+
+    loadImagePreviews();
+
+    return () => {
+      shouldUpdate = false;
+    };
+  }, [fileAssets, workspace.status, workspace.restaurant?.id]);
 
   useEffect(() => {
     const requestedDocId = searchParams.get("edit");
@@ -608,6 +699,7 @@ export default function ManagerContentPage() {
   const draftCount = docs.filter((doc) => doc.status === "draft").length;
   const publishedCount = docs.filter((doc) => doc.status === "published").length;
   const archivedCount = docs.filter((doc) => doc.status === "archived").length;
+  const visualRows = getVisualRowsForDocs(sortedDocs, categories, selectedSectionId);
 
   return (
     <section className="page-section training-workspace-page">
@@ -860,43 +952,71 @@ export default function ManagerContentPage() {
                     <p>Try a different word, status, type, or section.</p>
                   </div>
                 ) : (
-                  <div className="document-table" role="table" aria-label="Training pages">
-                    <div className="document-table-header" role="row">
-                      <span>Page</span>
-                      <span>Section</span>
-                      <span>Status</span>
-                      <span>Updated</span>
-                      <span>Quiz</span>
-                      <span>Actions</span>
-                    </div>
-                    {sortedDocs.map((doc) => {
-                      const content = parseContentJson(doc.contentJson);
-                      const displayType = contentTypeLabels[content.contentType] || contentTypeLabels[doc.type] || doc.type;
-                      const sectionNames = getDocSectionIds(doc).map((sectionId) => getCategoryName(categories, sectionId));
-                      const attachmentCount = fileAssets.filter((fileAsset) => fileAsset.trainingDocId === doc.id).length;
-                      const quizFactCount = (content.testableStaffKnowledge || content.quizFacts || []).filter((item) => item.quizEligible !== false).length;
-
-                      return (
-                        <article className="document-row" key={doc.id} role="row">
-                          <button className="document-title-button" type="button" onClick={() => editPage(doc)}>
-                            <strong>{doc.title}</strong>
-                            <span>{displayType}{attachmentCount ? ` · ${attachmentCount} file${attachmentCount === 1 ? "" : "s"}` : ""}</span>
-                          </button>
-                          <span>{sectionNames.length ? sectionNames.join(", ") : "Unassigned"}</span>
-                          <span className={`status-badge status-${doc.status || "draft"}`}>{doc.status || "draft"}</span>
-                          <span>{formatUpdatedDate(doc.updatedAt || doc.createdAt)}</span>
-                          <span>{quizFactCount ? `${quizFactCount} facts` : "No facts"}</span>
-                          <div className="card-actions">
-                            <button className="secondary-button" type="button" onClick={() => editPage(doc)}>Edit</button>
-                            {doc.status === "published" ? (
-                              <button className="secondary-button" type="button" onClick={() => changeStatus(doc, "draft")}>Unpublish</button>
-                            ) : (
-                              <button className="secondary-button" type="button" onClick={() => changeStatus(doc, "published")}>Publish</button>
-                            )}
+                  <div className="visual-library-rows" aria-label="Training page shelves">
+                    {visualRows.map((row) => (
+                      <section className="visual-library-row" key={row.id}>
+                        <div className="visual-row-heading">
+                          <div>
+                            <h3>{row.name}</h3>
+                            <p>{row.description} · {row.pages.length} page{row.pages.length === 1 ? "" : "s"}</p>
                           </div>
-                        </article>
-                      );
-                    })}
+                          <button
+                            className="text-button"
+                            type="button"
+                            onClick={() => {
+                              setSelectedSectionId(row.id === "unassigned" || row.id === "results" ? "all" : row.id);
+                              setSidebarView("all");
+                            }}
+                          >
+                            View row
+                          </button>
+                        </div>
+
+                        <div className="visual-card-track">
+                          {row.pages.map((doc) => {
+                            const content = parseContentJson(doc.contentJson);
+                            const displayType = contentTypeLabels[content.contentType] || contentTypeLabels[doc.type] || doc.type;
+                            const sectionNames = getDocSectionIds(doc).map((sectionId) => getCategoryName(categories, sectionId));
+                            const docFiles = fileAssets.filter((fileAsset) => fileAsset.trainingDocId === doc.id);
+                            const previewFile = docFiles.find((fileAsset) => filePreviewUrls[fileAsset.id]);
+                            const quizFactCount = (content.testableStaffKnowledge || content.quizFacts || []).filter((item) => item.quizEligible !== false).length;
+
+                            return (
+                              <article className="visual-library-card" key={`${row.id}-${doc.id}`}>
+                                <button className="visual-card-open" type="button" onClick={() => editPage(doc)}>
+                                  <div className="visual-card-media">
+                                    {previewFile ? (
+                                      <img src={filePreviewUrls[previewFile.id]} alt="" />
+                                    ) : (
+                                      <div className="visual-card-fallback">
+                                        <span>{displayType || "Training"}</span>
+                                      </div>
+                                    )}
+                                    <span className={`status-badge status-${doc.status || "draft"}`}>{doc.status || "draft"}</span>
+                                  </div>
+                                  <div className="visual-card-copy">
+                                    <strong>{doc.title}</strong>
+                                    <span>{content.summary || sectionNames.join(", ") || "Open to review this training page."}</span>
+                                  </div>
+                                </button>
+                                <div className="visual-card-meta">
+                                  <span>{formatUpdatedDate(doc.updatedAt || doc.createdAt)}</span>
+                                  <span>{quizFactCount ? `${quizFactCount} quiz facts` : "No quiz facts"}</span>
+                                </div>
+                                <div className="visual-card-actions">
+                                  <button className="secondary-button" type="button" onClick={() => editPage(doc)}>Edit</button>
+                                  {doc.status === "published" ? (
+                                    <button className="secondary-button" type="button" onClick={() => changeStatus(doc, "draft")}>Unpublish</button>
+                                  ) : (
+                                    <button className="secondary-button" type="button" onClick={() => changeStatus(doc, "published")}>Publish</button>
+                                  )}
+                                </div>
+                              </article>
+                            );
+                          })}
+                        </div>
+                      </section>
+                    ))}
                   </div>
                 )}
               </section>
