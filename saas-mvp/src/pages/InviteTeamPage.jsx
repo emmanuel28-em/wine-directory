@@ -206,8 +206,12 @@ export default function InviteTeamPage() {
 
           <div className="role-explainer">
             <article>
-              <h3>Admin / Manager</h3>
-              <p>Can help manage training material and view staff readiness.</p>
+              <h3>Admin</h3>
+              <p>Can do everything a Manager can, plus manage restaurant settings and team roles.</p>
+            </article>
+            <article>
+              <h3>Manager</h3>
+              <p>Can build training, create quizzes, assign work, invite Staff, and view readiness.</p>
             </article>
             <article>
               <h3>Staff</h3>
@@ -215,9 +219,9 @@ export default function InviteTeamPage() {
             </article>
           </div>
 
-          {workspace.role !== "owner" ? (
-            <p className="helper-text">Only Account Owners can invite another Admin or Manager. Admins and Managers can invite Staff.</p>
-          ) : null}
+          <p className="helper-text">
+            Account Owners can invite any role. Admins can invite Managers and Staff. Managers can invite Staff.
+          </p>
 
           <label>
             Optional note

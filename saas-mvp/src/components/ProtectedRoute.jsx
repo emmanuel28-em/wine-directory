@@ -41,6 +41,12 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
   }
 
   if (allowedRoles.length > 0 && !allowedRoles.includes(currentWorkspace.role)) {
+    // Staff who sign in through the shared login should land on their own Home
+    // instead of seeing a manager-permission error first.
+    if (currentWorkspace.role === "staff") {
+      return <Navigate to="/staff" replace />;
+    }
+
     return (
       <section className="page-section narrow-page">
         <div className="form-card">

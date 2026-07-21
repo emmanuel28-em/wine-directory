@@ -134,6 +134,7 @@ export default function ManagerDashboard() {
   const nextStep = gettingStartedSteps.find((step) => !step.complete);
   const restaurantName = workspace.restaurant?.name || "Your restaurant";
   const firstName = workspace.userProfile?.name?.split(" ")?.[0] || "there";
+  const isWorkspaceAdmin = isOwnerOrAdmin(workspace.role);
 
   return (
     <section className="page-section manager-home">
@@ -173,14 +174,32 @@ export default function ManagerDashboard() {
 
           <section className="home-account-bar">
             <div>
+              <span className="type-pill">{workspace.role === "owner" ? "Account Owner" : workspace.role === "admin" ? "Admin" : "Manager"}</span>
               <span>Plan</span>
               <strong>{formatBillingStatus(workspace.restaurant)}</strong>
               <small>{workspace.restaurant?.trialEndsAt ? `Trial ends ${formatDate(workspace.restaurant.trialEndsAt)}` : ""}</small>
             </div>
             <div className="home-account-actions">
               <Link to="/managed-setup">Get help importing</Link>
-              <Link to="/manager/settings">Restaurant settings</Link>
+              {isWorkspaceAdmin ? <Link to="/manager/settings">Restaurant settings</Link> : null}
               {isOwnerOrAdmin(workspace.role) ? <Link to="/manager/billing">Plan & billing</Link> : null}
+            </div>
+          </section>
+
+          <section className="daily-training-flow" aria-labelledby="daily-flow-title">
+            <div className="daily-flow-heading">
+              <div>
+                <p className="eyebrow">Today’s training update</p>
+                <h2 id="daily-flow-title">From menu change to staff-ready</h2>
+              </div>
+              <Link className="primary-button" to="/manager/import">Paste today’s update</Link>
+            </div>
+            <div className="daily-flow-steps">
+              <Link to="/manager/import"><strong>1</strong><span>Paste update</span></Link>
+              <Link to="/manager/content"><strong>2</strong><span>Review cards</span></Link>
+              <Link to="/manager/content"><strong>3</strong><span>Publish</span></Link>
+              <Link to="/manager/assignments"><strong>4</strong><span>Assign team</span></Link>
+              <Link to="/manager/staff-progress"><strong>5</strong><span>Track completion</span></Link>
             </div>
           </section>
 
@@ -190,7 +209,7 @@ export default function ManagerDashboard() {
               <span>Published pages</span>
               <small>{overview.pages - overview.publishedPages} drafts</small>
             </Link>
-            <Link to="/manager/settings#team">
+            <Link to={isWorkspaceAdmin ? "/manager/settings#team" : "/manager/invite-team"}>
               <strong>{isLoadingOverview ? "..." : overview.members}</strong>
               <span>Team members</span>
               <small>Active access</small>

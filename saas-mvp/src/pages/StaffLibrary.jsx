@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import {
   getAssignedItemIdsForUser,
@@ -310,6 +310,7 @@ function groupStaffRows(items) {
 
 export default function StaffLibrary() {
   const workspace = useCurrentWorkspace();
+  const [searchParams] = useSearchParams();
   const [collections, setCollections] = useState([]);
   const [docs, setDocs] = useState([]);
   const [fileAssets, setFileAssets] = useState([]);
@@ -378,6 +379,14 @@ export default function StaffLibrary() {
       setAssignedTrainingDocIds(new Set());
     }
   }, [workspace.status, workspace.restaurant?.id]);
+
+  // Dashboard assignment links can open the requested published page directly.
+  useEffect(() => {
+    const requestedDocId = searchParams.get("open");
+    if (requestedDocId && docs.some((doc) => doc.id === requestedDocId)) {
+      setActiveReaderDocId(requestedDocId);
+    }
+  }, [docs, searchParams]);
 
   useEffect(() => {
     if (workspace.status !== "ready" || fileAssets.length === 0) {

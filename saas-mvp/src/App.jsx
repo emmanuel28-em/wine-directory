@@ -20,6 +20,7 @@ import MyProgressPage from "./pages/MyProgressPage.jsx";
 import PlatformControlPage from "./pages/PlatformControlPage.jsx";
 import PlatformSupportPage from "./pages/PlatformSupportPage.jsx";
 import ReportIssuePage from "./pages/ReportIssuePage.jsx";
+import StaffDashboard from "./pages/StaffDashboard.jsx";
 import StaffCertificationsPage from "./pages/StaffCertificationsPage.jsx";
 import StaffLibrary from "./pages/StaffLibrary.jsx";
 import StaffQuizzesPage from "./pages/StaffQuizzesPage.jsx";
@@ -95,7 +96,7 @@ export default function App() {
         <Route
           path="/manager/settings"
           element={
-            <ProtectedRoute allowedRoles={managerRoles}>
+            <ProtectedRoute allowedRoles={ownerAdminRoles}>
               <WorkspaceSettingsPage />
             </ProtectedRoute>
           }
@@ -144,7 +145,7 @@ export default function App() {
           path="/staff"
           element={
             <ProtectedRoute allowedRoles={activeMemberRoles}>
-              <StaffLibrary />
+              <StaffDashboard />
             </ProtectedRoute>
           }
         />

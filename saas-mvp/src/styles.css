@@ -4123,3 +4123,315 @@ code {
     padding: 20px;
   }
 }
+
+/* Daily manager workflow: one compact path from raw update to team readiness. */
+.daily-training-flow {
+  display: grid;
+  gap: 18px;
+  margin: 22px 0;
+  padding: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-card);
+}
+
+.daily-flow-heading,
+.staff-home-panel-heading,
+.staff-home-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.daily-flow-heading h2,
+.daily-flow-heading p,
+.staff-home-panel-heading h2,
+.staff-home-panel-heading p {
+  margin: 0;
+}
+
+.daily-flow-steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.daily-flow-steps a {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 12px;
+  color: var(--color-text);
+  border-radius: 6px;
+  background: var(--color-background);
+  text-decoration: none;
+}
+
+.daily-flow-steps a:hover {
+  background: rgba(164, 182, 154, 0.3);
+}
+
+.daily-flow-steps strong {
+  display: grid;
+  width: 25px;
+  height: 25px;
+  flex: 0 0 25px;
+  color: #fff;
+  border-radius: 50%;
+  background: var(--color-primary);
+  font-size: 0.78rem;
+  place-items: center;
+}
+
+.daily-flow-steps span {
+  overflow: hidden;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Staff Home keeps the shift-critical information above the full library. */
+.staff-home {
+  display: grid;
+  gap: 22px;
+}
+
+.staff-home-hero {
+  padding: 30px;
+  color: #fff;
+  border-radius: 8px;
+  background: var(--color-primary);
+}
+
+.staff-home-hero h1,
+.staff-home-hero p {
+  margin: 0;
+}
+
+.staff-home-hero h1 {
+  margin: 5px 0 8px;
+  color: #fff;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+}
+
+.staff-home-hero .eyebrow {
+  color: var(--color-secondary);
+}
+
+.staff-home-hero .primary-button {
+  color: var(--color-primary);
+  background: #fff;
+  white-space: nowrap;
+}
+
+.staff-readiness-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-card);
+}
+
+.staff-readiness-strip a {
+  display: grid;
+  gap: 3px;
+  padding: 18px;
+  color: var(--color-text);
+  border-right: 1px solid var(--color-border);
+  text-decoration: none;
+}
+
+.staff-readiness-strip a:last-child {
+  border-right: 0;
+}
+
+.staff-readiness-strip a:hover {
+  background: rgba(164, 182, 154, 0.14);
+}
+
+.staff-readiness-strip strong {
+  color: var(--color-primary);
+  font-size: 1.65rem;
+}
+
+.staff-readiness-strip span {
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.staff-home-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 18px;
+}
+
+.staff-home-panel {
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-card);
+}
+
+.staff-home-panel-heading {
+  margin-bottom: 16px;
+}
+
+.staff-home-panel-heading > a {
+  color: var(--color-primary);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.staff-home-list {
+  display: grid;
+  gap: 8px;
+}
+
+.staff-home-list a {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.3fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  color: var(--color-text);
+  border-radius: 6px;
+  background: var(--color-background);
+  text-decoration: none;
+}
+
+.staff-home-list a:hover {
+  background: rgba(164, 182, 154, 0.26);
+}
+
+.staff-home-list span,
+.staff-home-list small {
+  color: var(--color-muted);
+  font-size: 0.76rem;
+}
+
+.staff-home-list span {
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.staff-home-list.compact a {
+  grid-template-columns: 90px minmax(0, 1fr);
+}
+
+.staff-home-list.compact small {
+  grid-column: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.staff-home-empty {
+  padding: 24px;
+  border-radius: 6px;
+  background: var(--color-background);
+}
+
+.staff-home-empty p {
+  margin: 5px 0 0;
+  color: var(--color-muted);
+}
+
+.staff-certificate-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.staff-certificate-row article {
+  display: grid;
+  gap: 5px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-background);
+}
+
+.staff-certificate-row article.is-earned {
+  border-color: var(--color-secondary);
+  background: rgba(164, 182, 154, 0.18);
+}
+
+.staff-certificate-row span,
+.staff-certificate-row small {
+  color: var(--color-muted);
+  font-size: 0.76rem;
+}
+
+@media (max-width: 900px) {
+  .daily-flow-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .staff-home-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-readiness-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .staff-readiness-strip a:nth-child(3) {
+    border-right: 0;
+  }
+
+  .staff-readiness-strip a:nth-child(-n + 3) {
+    border-bottom: 1px solid var(--color-border);
+  }
+}
+
+@media (max-width: 640px) {
+  .staff-home-hero,
+  .daily-flow-heading,
+  .staff-home-panel-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .staff-home-hero {
+    padding: 22px;
+  }
+
+  .staff-home-hero .primary-button {
+    width: 100%;
+  }
+
+  .staff-readiness-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .staff-readiness-strip a,
+  .staff-readiness-strip a:nth-child(3) {
+    border-right: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .staff-readiness-strip a:nth-child(even) {
+    border-right: 0;
+  }
+
+  .staff-readiness-strip a:last-child {
+    border-bottom: 0;
+  }
+
+  .daily-flow-steps,
+  .staff-home-list a,
+  .staff-home-list.compact a {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-home-list.compact small {
+    grid-column: auto;
+  }
+}

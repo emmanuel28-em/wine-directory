@@ -16,7 +16,9 @@ import {
   uploadRestaurantLogo
 } from "../lib/settings.js";
 
-const roleOptions = ["admin", "manager", "staff"];
+function editableRoleOptions(currentRole) {
+  return currentRole === "owner" ? ["admin", "manager", "staff"] : ["manager", "staff"];
+}
 
 const emailStatusLabels = {
   notSent: "Not sent",
@@ -411,7 +413,7 @@ export default function WorkspaceSettingsPage() {
                       <div className="card-actions">
                         {canEditRole ? (
                           <select value={member.membership.role} onChange={(event) => changeRole(member, event.target.value)} disabled={isWorking}>
-                            {roleOptions.map((role) => (
+                            {editableRoleOptions(workspace.role).map((role) => (
                               <option key={role} value={role}>
                                 {formatRole(role)}
                               </option>

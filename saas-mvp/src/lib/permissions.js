@@ -28,11 +28,21 @@ export function canInviteRole(currentRole, invitedRole) {
     return ["admin", "manager", "staff"].includes(invitedRole);
   }
 
-  if (currentRole === "admin" || currentRole === "manager") {
+  if (currentRole === "admin") {
+    return ["manager", "staff"].includes(invitedRole);
+  }
+
+  if (currentRole === "manager") {
     return invitedRole === "staff";
   }
 
   return false;
+}
+
+// Workspace-level settings sit above daily training operations. Admins can
+// manage them; Managers remain focused on content, assignments, and results.
+export function canManageWorkspace(role) {
+  return isOwnerOrAdmin(role);
 }
 
 export function canViewStaffProgress(role) {

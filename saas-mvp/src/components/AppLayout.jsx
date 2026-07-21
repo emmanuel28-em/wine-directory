@@ -33,7 +33,7 @@ function AccountMenu({ authSession, currentWorkspace, hasPlatformAccess, isSigni
             <NavLink to="/training-library">View staff library</NavLink>
             <NavLink to="/manager/import">Library builder</NavLink>
             <NavLink to="/manager/onboarding">Getting started</NavLink>
-            <NavLink to="/manager/settings">Restaurant settings</NavLink>
+            {isOwnerOrAdmin(currentWorkspace.role) ? <NavLink to="/manager/settings">Restaurant settings</NavLink> : null}
             {isOwnerOrAdmin(currentWorkspace.role) ? <NavLink to="/manager/billing">Plan & billing</NavLink> : null}
           </>
         ) : null}
@@ -69,9 +69,8 @@ function NavigationLinks({ authSession, currentWorkspace, hasPlatformAccess, loc
   if (currentWorkspace.role === "staff") {
     return (
       <>
+        <NavLink end to="/staff">Home</NavLink>
         <NavLink to="/training-library">Library</NavLink>
-        <NavLink to="/quizzes">Quizzes</NavLink>
-        <NavLink to="/certifications">Certifications</NavLink>
         <NavLink to="/my-progress">My progress</NavLink>
       </>
     );
@@ -83,8 +82,6 @@ function NavigationLinks({ authSession, currentWorkspace, hasPlatformAccess, loc
         <NavLink end to="/manager">Home</NavLink>
         <NavLink to="/manager/content">Training</NavLink>
         <NavLink to="/manager/invite-team">Team</NavLink>
-        <NavLink to="/manager/quizzes">Quizzes</NavLink>
-        <NavLink to="/manager/certifications">Certifications</NavLink>
         <NavLink to="/manager/assignments">Assignments</NavLink>
         <NavLink to="/manager/staff-progress">Results</NavLink>
       </>
@@ -106,10 +103,10 @@ function MobileBottomNav({ authSession, currentWorkspace, location }) {
   if (currentWorkspace.role === "staff") {
     return (
       <nav className="bottom-nav" aria-label="Staff quick navigation">
+        <NavLink end to="/staff">Home</NavLink>
         <NavLink to="/training-library">Library</NavLink>
-        <NavLink to="/quizzes">Assigned</NavLink>
-        <NavLink to="/certifications">Certs</NavLink>
         <NavLink to="/my-progress">Progress</NavLink>
+        <NavLink to="/report-issue">Help</NavLink>
       </nav>
     );
   }
@@ -131,6 +128,7 @@ export default function AppLayout() {
   const authSession = useAuthSession();
   const currentWorkspace = useCurrentWorkspace();
   const hasPlatformAccess = ["platform_owner", "platform_developer"].includes(authSession.platformRole);
+  const authenticatedHome = currentWorkspace.role === "staff" ? "/staff" : "/manager";
 
   async function handleLogout() {
     setIsSigningOut(true);
@@ -146,7 +144,7 @@ export default function AppLayout() {
   return (
     <div className="app-shell">
       <header className="site-header">
-        <NavLink className="brand" to={authSession.status === "authenticated" ? "/manager" : "/"}>
+        <NavLink className="brand" to={authSession.status === "authenticated" ? authenticatedHome : "/"}>
           <span className="brand-mark" aria-hidden="true">
             <span className="brand-l">L</span>
             <span className="brand-u">U</span>

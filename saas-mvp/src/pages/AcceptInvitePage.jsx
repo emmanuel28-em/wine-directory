@@ -172,7 +172,7 @@ export default function AcceptInvitePage() {
       await authSession.refreshSession();
 
       if (result.membership.role === "staff") {
-        navigate("/training-library", { replace: true });
+        navigate("/staff", { replace: true });
       } else {
         navigate("/manager", { replace: true });
       }

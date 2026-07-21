@@ -24,15 +24,17 @@ function cleanPathPart(value) {
 }
 
 function canChangeMemberRole({ currentRole, targetMembership, nextRole }) {
-  if (!isOwner(currentRole)) {
-    return false;
-  }
-
   if (targetMembership.role === "owner") {
     return false;
   }
 
-  return ["admin", "manager", "staff"].includes(nextRole);
+  if (isOwner(currentRole)) {
+    return ["admin", "manager", "staff"].includes(nextRole);
+  }
+
+  // Admins can organize day-to-day restaurant roles, but only the Account
+  // Owner can appoint another Admin.
+  return currentRole === "admin" && !["owner", "admin"].includes(targetMembership.role) && ["manager", "staff"].includes(nextRole);
 }
 
 function canDisableMember({ currentRole, currentMembershipId, targetMembership }) {
@@ -48,7 +50,7 @@ function canDisableMember({ currentRole, currentMembershipId, targetMembership }
     return true;
   }
 
-  return currentRole === "admin" && targetMembership.role === "staff";
+  return currentRole === "admin" && ["manager", "staff"].includes(targetMembership.role);
 }
 
 async function getMembershipForRestaurant({ dataClient, membershipId, restaurantId }) {
