@@ -14,6 +14,7 @@ import {
 import { listCertificationsForRestaurant } from "../lib/certifications.js";
 import { listQuizzesForRestaurant } from "../lib/quizzes.js";
 import { listTeamMembersForRestaurant } from "../lib/settings.js";
+import { listTrainingDocsForRestaurant } from "../lib/trainingDocs.js";
 
 const emptyGroupForm = {
   name: "",
@@ -22,7 +23,7 @@ const emptyGroupForm = {
 };
 
 const emptyAssignmentForm = {
-  itemType: "quiz",
+  itemType: "trainingDoc",
   itemId: "",
   targetType: "group",
   targetId: "",
@@ -43,12 +44,16 @@ function assignmentTargetLabel({ assignment, groups, members }) {
   return member ? memberLabel(member) : "Team member";
 }
 
-function assignmentItemLabel({ assignment, quizzes, certifications }) {
-  if (assignment.itemType === "quiz") {
-    return quizzes.find((quiz) => quiz.id === assignment.itemId)?.title || "Quiz";
-  }
-
+function assignmentItemLabel({ assignment, trainingDocs, quizzes, certifications }) {
+  if (assignment.itemType === "trainingDoc") return trainingDocs.find((doc) => doc.id === assignment.itemId)?.title || "Training page";
+  if (assignment.itemType === "quiz") return quizzes.find((quiz) => quiz.id === assignment.itemId)?.title || "Quiz";
   return certifications.find((certification) => certification.id === assignment.itemId)?.name || "Certification";
+}
+
+function assignmentTypeLabel(itemType) {
+  if (itemType === "trainingDoc") return "Training Page";
+  if (itemType === "quiz") return "Quiz";
+  return "Certification";
 }
 
 export default function ManagerAssignmentsPage() {
@@ -56,6 +61,7 @@ export default function ManagerAssignmentsPage() {
   const [groups, setGroups] = useState([]);
   const [groupMembers, setGroupMembers] = useState([]);
   const [members, setMembers] = useState([]);
+  const [trainingDocs, setTrainingDocs] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
   const [certifications, setCertifications] = useState([]);
   const [assignments, setAssignments] = useState([]);
@@ -70,9 +76,12 @@ export default function ManagerAssignmentsPage() {
     [members]
   );
   const activeGroups = useMemo(() => groups.filter((group) => group.status !== "archived"), [groups]);
-  const assignableItems = assignmentForm.itemType === "quiz"
-    ? quizzes.filter((quiz) => quiz.isPublished)
-    : certifications.filter((certification) => certification.status === "published");
+  const assignableItems =
+    assignmentForm.itemType === "trainingDoc"
+      ? trainingDocs.filter((doc) => doc.status === "published")
+      : assignmentForm.itemType === "quiz"
+        ? quizzes.filter((quiz) => quiz.isPublished)
+        : certifications.filter((certification) => certification.status === "published");
   const assignableTargets = assignmentForm.targetType === "group" ? activeGroups : activeStaffMembers;
 
   async function loadAssignmentsPage() {
@@ -81,10 +90,11 @@ export default function ManagerAssignmentsPage() {
     setMessage("");
 
     try {
-      const [nextGroups, nextGroupMembers, nextMembers, nextQuizzes, nextCertifications, nextAssignments] = await Promise.all([
+      const [nextGroups, nextGroupMembers, nextMembers, nextTrainingDocs, nextQuizzes, nextCertifications, nextAssignments] = await Promise.all([
         listStaffGroupsForRestaurant(workspace.restaurant.id),
         listStaffGroupMembersForRestaurant(workspace.restaurant.id),
         listTeamMembersForRestaurant(workspace.restaurant.id),
+        listTrainingDocsForRestaurant(workspace.restaurant.id),
         listQuizzesForRestaurant(workspace.restaurant.id),
         listCertificationsForRestaurant(workspace.restaurant.id),
         listTrainingAssignmentsForRestaurant(workspace.restaurant.id)
@@ -93,6 +103,7 @@ export default function ManagerAssignmentsPage() {
       setGroups(nextGroups);
       setGroupMembers(nextGroupMembers);
       setMembers(nextMembers);
+      setTrainingDocs(nextTrainingDocs);
       setQuizzes(nextQuizzes);
       setCertifications(nextCertifications);
       setAssignments(nextAssignments);
@@ -246,7 +257,7 @@ export default function ManagerAssignmentsPage() {
         <div>
           <p className="eyebrow">Assignments</p>
           <h1>Assign Training to the Right People</h1>
-          <p>Create groups like Server, Captain, Bar Team, or New Hires, then assign quizzes and certifications.</p>
+          <p>Create groups like Server, Captain, Bar Team, or New Hires, then assign pages, quizzes, and certifications.</p>
         </div>
         <Link className="secondary-button" to="/manager/staff-progress">
           View Results
@@ -354,6 +365,7 @@ export default function ManagerAssignmentsPage() {
                 <label>
                   Assign
                   <select name="itemType" value={assignmentForm.itemType} onChange={updateAssignmentForm}>
+                    <option value="trainingDoc">Training page</option>
                     <option value="quiz">Quiz</option>
                     <option value="certification">Certification</option>
                   </select>
@@ -365,7 +377,7 @@ export default function ManagerAssignmentsPage() {
                     <option value="">Choose item</option>
                     {assignableItems.map((item) => (
                       <option key={item.id} value={item.id}>
-                        {assignmentForm.itemType === "quiz" ? item.title : item.name}
+                        {assignmentForm.itemType === "certification" ? item.name : item.title}
                       </option>
                     ))}
                   </select>
@@ -429,8 +441,8 @@ export default function ManagerAssignmentsPage() {
                   .map((assignment) => (
                     <article className="operator-list-card" key={assignment.id}>
                       <div>
-                        <span className="type-pill">{assignment.itemType === "quiz" ? "Quiz" : "Certification"}</span>
-                        <h4>{assignmentItemLabel({ assignment, quizzes, certifications })}</h4>
+                        <span className="type-pill">{assignmentTypeLabel(assignment.itemType)}</span>
+                        <h4>{assignmentItemLabel({ assignment, trainingDocs, quizzes, certifications })}</h4>
                         <p>
                           Assigned to {assignmentTargetLabel({ assignment, groups, members })}
                           {assignment.dueDate ? ` · Due ${new Date(`${assignment.dueDate}T00:00:00`).toLocaleDateString()}` : ""}

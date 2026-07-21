@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
+import {
+  getAssignedItemIdsForUser,
+  listStaffGroupMembersForRestaurant,
+  listTrainingAssignmentsForRestaurant
+} from "../lib/assignments.js";
 import { listCollectionsForRestaurant } from "../lib/collections.js";
 import { getFileAssetUrl, isPreviewableImageFileAsset, listFileAssetsForRestaurant } from "../lib/fileAssets.js";
 import { isAdminOrManager } from "../lib/permissions.js";
@@ -310,6 +315,7 @@ export default function StaffLibrary() {
   const [fileAssets, setFileAssets] = useState([]);
   const [filePreviewUrls, setFilePreviewUrls] = useState({});
   const [acknowledgements, setAcknowledgements] = useState([]);
+  const [assignedTrainingDocIds, setAssignedTrainingDocIds] = useState(new Set());
   const [reviewingDocId, setReviewingDocId] = useState("");
   const [message, setMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -329,20 +335,30 @@ export default function StaffLibrary() {
     setMessage("");
 
     try {
-      const [restaurantCollections, restaurantDocs, restaurantFiles, myAcknowledgements] = await Promise.all([
+      const [restaurantCollections, restaurantDocs, restaurantFiles, myAcknowledgements, assignments, groupMembers] = await Promise.all([
         listCollectionsForRestaurant(workspace.restaurant.id),
         listTrainingDocsForRestaurant(workspace.restaurant.id),
         listFileAssetsForRestaurant(workspace.restaurant.id),
         listMyTrainingAcknowledgements({
           restaurantId: workspace.restaurant.id,
           userProfileId: workspace.userProfile.id
-        })
+        }),
+        listTrainingAssignmentsForRestaurant(workspace.restaurant.id),
+        listStaffGroupMembersForRestaurant(workspace.restaurant.id)
       ]);
 
       setCollections(restaurantCollections);
       setDocs(restaurantDocs.filter((doc) => doc.status === "published"));
       setFileAssets(restaurantFiles);
       setAcknowledgements(myAcknowledgements);
+      setAssignedTrainingDocIds(
+        getAssignedItemIdsForUser({
+          assignments,
+          groupMembers,
+          userProfileId: workspace.userProfile.id,
+          itemType: "trainingDoc"
+        })
+      );
     } catch (error) {
       setMessage(error.message || "Could not load the staff library.");
     }
@@ -359,6 +375,7 @@ export default function StaffLibrary() {
       setFileAssets([]);
       setFilePreviewUrls({});
       setAcknowledgements([]);
+      setAssignedTrainingDocIds(new Set());
     }
   }, [workspace.status, workspace.restaurant?.id]);
 
@@ -688,6 +705,7 @@ export default function StaffLibrary() {
                       const attachedFiles = fileAssets.filter((fileAsset) => fileAsset.trainingDocId === doc.id);
                       const primaryImage = attachedFiles.find((fileAsset) => filePreviewUrls[fileAsset.id]);
                       const acknowledgement = acknowledgements.find((item) => item.trainingDocId === doc.id);
+                      const isAssigned = assignedTrainingDocIds.has(doc.id);
 
                       return (
                         <article className="staff-visual-card" key={`${row.id}-${doc.id}`}>
@@ -701,6 +719,7 @@ export default function StaffLibrary() {
                                 </div>
                               )}
                               {acknowledgement ? <span className="reviewed-pill">Reviewed</span> : null}
+                              {!acknowledgement && isAssigned ? <span className="assigned-pill">Assigned</span> : null}
                             </div>
                             <div className="staff-visual-copy">
                               <span className="type-pill">{typeLabels[doc.type] || doc.type}</span>
@@ -708,6 +727,12 @@ export default function StaffLibrary() {
                               <p>{content.summary || doc.category || "Open this page to study the full training notes."}</p>
                             </div>
                           </button>
+                          <div className="staff-card-status-row">
+                            <span className={acknowledgement ? "status-badge status-published" : "status-badge status-draft"}>
+                              {acknowledgement ? "Reviewed" : "Unreviewed"}
+                            </span>
+                            {isAssigned ? <span className="status-badge status-review">Assigned</span> : null}
+                          </div>
                           <div className="staff-visual-actions">
                             <button className="secondary-button" type="button" onClick={() => setActiveReaderDocId(doc.id)}>
                               Open

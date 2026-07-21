@@ -2607,6 +2607,11 @@ code {
   background: rgba(221, 211, 195, 0.56);
 }
 
+.status-review {
+  color: var(--color-accent);
+  background: rgba(200, 107, 74, 0.14);
+}
+
 .quiet-danger-button {
   min-height: 44px;
   padding: 0 14px;
@@ -3029,7 +3034,8 @@ code {
   place-items: center;
 }
 
-.reviewed-pill {
+.reviewed-pill,
+.assigned-pill {
   position: absolute;
   top: 12px;
   right: 12px;
@@ -3042,6 +3048,27 @@ code {
   border: 1px solid rgba(31, 61, 46, 0.12);
   border-radius: 999px;
   backdrop-filter: blur(8px);
+}
+
+.assigned-pill {
+  color: #fff;
+  background: rgba(200, 107, 74, 0.92);
+  border-color: rgba(200, 107, 74, 0.42);
+}
+
+.reviewed-pill + .assigned-pill {
+  top: 48px;
+}
+
+.staff-card-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 12px 10px;
+}
+
+.staff-card-status-row .status-badge {
+  margin: 0;
 }
 
 .staff-visual-copy {
@@ -3088,6 +3115,13 @@ code {
 
 .staff-visual-review {
   margin: 0 12px 14px;
+}
+
+.progress-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
 }
 
 .staff-library-filter-panel {
@@ -3759,6 +3793,10 @@ code {
   .support-resolution-row {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .progress-summary-grid {
+    grid-template-columns: 1fr;
   }
 
   .training-workspace-header,

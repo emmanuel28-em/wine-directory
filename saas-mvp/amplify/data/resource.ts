@@ -490,7 +490,7 @@ const schema = a.schema({
   TrainingAssignment: a
     .model({
       restaurantId: a.id().required(),
-      itemType: a.enum(["quiz", "certification"]),
+      itemType: a.enum(["trainingDoc", "quiz", "certification"]),
       itemId: a.id().required(),
       targetType: a.enum(["group", "member"]),
       targetId: a.id().required(),
