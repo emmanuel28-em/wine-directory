@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
-import { listCollectionsForRestaurant } from "../lib/collections.js";
+import { listCollectionsForRestaurant, saveCollection } from "../lib/collections.js";
 import { parseBulkTrainingMaterial } from "../lib/bulkTrainingImport.js";
 import { listTrainingDocsForRestaurant, saveTrainingDoc } from "../lib/trainingDocs.js";
 
 function updateDraftAtIndex(drafts, index, field, value) {
   return drafts.map((draft, draftIndex) => (draftIndex === index ? { ...draft, [field]: value } : draft));
+}
+
+function normalizeName(value) {
+  return String(value || "").trim().toLowerCase();
 }
 
 export default function ManagerImportPage() {
@@ -58,8 +62,8 @@ export default function ManagerImportPage() {
     setDrafts(parsedDrafts);
     setMessage(
       parsedDrafts.length === 1
-        ? "One page is ready to review. If you expected more, place --- on its own line between items and try again."
-        : `${parsedDrafts.length} pages are ready to review. Nothing has been saved yet.`
+        ? "One draft page is ready. If you expected more, place --- on its own line between items and try again."
+        : `${parsedDrafts.length} draft pages are ready. Line Up also suggested library sections. Nothing has been saved yet.`
     );
   }
 
@@ -103,17 +107,45 @@ export default function ManagerImportPage() {
     let skippedCount = 0;
 
     try {
-      const existingDocs = await listTrainingDocsForRestaurant(workspace.restaurant.id);
+      const [existingDocs, latestCollections] = await Promise.all([
+        listTrainingDocsForRestaurant(workspace.restaurant.id),
+        listCollectionsForRestaurant(workspace.restaurant.id)
+      ]);
       const existingKeys = new Set(
         existingDocs.map((doc) => `${(doc.title || "").trim().toLowerCase()}::${doc.collectionId || ""}`)
       );
+      const collectionIdByName = new Map(latestCollections.map((collection) => [normalizeName(collection.name), collection.id]));
 
       for (const draft of drafts.filter((item) => item.selected)) {
         if (!draft.title.trim()) {
           throw new Error("Every selected draft needs a title.");
         }
 
-        const duplicateKey = `${draft.title.trim().toLowerCase()}::${draft.collectionId || ""}`;
+        let collectionId = draft.collectionId;
+
+        if (!collectionId && draft.suggestedCollectionName) {
+          const suggestedKey = normalizeName(draft.suggestedCollectionName);
+          collectionId = collectionIdByName.get(suggestedKey);
+
+          if (!collectionId) {
+            const createdCollection = await saveCollection({
+              collection: {
+                name: draft.suggestedCollectionName,
+                description: "Created from imported training material.",
+                categoryType: draft.suggestedCollectionType || "custom",
+                status: "active",
+                sortOrder: latestCollections.length + collectionIdByName.size + 1
+              },
+              restaurantId: workspace.restaurant.id,
+              userProfileId: workspace.userProfile.id,
+              editingCollectionId: null
+            });
+            collectionId = createdCollection.id;
+            collectionIdByName.set(suggestedKey, collectionId);
+          }
+        }
+
+        const duplicateKey = `${draft.title.trim().toLowerCase()}::${collectionId || ""}`;
 
         if (existingKeys.has(duplicateKey)) {
           skippedCount += 1;
@@ -123,7 +155,8 @@ export default function ManagerImportPage() {
         await saveTrainingDoc({
           form: {
             ...draft,
-            status: "draft"
+            collectionId,
+            status: draft.status || "draft"
           },
           editingDocId: null,
           restaurantId: workspace.restaurant.id,
@@ -141,7 +174,7 @@ export default function ManagerImportPage() {
       setMessage(
         `${createdCount} training page${createdCount === 1 ? " was" : "s were"} saved. ${publishedCreatedCount} published and ${draftCount} kept as ${draftCount === 1 ? "a draft" : "drafts"}.${
           skippedCount ? ` ${skippedCount} possible duplicate${skippedCount === 1 ? " was" : "s were"} skipped.` : ""
-        } Review and publish the new pages when they are ready for staff.`
+        } Review the new pages, add photos, then publish anything that should be visible to staff.`
       );
     } catch (error) {
       setMessage(
@@ -156,9 +189,9 @@ export default function ManagerImportPage() {
     <section className="page-section">
       <div className="dashboard-header">
         <div>
-          <p className="eyebrow">Add training</p>
-          <h1>Bring your training material into one place</h1>
-          <p>Paste a menu, wine list, cocktail spec, or procedure. Line Up separates it into pages you can review.</p>
+          <p className="eyebrow">Library builder</p>
+          <h1>Let Line Up create your training library for you</h1>
+          <p>Paste a large menu packet, wine list, cocktail specs, SOPs, or manager notes. Line Up separates the material into draft pages and suggests sections.</p>
         </div>
         <Link className="secondary-button" to="/manager/content">
           Back to training
@@ -166,9 +199,10 @@ export default function ManagerImportPage() {
       </div>
 
       <div className="workflow-strip">
-        <span>1. Paste your material</span>
-        <span>2. Check what Line Up found</span>
-        <span>3. Save or publish</span>
+        <span>1. Paste everything</span>
+        <span>2. Review the draft library</span>
+        <span>3. Save pages and sections</span>
+        <span>4. Add photos where needed</span>
       </div>
 
       {message ? <p className="form-message page-message">{message}</p> : null}
@@ -176,16 +210,16 @@ export default function ManagerImportPage() {
       <section className="operator-section">
         <div className="import-workspace-grid">
           <form className="form-card" onSubmit={(event) => event.preventDefault()}>
-            <h2>Paste your notes</h2>
+            <h2>Paste your existing materials</h2>
             <p className="helper-text">
-              Line Up recognizes headings such as Menu Description, One Liner, Allergies, Ingredients, Producer,
-              Varietal, Region, Glassware, Garnish, and Details.
+              This is designed for a massive copy paste from Google Docs, menus, wine tech sheets, cocktail specs,
+              opening notes, or SOPs. Line Up looks for familiar headings and turns them into reviewable draft pages.
             </p>
 
             <label>
-              Library section optional
+              Put everything into one section optional
               <select value={defaultCollectionId} onChange={(event) => setDefaultCollectionId(event.target.value)}>
-                <option value="">Choose later</option>
+                <option value="">Let Line Up suggest sections</option>
                 {collections.map((collection) => (
                   <option key={collection.id} value={collection.id}>
                     {collection.name}
@@ -197,11 +231,11 @@ export default function ManagerImportPage() {
             <label>
               Or load a text document
               <input type="file" accept=".txt,.md,.csv,text/plain,text/markdown,text/csv" onChange={loadTextFile} />
-              <small>Works with text, Markdown, and CSV files. Your file is read in your browser before anything is saved.</small>
+              <small>Works with text, Markdown, and CSV files. For PDFs or Word docs, copy the text and paste it below for now.</small>
             </label>
 
             <label>
-              Menu notes, tech sheets, or procedures
+              Menus, tech sheets, SOPs, or training notes
               <textarea
                 className="import-textarea"
                 value={sourceText}
@@ -210,23 +244,30 @@ export default function ManagerImportPage() {
               />
             </label>
 
-            <p className="helper-text">For unusual formats, put <strong>---</strong> on its own line between items.</p>
+            <p className="helper-text">
+              Tip: for unusual formats, put <strong>---</strong> on its own line between items. Photos are added after the pages are created.
+            </p>
 
             <button className="primary-button full-width" type="button" onClick={reviewMaterial} disabled={isWorking}>
-              Find training pages
+              Build draft training library
             </button>
           </form>
 
           <aside className="form-card import-guidance-card">
-            <p className="eyebrow">You stay in control</p>
-            <h2>Staff will not see anything yet</h2>
-            <p>You choose whether each page stays a draft or is published for staff. Nothing is saved until you confirm.</p>
+            <p className="eyebrow">What Line Up does</p>
+            <h2>It organizes first. You approve before staff sees it.</h2>
+            <p>Line Up creates draft pages, suggests library sections, and pulls useful quiz facts from headings like allergens, ingredients, region, glassware, garnish, and details.</p>
+            <h3>Best way to add images</h3>
+            <p className="helper-text">
+              Import the written material first. Then open each new page in Training Library and attach the best photo for that item.
+              Later, the easiest upgrade is a bulk image matcher that pairs uploaded photos by file name.
+            </p>
             <h3>Best results</h3>
             <ul className="plain-list">
               <li>Keep the item name on its own line.</li>
               <li>Keep familiar headings from the original document.</li>
               <li>Review allergens and ingredients carefully.</li>
-              <li>Choose a library section that matches the restaurant menu.</li>
+              <li>Let Line Up suggest sections, then adjust anything that looks wrong.</li>
             </ul>
           </aside>
         </div>
@@ -238,7 +279,7 @@ export default function ManagerImportPage() {
             <div>
               <p className="eyebrow">Review</p>
               <h2>Check what Line Up found</h2>
-              <p>{selectedCount} of {drafts.length} drafts selected for import.</p>
+              <p>{selectedCount} of {drafts.length} draft pages selected. You can edit titles, sections, notes, and visibility before saving.</p>
             </div>
             <button className="primary-button" type="button" onClick={importDrafts} disabled={isWorking || selectedCount === 0}>
               {isWorking ? "Saving..." : `Save ${selectedCount} Training Page${selectedCount === 1 ? "" : "s"}`}
@@ -283,13 +324,14 @@ export default function ManagerImportPage() {
                 <label>
                   Library section
                   <select value={draft.collectionId} onChange={(event) => updateDraft(index, "collectionId", event.target.value)}>
-                    <option value="">Unassigned</option>
+                    <option value="">Use Line Up suggestion: {draft.suggestedCollectionName || "Training Library"}</option>
                     {collections.map((collection) => (
                       <option key={collection.id} value={collection.id}>
                         {collection.name}
                       </option>
                     ))}
                   </select>
+                  <small>Line Up will create this section if it does not already exist.</small>
                 </label>
 
                 <label>
@@ -336,10 +378,10 @@ export default function ManagerImportPage() {
           <div>
             <p className="eyebrow">Material added</p>
             <h2>Your training pages are ready for the next step.</h2>
-            <p>Review the library, create a knowledge check, or invite one staff member to begin testing the workspace.</p>
+            <p>Review the new pages, add photos where needed, create a quiz, or invite one staff member to begin testing the workspace.</p>
           </div>
           <div className="import-next-actions">
-            <Link className="secondary-button" to="/manager/content">Review training pages</Link>
+            <Link className="secondary-button" to="/manager/content">Review and add photos</Link>
             <Link className="primary-button" to="/manager/quizzes">Generate a quiz</Link>
             <Link className="secondary-button" to="/manager/invite-team">Invite your team</Link>
           </div>
@@ -348,8 +390,8 @@ export default function ManagerImportPage() {
 
       <section className="setup-help-strip">
         <div>
-          <strong>Have a PDF, Word document, or a large training manual?</strong>
-          <span>Send it through setup help and we can organize the first library with you.</span>
+          <strong>Have a PDF, Word document, image-heavy menu, or a large training manual?</strong>
+          <span>Use setup help if you want Line Up to organize the first library with you.</span>
         </div>
         <div>
           <Link to="/managed-setup">Request setup help</Link>

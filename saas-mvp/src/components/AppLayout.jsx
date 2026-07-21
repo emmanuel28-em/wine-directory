@@ -31,7 +31,7 @@ function AccountMenu({ authSession, currentWorkspace, hasPlatformAccess, isSigni
         {currentWorkspace.isActiveMember && currentWorkspace.role !== "staff" ? (
           <>
             <NavLink to="/training-library">View staff library</NavLink>
-            <NavLink to="/manager/import">Import training material</NavLink>
+            <NavLink to="/manager/import">Library builder</NavLink>
             <NavLink to="/manager/onboarding">Getting started</NavLink>
             <NavLink to="/manager/settings">Restaurant settings</NavLink>
             {isOwnerOrAdmin(currentWorkspace.role) ? <NavLink to="/manager/billing">Plan & billing</NavLink> : null}

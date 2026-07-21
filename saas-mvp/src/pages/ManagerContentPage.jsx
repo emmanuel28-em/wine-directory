@@ -722,7 +722,7 @@ export default function ManagerContentPage() {
           <button className="primary-button" type="button" onClick={startNewPage}>
             New page
           </button>
-          <Link className="secondary-button" to="/manager/import">Import material</Link>
+          <Link className="secondary-button" to="/manager/import">Let Line Up build it</Link>
           <Link className="secondary-button" to="/training-library">View as staff</Link>
         </div>
       </div>
@@ -943,7 +943,7 @@ export default function ManagerContentPage() {
                     <p>Create a blank page or import existing menus, tech sheets, SOPs, wine lists, or cocktail specs.</p>
                     <div className="form-button-row">
                       <button className="primary-button" type="button" onClick={startNewPage}>New page</button>
-                      <Link className="secondary-button" to="/manager/import">Import material</Link>
+                      <Link className="secondary-button" to="/manager/import">Let Line Up build it</Link>
                     </div>
                   </div>
                 ) : sortedDocs.length === 0 ? (

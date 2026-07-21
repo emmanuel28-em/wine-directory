@@ -152,6 +152,64 @@ function inferContentType(fields) {
   return "custom";
 }
 
+function inferSuggestedCollection({ contentType, sourceText }) {
+  const normalizedSource = sourceText.toLowerCase();
+
+  if (normalizedSource.includes("brunch")) {
+    return { name: "Brunch Menu", categoryType: "foodMenu" };
+  }
+
+  if (normalizedSource.includes("lunch")) {
+    return { name: "Lunch Menu", categoryType: "foodMenu" };
+  }
+
+  if (normalizedSource.includes("dinner")) {
+    return { name: "Dinner Menu", categoryType: "foodMenu" };
+  }
+
+  if (normalizedSource.includes("pasta tasting") || normalizedSource.includes("wine pairing") || normalizedSource.includes("course 1")) {
+    return { name: "Pasta Tasting", categoryType: "foodMenu" };
+  }
+
+  if (contentType === "cocktail") {
+    return { name: "Cocktails", categoryType: "cocktail" };
+  }
+
+  if (contentType === "wine") {
+    if (normalizedSource.includes("btg") || normalizedSource.includes("glass")) {
+      return { name: "BTG Wines", categoryType: "wine" };
+    }
+
+    return { name: "Wines", categoryType: "wine" };
+  }
+
+  if (normalizedSource.includes("sop") || normalizedSource.includes("procedure") || normalizedSource.includes("opening")) {
+    return { name: "SOPs", categoryType: "sop" };
+  }
+
+  if (contentType === "foodItem") {
+    return { name: "Food Menu", categoryType: "foodMenu" };
+  }
+
+  return { name: "Training Library", categoryType: "custom" };
+}
+
+function inferCategory(sourceText) {
+  const normalizedSource = sourceText.toLowerCase();
+
+  if (normalizedSource.includes("antipasta") || normalizedSource.includes("antipasti")) return "Antipasta";
+  if (normalizedSource.includes("primi")) return "Primi";
+  if (normalizedSource.includes("secondi")) return "Secondi";
+  if (normalizedSource.includes("verdure")) return "Verdure";
+  if (normalizedSource.includes("course 1")) return "Course 1";
+  if (normalizedSource.includes("course 2")) return "Course 2";
+  if (normalizedSource.includes("course 3")) return "Course 3";
+  if (normalizedSource.includes("course 4")) return "Course 4";
+  if (normalizedSource.includes("course 5")) return "Course 5";
+
+  return "";
+}
+
 function firstParagraph(value) {
   return (value || "").split(/\n\s*\n/)[0].trim();
 }
@@ -201,6 +259,7 @@ function buildQuizFacts(contentType, fields) {
 function toDraft(parsedBlock, index) {
   const { fields } = parsedBlock;
   const contentType = inferContentType(fields);
+  const suggestedCollection = inferSuggestedCollection({ contentType, sourceText: parsedBlock.sourceText });
   const summary = fields.oneLiner || fields.menuDescription || firstParagraph(fields.description);
   const body = fields.details || fields.description || parsedBlock.sourceText;
   const tags = contentType === "foodItem" ? "food, menu" : contentType === "wine" ? "wine, beverage" : contentType === "cocktail" ? "cocktail, beverage" : "imported";
@@ -209,9 +268,11 @@ function toDraft(parsedBlock, index) {
     importId: `import-${Date.now()}-${index}`,
     selected: true,
     collectionId: "",
+    suggestedCollectionName: suggestedCollection.name,
+    suggestedCollectionType: suggestedCollection.categoryType,
     contentType,
     title: parsedBlock.title,
-    category: "",
+    category: inferCategory(parsedBlock.sourceText),
     status: "draft",
     tags,
     summary,
@@ -233,4 +294,3 @@ export function parseBulkTrainingMaterial(sourceText) {
 
   return splitIntoBlocks(sourceText).map(parseBlock).map(toDraft);
 }
-
