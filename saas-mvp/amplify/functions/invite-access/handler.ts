@@ -90,6 +90,13 @@ function failure(error: unknown) {
   return { success: false, error: error instanceof Error ? error.message : "Invite could not be processed.", status: "error" };
 }
 
+function canInviteRole(callerRole: string, invitedRole: string) {
+  if (callerRole === "owner") return ["admin", "manager", "staff"].includes(invitedRole);
+  if (callerRole === "admin") return ["manager", "staff"].includes(invitedRole);
+  if (callerRole === "manager") return invitedRole === "staff";
+  return false;
+}
+
 async function manageMember(event: InviteAccessEvent, identity: Awaited<ReturnType<typeof identityFor>>) {
   const restaurantId = event.arguments.restaurantId || "";
   const membershipId = event.arguments.membershipId || "";
@@ -128,11 +135,14 @@ async function manageMember(event: InviteAccessEvent, identity: Awaited<ReturnTy
   let nextStatus = target.status?.S || "active";
 
   if (action === "changeRole") {
-    if (callerRole !== "owner") throw new Error("Only the Account Owner can change team roles.");
-    if (!["admin", "manager", "staff"].includes(event.arguments.role || "")) throw new Error("Choose a valid role.");
-    nextRole = event.arguments.role || "staff";
+    const requestedRole = event.arguments.role || "";
+    if (!["admin", "manager", "staff"].includes(requestedRole)) throw new Error("Choose a valid role.");
+    const ownerCanChange = callerRole === "owner";
+    const adminCanChange = callerRole === "admin" && target.role?.S !== "admin" && ["manager", "staff"].includes(requestedRole);
+    if (!ownerCanChange && !adminCanChange) throw new Error("You do not have permission to change this team role.");
+    nextRole = requestedRole;
   } else {
-    const canDisable = callerRole === "owner" || (callerRole === "admin" && target.role?.S === "staff");
+    const canDisable = callerRole === "owner" || (callerRole === "admin" && ["manager", "staff"].includes(target.role?.S || ""));
     if (!canDisable) throw new Error("You do not have permission to disable this team member.");
     nextStatus = "disabled";
   }
@@ -207,6 +217,21 @@ export const handler = async (event: InviteAccessEvent) => {
     const restaurant = await dynamo.send(new GetItemCommand({ TableName: env("RESTAURANT_TABLE_NAME"), Key: { id: { S: restaurantId } } }));
     if (!restaurant.Item) throw new Error("The restaurant workspace was not found.");
 
+    // Validate the inviter again at acceptance time. This prevents a forged
+    // Invite record from granting a role the inviter was never allowed to give.
+    const inviterProfileId = invite.invitedBy?.S || "";
+    const inviterMembership = inviterProfileId
+      ? await scanFirst(
+          env("MEMBERSHIP_TABLE_NAME"),
+          "restaurantId = :restaurant AND userProfileId = :profile",
+          { ":restaurant": { S: restaurantId }, ":profile": { S: inviterProfileId } }
+        )
+      : null;
+    const invitedRole = invite.role?.S || "staff";
+    if (!inviterMembership || inviterMembership.status?.S !== "active" || !canInviteRole(inviterMembership.role?.S || "staff", invitedRole)) {
+      throw new Error("The person who created this invite is not allowed to grant that role. Ask an Admin or Account Owner for a new invite.");
+    }
+
     const details = {
       success: true,
       error: "",
@@ -216,7 +241,7 @@ export const handler = async (event: InviteAccessEvent) => {
       email: invite.email?.S || "",
       firstName: invite.firstName?.S || "",
       lastName: invite.lastName?.S || "",
-      role: invite.role?.S || "staff",
+      role: invitedRole,
       expiresAt: invite.expiresAt?.S || ""
     };
 
