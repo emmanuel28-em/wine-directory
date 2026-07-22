@@ -1,6 +1,7 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 import { createBillingPortalSession } from "../functions/create-billing-portal-session/resource";
 import { createCheckoutSession } from "../functions/create-checkout-session/resource";
+import { createTeamMemberInvite } from "../functions/create-team-member-invite/resource";
 import { sendInviteEmail } from "../functions/send-invite-email/resource";
 import { provisionTrialWorkspace } from "../functions/provision-trial-workspace/resource";
 import { inviteAccess } from "../functions/invite-access/resource";
@@ -12,6 +13,16 @@ const schema = a.schema({
     success: a.boolean(),
     status: a.string(),
     error: a.string()
+  }),
+
+  TeamMemberInviteResult: a.customType({
+    success: a.boolean(),
+    status: a.string(),
+    error: a.string(),
+    email: a.email(),
+    role: a.string(),
+    userProfileId: a.id(),
+    membershipId: a.id()
   }),
 
   CheckoutSessionResult: a.customType({
@@ -269,6 +280,20 @@ const schema = a.schema({
     .returns(a.ref("InviteEmailResult"))
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(sendInviteEmail)),
+
+  createTeamMemberInvite: a
+    .mutation()
+    .arguments({
+      restaurantId: a.id().required(),
+      email: a.email().required(),
+      firstName: a.string().required(),
+      lastName: a.string().required(),
+      role: a.string().required(),
+      note: a.string()
+    })
+    .returns(a.ref("TeamMemberInviteResult"))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(createTeamMemberInvite)),
 
   createCheckoutSession: a
     .mutation()

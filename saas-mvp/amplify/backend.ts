@@ -5,6 +5,7 @@ import { auth } from "./auth/resource";
 import { data } from "./data/resource";
 import { createBillingPortalSession } from "./functions/create-billing-portal-session/resource";
 import { createCheckoutSession } from "./functions/create-checkout-session/resource";
+import { createTeamMemberInvite } from "./functions/create-team-member-invite/resource";
 import { sendInviteEmail } from "./functions/send-invite-email/resource";
 import { provisionTrialWorkspace } from "./functions/provision-trial-workspace/resource";
 import { inviteAccess } from "./functions/invite-access/resource";
@@ -17,6 +18,7 @@ import { storage } from "./storage/resource";
 // Storage keeps training source files in S3.
 const backend = defineBackend({
   auth,
+  createTeamMemberInvite,
   createBillingPortalSession,
   createCheckoutSession,
   data,
@@ -49,6 +51,10 @@ membershipTable.grantReadData(backend.createCheckoutSession.resources.lambda);
 membershipTable.grantReadData(backend.createBillingPortalSession.resources.lambda);
 userProfileTable.grantReadData(backend.sendInviteEmail.resources.lambda);
 membershipTable.grantReadData(backend.sendInviteEmail.resources.lambda);
+restaurantTable.grantReadData(backend.createTeamMemberInvite.resources.lambda);
+userProfileTable.grantReadWriteData(backend.createTeamMemberInvite.resources.lambda);
+membershipTable.grantReadWriteData(backend.createTeamMemberInvite.resources.lambda);
+inviteTable.grantWriteData(backend.createTeamMemberInvite.resources.lambda);
 restaurantTable.grantReadWriteData(backend.provisionTrialWorkspace.resources.lambda);
 userProfileTable.grantReadWriteData(backend.provisionTrialWorkspace.resources.lambda);
 membershipTable.grantReadWriteData(backend.provisionTrialWorkspace.resources.lambda);
@@ -84,6 +90,11 @@ backend.createBillingPortalSession.addEnvironment("USER_PROFILE_TABLE_NAME", use
 backend.createBillingPortalSession.addEnvironment("MEMBERSHIP_TABLE_NAME", membershipTable.tableName);
 backend.sendInviteEmail.addEnvironment("USER_PROFILE_TABLE_NAME", userProfileTable.tableName);
 backend.sendInviteEmail.addEnvironment("MEMBERSHIP_TABLE_NAME", membershipTable.tableName);
+backend.createTeamMemberInvite.addEnvironment("USER_POOL_ID", backend.auth.resources.userPool.userPoolId);
+backend.createTeamMemberInvite.addEnvironment("RESTAURANT_TABLE_NAME", restaurantTable.tableName);
+backend.createTeamMemberInvite.addEnvironment("USER_PROFILE_TABLE_NAME", userProfileTable.tableName);
+backend.createTeamMemberInvite.addEnvironment("MEMBERSHIP_TABLE_NAME", membershipTable.tableName);
+backend.createTeamMemberInvite.addEnvironment("INVITE_TABLE_NAME", inviteTable.tableName);
 backend.provisionTrialWorkspace.addEnvironment("USER_POOL_ID", backend.auth.resources.userPool.userPoolId);
 backend.provisionTrialWorkspace.addEnvironment("RESTAURANT_TABLE_NAME", restaurantTable.tableName);
 backend.provisionTrialWorkspace.addEnvironment("USER_PROFILE_TABLE_NAME", userProfileTable.tableName);
@@ -122,6 +133,20 @@ backend.inviteAccess.resources.lambda.addToRolePolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
     actions: ["cognito-idp:CreateGroup", "cognito-idp:AdminAddUserToGroup", "cognito-idp:AdminRemoveUserFromGroup", "cognito-idp:AdminGetUser"],
+    resources: [backend.auth.resources.userPool.userPoolArn]
+  })
+);
+
+backend.createTeamMemberInvite.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      "cognito-idp:AdminAddUserToGroup",
+      "cognito-idp:AdminCreateUser",
+      "cognito-idp:AdminGetUser",
+      "cognito-idp:CreateGroup",
+      "cognito-idp:ListUsers"
+    ],
     resources: [backend.auth.resources.userPool.userPoolArn]
   })
 );

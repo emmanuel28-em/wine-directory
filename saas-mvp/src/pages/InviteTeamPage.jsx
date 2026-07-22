@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
-import { createInvite, listInvitesForRestaurant, makeInviteLink, sendInviteEmailForInvite } from "../lib/invites.js";
+import { createInvite, createTeamMemberLoginInvite, listInvitesForRestaurant, makeInviteLink, sendInviteEmailForInvite } from "../lib/invites.js";
 import { canInviteRole } from "../lib/permissions.js";
 import { revokeInvite } from "../lib/settings.js";
 
@@ -74,30 +74,38 @@ export default function InviteTeamPage() {
     setCreatedInvite(null);
 
     try {
-      const nextInvite = await createInvite({
+      const loginInvite = await createTeamMemberLoginInvite({
         restaurantId: workspace.restaurant.id,
         invite,
-        invitedBy: workspace.userProfile.id,
         currentRole: workspace.role
       });
-      const emailResult = await sendInviteEmailForInvite({
-        invite: nextInvite,
-        restaurantName: workspace.restaurant.name
-      });
 
-      setCreatedInvite(emailResult.invite);
       setInvite({
         ...emptyInvite,
         role: allowedRoles[0] || "staff"
       });
       await loadInvites();
       setMessage(
-        emailResult.success
-          ? `Invite sent to ${nextInvite.email}.`
-          : "Invite was created, but email could not be sent. Copy the invite link manually."
+        loginInvite.status === "existingUser"
+          ? `${loginInvite.email} already had a Line Up login. Access was added, so they can sign in at lineuptraining.com/login.`
+          : `Account invite sent to ${loginInvite.email}. They will receive a temporary password by email, then create their permanent password.`
       );
     } catch (error) {
-      setMessage(error.message || "Could not create invite.");
+      try {
+        const nextInvite = await createInvite({
+          restaurantId: workspace.restaurant.id,
+          invite,
+          invitedBy: workspace.userProfile.id,
+          currentRole: workspace.role
+        });
+        setCreatedInvite(nextInvite);
+        await loadInvites();
+        setMessage(
+          `${error.message || "The account email could not be sent."} A secure invite link was created as a fallback. Copy it and send it manually.`
+        );
+      } catch (fallbackError) {
+        setMessage(fallbackError.message || error.message || "Could not create invite.");
+      }
     } finally {
       setIsWorking(false);
     }
@@ -229,14 +237,14 @@ export default function InviteTeamPage() {
           </label>
 
           <button className="primary-button full-width" type="submit" disabled={isWorking || allowedRoles.length === 0}>
-            {isWorking ? "Sending invite..." : "Send Invite Email"}
+            {isWorking ? "Sending invite..." : "Create Login & Send Email"}
           </button>
         </form>
 
         <section className="data-list-panel">
           <div className="form-card invite-link-panel">
             <h2>Manual Fallback</h2>
-            <p>If email is not configured or sending fails, copy this invite link and send it manually.</p>
+            <p>If the account email cannot be sent, Line Up creates a secure invite link you can copy and send manually.</p>
 
             {createdInvite ? (
               <>

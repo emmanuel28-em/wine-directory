@@ -66,6 +66,33 @@ export async function createInvite({ restaurantId, invite, invitedBy, currentRol
   );
 }
 
+export async function createTeamMemberLoginInvite({ restaurantId, invite, currentRole }) {
+  requireRestaurantId(restaurantId);
+
+  if (!canInviteRole(currentRole, invite.role)) {
+    throw new Error("You do not have permission to invite that role.");
+  }
+
+  const result = await getDataClient().mutations.createTeamMemberInvite({
+    restaurantId,
+    email: invite.email.trim().toLowerCase(),
+    firstName: invite.firstName.trim(),
+    lastName: invite.lastName.trim(),
+    role: invite.role,
+    note: invite.note.trim()
+  });
+
+  if (result.errors?.length) {
+    throw new Error(result.errors.map((error) => error.message).join(" "));
+  }
+
+  if (!result.data?.success) {
+    throw new Error(result.data?.error || "Team member invite could not be sent.");
+  }
+
+  return result.data;
+}
+
 export async function listInvitesForRestaurant(restaurantId) {
   requireRestaurantId(restaurantId);
   const dataClient = getDataClient();
