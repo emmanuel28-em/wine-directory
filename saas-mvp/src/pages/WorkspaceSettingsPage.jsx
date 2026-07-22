@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { formatRole, useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
-import { listInvitesForRestaurant, makeInviteLink, sendInviteEmailForInvite } from "../lib/invites.js";
+import { listInvitesForRestaurant, makeInviteLink, sendLoginInviteForPendingInvite } from "../lib/invites.js";
 import { canInviteRole, isAdminOrManager, isOwner } from "../lib/permissions.js";
 import {
   canChangeMemberRole,
@@ -239,18 +239,23 @@ export default function WorkspaceSettingsPage() {
     setMessage("");
 
     try {
-      const emailResult = await sendInviteEmailForInvite({
-        invite,
-        restaurantName: workspace.restaurant.name
+      const loginInvite = await sendLoginInviteForPendingInvite({
+        restaurantId: workspace.restaurant.id,
+        inviteRecord: invite,
+        currentRole: workspace.role
+      });
+      await revokeInvite({
+        restaurantId: workspace.restaurant.id,
+        invite
       });
       await loadSettings();
       setMessage(
-        emailResult.success
-          ? `Invite resent to ${invite.email}.`
-          : "Invite email could not be sent. Copy the invite link manually."
+        loginInvite.status === "existingUser"
+          ? `${loginInvite.email} already has a Line Up login. Access was added, so they can sign in normally.`
+          : `Login email sent to ${loginInvite.email}.`
       );
     } catch (error) {
-      setMessage(error.message || "Could not resend invite email.");
+      setMessage(`${error.message || "Could not send a login email."} Copy the invite link manually if needed.`);
     } finally {
       setIsWorking(false);
     }
@@ -464,7 +469,7 @@ export default function WorkspaceSettingsPage() {
                     </div>
                     <div className="card-actions">
                       <button className="secondary-button" type="button" onClick={() => resendInviteEmail(invite)} disabled={isWorking}>
-                        Resend Email
+                        Send Login Email
                       </button>
                       <button className="secondary-button" type="button" onClick={() => copyInviteLink(invite)}>
                         Copy Link

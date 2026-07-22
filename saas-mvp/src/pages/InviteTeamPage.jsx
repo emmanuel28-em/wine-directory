@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
-import { createInvite, createTeamMemberLoginInvite, listInvitesForRestaurant, makeInviteLink, sendInviteEmailForInvite } from "../lib/invites.js";
+import { createInvite, createTeamMemberLoginInvite, listInvitesForRestaurant, makeInviteLink, sendLoginInviteForPendingInvite } from "../lib/invites.js";
 import { canInviteRole } from "../lib/permissions.js";
 import { revokeInvite } from "../lib/settings.js";
 
@@ -26,6 +26,18 @@ const emailStatusLabels = {
 
 function getAllowedRoles(currentRole) {
   return ["admin", "manager", "staff"].filter((role) => canInviteRole(currentRole, role));
+}
+
+function loginInviteMessage(result) {
+  if (result.status === "existingUser") {
+    return `${result.email} already had a Line Up login. Access was added, so they can sign in at lineuptraining.com/login.`;
+  }
+
+  if (result.status === "emailResent") {
+    return `Login email resent to ${result.email}. They will receive a temporary password by email, then create their permanent password.`;
+  }
+
+  return `Account invite sent to ${result.email}. They will receive a temporary password by email, then create their permanent password.`;
 }
 
 export default function InviteTeamPage() {
@@ -85,11 +97,7 @@ export default function InviteTeamPage() {
         role: allowedRoles[0] || "staff"
       });
       await loadInvites();
-      setMessage(
-        loginInvite.status === "existingUser"
-          ? `${loginInvite.email} already had a Line Up login. Access was added, so they can sign in at lineuptraining.com/login.`
-          : `Account invite sent to ${loginInvite.email}. They will receive a temporary password by email, then create their permanent password.`
-      );
+      setMessage(loginInviteMessage(loginInvite));
     } catch (error) {
       try {
         const nextInvite = await createInvite({
@@ -122,18 +130,19 @@ export default function InviteTeamPage() {
     setMessage("");
 
     try {
-      const emailResult = await sendInviteEmailForInvite({
-        invite: inviteRecord,
-        restaurantName: workspace.restaurant.name
+      const loginInvite = await sendLoginInviteForPendingInvite({
+        restaurantId: workspace.restaurant.id,
+        inviteRecord,
+        currentRole: workspace.role
+      });
+      await revokeInvite({
+        restaurantId: workspace.restaurant.id,
+        invite: inviteRecord
       });
       await loadInvites();
-      setMessage(
-        emailResult.success
-          ? `Invite resent to ${inviteRecord.email}.`
-          : "Invite email could not be sent. Copy the invite link manually."
-      );
+      setMessage(loginInviteMessage(loginInvite));
     } catch (error) {
-      setMessage(error.message || "Could not resend invite email.");
+      setMessage(`${error.message || "Could not send a login email."} Copy the invite link manually if needed.`);
     } finally {
       setIsWorking(false);
     }
@@ -288,7 +297,7 @@ export default function InviteTeamPage() {
                       {item.status === "pending" ? (
                         <>
                           <button className="secondary-button" type="button" onClick={() => resendInvite(item)} disabled={isWorking}>
-                            Resend Invite Email
+                            Send Login Email
                           </button>
                           <button className="secondary-button" type="button" onClick={() => copyInviteLink(item)}>
                             Copy Link

@@ -93,6 +93,20 @@ export async function createTeamMemberLoginInvite({ restaurantId, invite, curren
   return result.data;
 }
 
+export async function sendLoginInviteForPendingInvite({ restaurantId, inviteRecord, currentRole }) {
+  return createTeamMemberLoginInvite({
+    restaurantId,
+    currentRole,
+    invite: {
+      firstName: inviteRecord.firstName || "Team",
+      lastName: inviteRecord.lastName || "Member",
+      email: inviteRecord.email,
+      role: inviteRecord.role,
+      note: inviteRecord.note || ""
+    }
+  });
+}
+
 export async function listInvitesForRestaurant(restaurantId) {
   requireRestaurantId(restaurantId);
   const dataClient = getDataClient();

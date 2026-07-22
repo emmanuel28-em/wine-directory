@@ -125,6 +125,35 @@ async function createOrFindCognitoUser({
       throw new Error("This person already has a login, but Line Up could not locate the account.");
     }
 
+    try {
+      const resendResult = await cognito.send(
+        new AdminCreateUserCommand({
+          UserPoolId: userPoolId,
+          Username: existingUser.Username,
+          MessageAction: "RESEND",
+          DesiredDeliveryMediums: ["EMAIL"],
+          UserAttributes: [
+            { Name: "email", Value: email },
+            { Name: "email_verified", Value: "true" },
+            { Name: "given_name", Value: firstName },
+            { Name: "family_name", Value: lastName },
+            { Name: "name", Value: cleanName(firstName, lastName, email) }
+          ]
+        })
+      );
+
+      return {
+        username: resendResult.User?.Username || existingUser.Username,
+        sub: attribute(resendResult.User?.Attributes, "sub"),
+        status: "emailResent",
+        emailWasSent: true
+      };
+    } catch {
+      // If the person already completed setup, Cognito cannot resend the
+      // temporary password email. In that case we still grant workspace access
+      // and tell the manager the user can sign in normally.
+    }
+
     const user = await cognito.send(new AdminGetUserCommand({ UserPoolId: userPoolId, Username: existingUser.Username }));
     return {
       username: existingUser.Username,
