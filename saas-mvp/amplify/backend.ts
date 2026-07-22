@@ -34,6 +34,11 @@ const userProfileTable = backend.data.resources.tables.UserProfile;
 const membershipTable = backend.data.resources.tables.Membership;
 const inviteTable = backend.data.resources.tables.Invite;
 const supportTicketTable = backend.data.resources.tables.SupportTicket;
+const trainingDocTable = backend.data.resources.tables.TrainingDoc;
+const acknowledgementTable = backend.data.resources.tables.TrainingDocAcknowledgement;
+const quizAttemptTable = backend.data.resources.tables.QuizAttempt;
+const importRunTable = backend.data.resources.tables.ImportRun;
+const billingEventTable = backend.data.resources.tables.BillingEvent;
 
 restaurantTable.grantReadWriteData(backend.createCheckoutSession.resources.lambda);
 restaurantTable.grantReadWriteData(backend.createBillingPortalSession.resources.lambda);
@@ -55,6 +60,20 @@ restaurantTable.grantReadData(backend.supportAccess.resources.lambda);
 userProfileTable.grantReadData(backend.supportAccess.resources.lambda);
 membershipTable.grantReadData(backend.supportAccess.resources.lambda);
 supportTicketTable.grantReadWriteData(backend.supportAccess.resources.lambda);
+billingEventTable.grantWriteData(backend.stripeWebhook.resources.lambda);
+
+// Platform Control reads operational metadata only. It never receives training
+// page content, quiz answers, or uploaded files in its API response.
+restaurantTable.grantReadData(backend.platformAccess.resources.lambda);
+userProfileTable.grantReadData(backend.platformAccess.resources.lambda);
+membershipTable.grantReadData(backend.platformAccess.resources.lambda);
+inviteTable.grantReadData(backend.platformAccess.resources.lambda);
+supportTicketTable.grantReadData(backend.platformAccess.resources.lambda);
+trainingDocTable.grantReadData(backend.platformAccess.resources.lambda);
+acknowledgementTable.grantReadData(backend.platformAccess.resources.lambda);
+quizAttemptTable.grantReadData(backend.platformAccess.resources.lambda);
+importRunTable.grantReadData(backend.platformAccess.resources.lambda);
+billingEventTable.grantReadData(backend.platformAccess.resources.lambda);
 
 backend.createCheckoutSession.addEnvironment("RESTAURANT_TABLE_NAME", restaurantTable.tableName);
 backend.createBillingPortalSession.addEnvironment("RESTAURANT_TABLE_NAME", restaurantTable.tableName);
@@ -75,6 +94,17 @@ backend.inviteAccess.addEnvironment("USER_PROFILE_TABLE_NAME", userProfileTable.
 backend.inviteAccess.addEnvironment("MEMBERSHIP_TABLE_NAME", membershipTable.tableName);
 backend.inviteAccess.addEnvironment("INVITE_TABLE_NAME", inviteTable.tableName);
 backend.platformAccess.addEnvironment("USER_POOL_ID", backend.auth.resources.userPool.userPoolId);
+backend.platformAccess.addEnvironment("RESTAURANT_TABLE_NAME", restaurantTable.tableName);
+backend.platformAccess.addEnvironment("USER_PROFILE_TABLE_NAME", userProfileTable.tableName);
+backend.platformAccess.addEnvironment("MEMBERSHIP_TABLE_NAME", membershipTable.tableName);
+backend.platformAccess.addEnvironment("INVITE_TABLE_NAME", inviteTable.tableName);
+backend.platformAccess.addEnvironment("SUPPORT_TICKET_TABLE_NAME", supportTicketTable.tableName);
+backend.platformAccess.addEnvironment("TRAINING_DOC_TABLE_NAME", trainingDocTable.tableName);
+backend.platformAccess.addEnvironment("ACKNOWLEDGEMENT_TABLE_NAME", acknowledgementTable.tableName);
+backend.platformAccess.addEnvironment("QUIZ_ATTEMPT_TABLE_NAME", quizAttemptTable.tableName);
+backend.platformAccess.addEnvironment("IMPORT_RUN_TABLE_NAME", importRunTable.tableName);
+backend.platformAccess.addEnvironment("BILLING_EVENT_TABLE_NAME", billingEventTable.tableName);
+backend.stripeWebhook.addEnvironment("BILLING_EVENT_TABLE_NAME", billingEventTable.tableName);
 backend.supportAccess.addEnvironment("RESTAURANT_TABLE_NAME", restaurantTable.tableName);
 backend.supportAccess.addEnvironment("USER_PROFILE_TABLE_NAME", userProfileTable.tableName);
 backend.supportAccess.addEnvironment("MEMBERSHIP_TABLE_NAME", membershipTable.tableName);

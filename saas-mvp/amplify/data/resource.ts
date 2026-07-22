@@ -64,7 +64,8 @@ const schema = a.schema({
     success: a.boolean(),
     error: a.string(),
     currentRole: a.string(),
-    usersJson: a.string()
+    usersJson: a.string(),
+    operationsJson: a.string()
   }),
 
   SupportTicketResult: a.customType({
@@ -395,6 +396,47 @@ const schema = a.schema({
       // A prospective restaurant can submit a setup inquiry before creating an account.
       // Guest access is create-only: public visitors cannot list, read, update, or delete inquiries.
       allow.guest().to(["create"])
+    ]),
+
+  // One record per Library Builder save attempt. This is operational history,
+  // not a second copy of the imported training content.
+  ImportRun: a
+    .model({
+      restaurantId: a.id().required(),
+      sourceType: a.string(),
+      sourceName: a.string(),
+      status: a.enum(["processing", "completed", "failed"]),
+      detectedCount: a.integer(),
+      selectedCount: a.integer(),
+      createdCount: a.integer(),
+      skippedCount: a.integer(),
+      errorMessage: a.string(),
+      startedAt: a.datetime().required(),
+      completedAt: a.datetime(),
+      createdBy: a.id(),
+      tenantGroup: a.string(),
+      managerGroup: a.string()
+    })
+    .authorization((allow) => [
+      allow.groupDefinedIn("managerGroup").to(["create", "read", "update"]),
+      allow.groups(["lineup-platform-owners"]).to(["read"])
+    ]),
+
+  // Stripe webhooks write a small, non-card-data event record so Account
+  // Health can explain recent subscription changes without querying Stripe.
+  BillingEvent: a
+    .model({
+      restaurantId: a.id().required(),
+      stripeEventId: a.string().required(),
+      eventType: a.string().required(),
+      status: a.string(),
+      amount: a.integer(),
+      currency: a.string(),
+      description: a.string(),
+      occurredAt: a.datetime().required()
+    })
+    .authorization((allow) => [
+      allow.groups(["lineup-platform-owners"]).to(["read"])
     ]),
 
   // A Quiz groups questions together for one doc, one topic, or one training area.

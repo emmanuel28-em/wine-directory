@@ -8,6 +8,7 @@ import {
   ListUsersInGroupCommand,
   type UserType
 } from "@aws-sdk/client-cognito-identity-provider";
+import { buildPlatformOperations } from "./operations";
 
 const OWNER_GROUP = "lineup-platform-owners";
 const DEVELOPER_GROUP = "lineup-platform-developers";
@@ -129,7 +130,8 @@ export const handler = async (event: PlatformAccessEvent) => {
     const action = event.arguments?.action || "list";
     if (action === "list") {
       const users = currentRole === "platform_owner" ? await listPlatformUsers() : [];
-      return { success: true, error: "", currentRole, usersJson: JSON.stringify(users) };
+      const operations = currentRole === "platform_owner" ? await buildPlatformOperations() : { workspaces: [], totals: {} };
+      return { success: true, error: "", currentRole, usersJson: JSON.stringify(users), operationsJson: JSON.stringify(operations) };
     }
 
     if (currentRole !== "platform_owner") {
@@ -172,13 +174,14 @@ export const handler = async (event: PlatformAccessEvent) => {
     }
 
     const users = await listPlatformUsers();
-    return { success: true, error: "", currentRole, usersJson: JSON.stringify(users) };
+    return { success: true, error: "", currentRole, usersJson: JSON.stringify(users), operationsJson: "" };
   } catch (error) {
     return {
       success: false,
       error: error instanceof Error ? error.message : "Platform access could not be updated.",
       currentRole: "",
-      usersJson: "[]"
+      usersJson: "[]",
+      operationsJson: "{}"
     };
   }
 };

@@ -1,86 +1,38 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import { getDataClient } from "../lib/dataClient.js";
-
-function parseUsers(value) {
-  try {
-    return JSON.parse(value || "[]");
-  } catch {
-    return [];
-  }
-}
+import {
+  formatPlatformDate,
+  formatRelativeActivity,
+  loadPlatformOperations,
+  parsePlatformUsers,
+  signalTone,
+  subscriptionLabel
+} from "../lib/platformOperations.js";
 
 function roleLabel(role) {
   return role === "platform_owner" ? "Platform Owner" : "Platform Developer";
 }
 
-function restaurantRoleLabel(role) {
-  const labels = {
-    owner: "Account Owner",
-    admin: "Admin",
-    manager: "Manager",
-    staff: "Staff"
-  };
-  return labels[role] || "Team Member";
+function summaryNumber(value) {
+  return Number(value || 0).toLocaleString();
 }
 
-function formatDate(value) {
-  if (!value) return "Not set";
-  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
-}
-
-function isActiveStatus(status) {
-  return status === "active";
-}
-
-async function listAllRecords(model, options = {}) {
-  const records = [];
-  let nextToken;
-
-  do {
-    const result = await model.list({ ...options, limit: 1000, nextToken });
-    if (result.errors?.length) throw new Error(result.errors.map((error) => error.message).join(" "));
-    records.push(...(result.data || []));
-    nextToken = result.nextToken;
-  } while (nextToken);
-
-  return records;
-}
-
-function buildWorkspaceSummary({ restaurant, memberships, profilesById }) {
-  const workspaceMemberships = memberships.filter((membership) => membership.restaurantId === restaurant.id);
-  const activeMemberships = workspaceMemberships.filter((membership) => isActiveStatus(membership.status));
-  const ownerMembership =
-    activeMemberships.find((membership) => membership.role === "owner") ||
-    workspaceMemberships.find((membership) => membership.role === "owner");
-  const ownerProfile = ownerMembership ? profilesById.get(ownerMembership.userProfileId) : null;
-  const roleCounts = activeMemberships.reduce(
-    (counts, membership) => ({ ...counts, [membership.role]: (counts[membership.role] || 0) + 1 }),
-    { owner: 0, admin: 0, manager: 0, staff: 0 }
-  );
-
-  return {
-    restaurant,
-    accountHolderName: restaurant.primaryContactName || ownerProfile?.name || "No account holder set",
-    accountHolderEmail: restaurant.primaryContactEmail || restaurant.billingEmail || ownerProfile?.email || "No account email",
-    billingEmail: restaurant.billingEmail || restaurant.primaryContactEmail || ownerProfile?.email || "No billing email",
-    activeMemberCount: activeMemberships.length,
-    disabledMemberCount: workspaceMemberships.filter((membership) => membership.status === "disabled").length,
-    pendingMemberCount: workspaceMemberships.filter((membership) => membership.status === "invited").length,
-    roleCounts
-  };
+function attentionCopy(workspace) {
+  if (!workspace.attention?.length) return "No open signals";
+  return workspace.attention.map((signal) => signal.label).join(" · ");
 }
 
 export default function PlatformControlPage() {
   const authSession = useAuthSession();
   const workspace = useCurrentWorkspace();
-  const [restaurants, setRestaurants] = useState([]);
-  const [workspaceSummaries, setWorkspaceSummaries] = useState([]);
   const [platformUsers, setPlatformUsers] = useState([]);
+  const [operations, setOperations] = useState({ totals: {}, workspaces: [] });
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("platform_developer");
+  const [searchTerm, setSearchTerm] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -90,28 +42,9 @@ export default function PlatformControlPage() {
     setIsLoading(true);
     setMessage("");
     try {
-      const client = getDataClient();
-      const accessResult = await client.queries.getPlatformAccess();
-      if (accessResult.errors?.length) throw new Error(accessResult.errors.map((error) => error.message).join(" "));
-      if (!accessResult.data?.success) throw new Error(accessResult.data?.error || "Platform access could not be loaded.");
-      setPlatformUsers(parseUsers(accessResult.data.usersJson));
-
-      if (isPlatformOwner) {
-        const [restaurantRecords, membershipRecords, profileRecords] = await Promise.all([
-          listAllRecords(client.models.Restaurant),
-          listAllRecords(client.models.Membership),
-          listAllRecords(client.models.UserProfile)
-        ]);
-        const sortedRestaurants = restaurantRecords.sort((left, right) => left.name.localeCompare(right.name));
-        const profilesById = new Map(profileRecords.map((profile) => [profile.id, profile]));
-
-        setRestaurants(sortedRestaurants);
-        setWorkspaceSummaries(
-          sortedRestaurants.map((restaurant) =>
-            buildWorkspaceSummary({ restaurant, memberships: membershipRecords, profilesById })
-          )
-        );
-      }
+      const result = await loadPlatformOperations();
+      setPlatformUsers(result.users);
+      setOperations(result.operations);
     } catch (error) {
       setMessage(error.message || "Platform Control could not be loaded.");
     } finally {
@@ -134,7 +67,7 @@ export default function PlatformControlPage() {
       });
       if (result.errors?.length) throw new Error(result.errors.map((error) => error.message).join(" "));
       if (!result.data?.success) throw new Error(result.data?.error || "Platform access could not be updated.");
-      setPlatformUsers(parseUsers(result.data.usersJson));
+      setPlatformUsers(parsePlatformUsers(result.data.usersJson));
       setEmail("");
       setMessage(action === "grant" ? "Platform access updated. The person should sign out and back in." : "Platform access removed.");
     } catch (error) {
@@ -144,62 +77,180 @@ export default function PlatformControlPage() {
     }
   }
 
+  const filteredWorkspaces = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return operations.workspaces;
+    return operations.workspaces.filter((item) =>
+      [item.name, item.city, item.website, item.accountHolder?.name, item.accountHolder?.email, item.billingEmail]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(term)
+    );
+  }, [operations.workspaces, searchTerm]);
+
+  const needsAttention = filteredWorkspaces.filter((item) => item.attention?.length);
+  const activeCustomers = filteredWorkspaces.filter((item) => item.activeRecently);
+  const totals = operations.totals || {};
+
   return (
     <section className="page-section">
       <div className="dashboard-header">
         <div>
           <p className="eyebrow">Line Up Operations</p>
           <h1>Platform Control</h1>
-          <p>Manage company access and review workspace health without mixing company roles with restaurant roles.</p>
+          <p>See which restaurant accounts need attention, then open each account health page for the full timeline.</p>
         </div>
-        {workspace.isActiveMember ? <Link className="secondary-button" to="/manager">Restaurant Dashboard</Link> : null}
-        {isPlatformOwner ? <Link className="primary-button" to="/platform/support">Open Support Inbox</Link> : null}
+        <div className="form-button-row">
+          {workspace.isActiveMember ? <Link className="secondary-button" to="/manager">Restaurant Dashboard</Link> : null}
+          {isPlatformOwner ? <Link className="primary-button" to="/platform/support">Support Inbox</Link> : null}
+        </div>
       </div>
 
       {message ? <p className="form-message page-message">{message}</p> : null}
       {isLoading ? <div className="empty-panel">Loading Platform Control...</div> : null}
 
       {!isLoading ? (
-        <div className="dashboard-grid">
+        <div className="dashboard-grid platform-overview-grid">
           <article className="stat-card">
             <span>Your company role</span>
             <h2>{roleLabel(authSession.platformRole)}</h2>
-            <p>This role is separate from any role you hold inside a restaurant workspace.</p>
+            <p>This role is separate from restaurant owner, admin, manager, or staff access.</p>
+          </article>
+          <article className="stat-card platform-attention-stat">
+            <span>Need attention</span>
+            <h2>{isPlatformOwner ? summaryNumber(totals.needsAttention) : "Private"}</h2>
+            <p>Accounts with support, billing, import, trial, onboarding, or publishing signals.</p>
           </article>
           <article className="stat-card">
-            <span>Customer workspaces</span>
-            <h2>{isPlatformOwner ? restaurants.length : "Private"}</h2>
-            <p>{isPlatformOwner ? "Workspace metadata visible to Platform Owners." : "Developers do not receive customer access by default."}</p>
+            <span>Active customers</span>
+            <h2>{isPlatformOwner ? summaryNumber(totals.activeCustomers) : "Private"}</h2>
+            <p>Restaurants with recorded product activity in the last 14 days.</p>
           </article>
           <article className="stat-card">
-            <span>Active members</span>
-            <h2>{isPlatformOwner ? workspaceSummaries.reduce((total, summary) => total + summary.activeMemberCount, 0) : "Private"}</h2>
-            <p>{isPlatformOwner ? "Total active seats across all restaurant accounts." : "Only Platform Owners can review customer seat counts."}</p>
+            <span>Total workspaces</span>
+            <h2>{isPlatformOwner ? summaryNumber(totals.restaurants) : "Private"}</h2>
+            <p>Customer accounts visible only to Platform Owners.</p>
           </article>
-          <article className="stat-card">
-            <span>Recommended testing</span>
-            <h2>Dedicated Test Workspace</h2>
-            <p>Invite developers into a non-customer restaurant workspace when they need to test staff or manager flows.</p>
-          </article>
-          {isPlatformOwner ? (
-            <article className="stat-card platform-reminder-card">
-              <span>Owner Reminder</span>
-              <h2>Stripe cleanup</h2>
-              <p>Live payments are connected. Rotate the Stripe secret key after today's payment test, then finish the Stripe webhook secret so subscription status updates automatically.</p>
-            </article>
-          ) : null}
         </div>
       ) : null}
 
       {isPlatformOwner && !isLoading ? (
         <>
-          <section className="setup-steps">
-            <div className="section-heading compact-heading">
-              <p className="eyebrow">Company Access</p>
-              <h2>Platform owners and developers</h2>
-              <p>The person must first create a Line Up login. Never share your password or AWS root login.</p>
+          <section className="platform-signal-strip" aria-label="Operational signals">
+            <article>
+              <span>Stuck onboarding</span>
+              <strong>{summaryNumber(totals.stuckOnboarding)}</strong>
+            </article>
+            <article>
+              <span>Failed imports</span>
+              <strong>{summaryNumber(totals.failedImports)}</strong>
+            </article>
+            <article>
+              <span>Trials ending</span>
+              <strong>{summaryNumber(totals.trialsEnding)}</strong>
+            </article>
+            <article>
+              <span>Payment problems</span>
+              <strong>{summaryNumber(totals.paymentProblems)}</strong>
+            </article>
+            <article>
+              <span>Stale publishing</span>
+              <strong>{summaryNumber(totals.stalePublishing)}</strong>
+            </article>
+            <article>
+              <span>Urgent support</span>
+              <strong>{summaryNumber(totals.urgentSupport)}</strong>
+            </article>
+          </section>
+
+          <section className="platform-ops-layout">
+            <div className="platform-ops-main">
+              <div className="section-heading compact-heading">
+                <p className="eyebrow">Exception Queue</p>
+                <h2>Restaurants needing your attention</h2>
+                <p>Start here when you only have a few minutes to manage Line Up.</p>
+              </div>
+
+              {needsAttention.length === 0 ? (
+                <div className="empty-panel">No restaurant accounts need attention right now.</div>
+              ) : (
+                <div className="platform-attention-list">
+                  {needsAttention.map((account) => (
+                    <Link className="platform-attention-card" to={`/platform/restaurants/${account.id}`} key={account.id}>
+                      <div>
+                        <h3>{account.name}</h3>
+                        <p>{attentionCopy(account)}</p>
+                      </div>
+                      <div className="platform-attention-pills">
+                        {account.attention.slice(0, 3).map((signal) => (
+                          <span className={`platform-signal-pill signal-${signalTone(signal.code)}`} key={`${account.id}-${signal.code}`}>
+                            {signal.label}
+                          </span>
+                        ))}
+                      </div>
+                      <span className="platform-row-arrow">Open account</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
 
+            <aside className="platform-ops-side">
+              <div className="section-heading compact-heading">
+                <p className="eyebrow">Active This Month</p>
+                <h2>Customer pulse</h2>
+              </div>
+              <div className="platform-pulse-list">
+                {activeCustomers.slice(0, 6).map((account) => (
+                  <Link to={`/platform/restaurants/${account.id}`} key={account.id}>
+                    <strong>{account.name}</strong>
+                    <span>{formatRelativeActivity(account.lastActivityAt)}</span>
+                  </Link>
+                ))}
+                {activeCustomers.length === 0 ? <p>No recent customer activity recorded yet.</p> : null}
+              </div>
+            </aside>
+          </section>
+
+          <section className="setup-steps platform-accounts-section">
+            <div className="platform-section-toolbar">
+              <div className="section-heading compact-heading">
+                <p className="eyebrow">Accounts</p>
+                <h2>Restaurant health overview</h2>
+                <p>Training content stays tenant-protected. This view shows account metadata, usage signals, and support health.</p>
+              </div>
+              <label className="compact-search">
+                <span>Search accounts</span>
+                <input
+                  type="search"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder="Restaurant, owner, email..."
+                />
+              </label>
+            </div>
+
+            <div className="platform-account-table">
+              {filteredWorkspaces.map((account) => (
+                <Link className="platform-account-row" to={`/platform/restaurants/${account.id}`} key={account.id}>
+                  <div>
+                    <h4>{account.name}</h4>
+                    <p>{account.accountHolder?.name || "No owner set"} · {account.accountHolder?.email || "No email set"}</p>
+                  </div>
+                  <span>{subscriptionLabel(account.subscriptionStatus)}</span>
+                  <span>{account.activeMembers} active users</span>
+                  <span>{account.publishedPages} published pages</span>
+                  <span>{account.staffCompletionRate}% staff completion</span>
+                  <span>{formatRelativeActivity(account.lastActivityAt)}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          <details className="setup-steps platform-control-details">
+            <summary>Platform access management</summary>
+            <p>The person must first create a Line Up login. Never share your password or AWS root login.</p>
             <form
               className="form-card platform-access-form"
               onSubmit={(event) => {
@@ -219,7 +270,7 @@ export default function PlatformControlPage() {
                 </select>
               </label>
               <button className="primary-button" type="submit" disabled={isSaving}>
-                {isSaving ? "Updating..." : "Grant Platform Access"}
+                {isSaving ? "Updating..." : "Grant Access"}
               </button>
             </form>
 
@@ -241,56 +292,11 @@ export default function PlatformControlPage() {
                 </article>
               ))}
             </div>
-          </section>
+          </details>
 
-          <section className="setup-steps">
-            <div className="section-heading compact-heading">
-              <p className="eyebrow">Workspace Overview</p>
-              <h2>Restaurant accounts</h2>
-              <p>Review account holders, billing status, and active seats. Training libraries remain tenant-protected.</p>
-            </div>
-            <div className="platform-account-grid">
-              {workspaceSummaries.map((summary) => (
-                <article className="platform-account-card" key={summary.restaurant.id}>
-                  <div className="platform-account-heading">
-                    <div>
-                      <h4>{summary.restaurant.name}</h4>
-                      <p>{summary.restaurant.website || summary.restaurant.city || "No website or city set"}</p>
-                    </div>
-                    <div className="platform-workspace-status">
-                      <strong>{summary.restaurant.subscriptionStatus || summary.restaurant.status || "trial"}</strong>
-                      <span>{summary.restaurant.plan || "No plan selected"}</span>
-                    </div>
-                  </div>
-
-                  <div className="platform-account-owner">
-                    <span>Account holder</span>
-                    <strong>{summary.accountHolderName}</strong>
-                    <small>{summary.accountHolderEmail}</small>
-                  </div>
-
-                  <div className="platform-account-meta">
-                    <span>Billing email: {summary.billingEmail}</span>
-                    <span>Trial ends: {formatDate(summary.restaurant.trialEndsAt)}</span>
-                  </div>
-
-                  <div className="platform-account-stats">
-                    <span><strong>{summary.activeMemberCount}</strong> active</span>
-                    <span><strong>{summary.roleCounts.owner}</strong> {restaurantRoleLabel("owner")}</span>
-                    <span><strong>{summary.roleCounts.admin + summary.roleCounts.manager}</strong> leaders</span>
-                    <span><strong>{summary.roleCounts.staff}</strong> staff</span>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <section className="setup-steps">
-            <div className="section-heading compact-heading">
-              <p className="eyebrow">Future AI Operations</p>
-              <h2>Business helper map</h2>
-              <p>These are not connected yet. This is the control-room layout for later AI agents that help you run Line Up.</p>
-            </div>
+          <details className="setup-steps platform-control-details">
+            <summary>Future AI operations map</summary>
+            <p>These are not connected yet. This is the control-room layout for later AI agents that help you run Line Up.</p>
             <div className="platform-ai-grid">
               <article className="platform-ai-card">
                 <h4>Customer Support AI</h4>
@@ -309,7 +315,9 @@ export default function PlatformControlPage() {
                 <p>Surface which restaurants are active, stuck, growing, or likely to need your help.</p>
               </article>
             </div>
-          </section>
+          </details>
+
+          <p className="platform-generated-note">Updated {formatPlatformDate(operations.generatedAt, "just now")}. Login activity is currently estimated from product actions until auth event tracking is added.</p>
         </>
       ) : null}
 

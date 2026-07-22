@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import { listCollectionsForRestaurant, saveCollection } from "../lib/collections.js";
 import { parseBulkTrainingMaterial } from "../lib/bulkTrainingImport.js";
+import { finishImportRun, startImportRun } from "../lib/importRuns.js";
 import { listTrainingDocsForRestaurant, saveTrainingDoc } from "../lib/trainingDocs.js";
 
 function updateDraftAtIndex(drafts, index, field, value) {
@@ -23,6 +24,7 @@ export default function ManagerImportPage() {
   const [isWorking, setIsWorking] = useState(false);
   const [message, setMessage] = useState("");
   const [importSummary, setImportSummary] = useState(null);
+  const [sourceDetails, setSourceDetails] = useState({ type: "paste", name: "Pasted training material" });
 
   useEffect(() => {
     async function loadCollections() {
@@ -81,6 +83,7 @@ export default function ManagerImportPage() {
 
     try {
       setSourceText(await file.text());
+      setSourceDetails({ type: "file", name: file.name });
       setMessage(`${file.name} is ready. Select “Find training pages” to review what Line Up finds.`);
     } catch {
       setMessage("Line Up could not read that file. Try pasting its text instead.");
@@ -105,8 +108,23 @@ export default function ManagerImportPage() {
     let createdCount = 0;
     let publishedCreatedCount = 0;
     let skippedCount = 0;
+    let importRunId = "";
 
     try {
+      try {
+        const importRun = await startImportRun({
+          restaurantId: workspace.restaurant.id,
+          userProfileId: workspace.userProfile.id,
+          sourceType: sourceDetails.type,
+          sourceName: sourceDetails.name,
+          detectedCount: drafts.length,
+          selectedCount
+        });
+        importRunId = importRun.id;
+      } catch {
+        // Operational history must never block a manager from saving training.
+      }
+
       const [existingDocs, latestCollections] = await Promise.all([
         listTrainingDocsForRestaurant(workspace.restaurant.id),
         listCollectionsForRestaurant(workspace.restaurant.id)
@@ -170,6 +188,7 @@ export default function ManagerImportPage() {
       setDrafts([]);
       setSourceText("");
       setImportSummary({ createdCount, skippedCount });
+      await finishImportRun({ importRunId, status: "completed", createdCount, skippedCount }).catch(() => null);
       const draftCount = createdCount - publishedCreatedCount;
       setMessage(
         `${createdCount} training page${createdCount === 1 ? " was" : "s were"} saved. ${publishedCreatedCount} published and ${draftCount} kept as ${draftCount === 1 ? "a draft" : "drafts"}.${
@@ -177,6 +196,13 @@ export default function ManagerImportPage() {
         } Review the new pages, add photos, then publish anything that should be visible to staff.`
       );
     } catch (error) {
+      await finishImportRun({
+        importRunId,
+        status: "failed",
+        createdCount,
+        skippedCount,
+        errorMessage: error.message || "Import stopped before completion."
+      }).catch(() => null);
       setMessage(
         `${createdCount} page${createdCount === 1 ? " was" : "s were"} created before the import stopped. ${error.message || "The remaining pages could not be imported."}`
       );

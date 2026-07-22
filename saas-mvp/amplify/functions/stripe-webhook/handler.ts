@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "crypto";
-import { DynamoDBClient, ScanCommand, UpdateItemCommand, type AttributeValue } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, PutItemCommand, ScanCommand, UpdateItemCommand, type AttributeValue } from "@aws-sdk/client-dynamodb";
+import { randomUUID } from "crypto";
 
 type LambdaUrlEvent = {
   body?: string;
@@ -8,6 +9,8 @@ type LambdaUrlEvent = {
 };
 
 type StripeEvent = {
+  id?: string;
+  created?: number;
   type: string;
   data: {
     object: Record<string, any>;
@@ -237,6 +240,33 @@ async function updateRestaurantBilling(restaurantId: string, fields: ReturnType<
   );
 }
 
+async function recordBillingEvent(restaurantId: string, stripeEvent: StripeEvent, object: Record<string, any>) {
+  const tableName = process.env.BILLING_EVENT_TABLE_NAME || "";
+  if (!tableName) return;
+
+  const now = new Date().toISOString();
+  const amount = Number(object.amount_paid ?? object.amount_due ?? object.amount_total ?? object.total ?? 0);
+  const fields = getBillingFields(stripeEvent.type, object);
+
+  await dynamo.send(new PutItemCommand({
+    TableName: tableName,
+    Item: {
+      id: { S: stripeEvent.id || randomUUID() },
+      __typename: { S: "BillingEvent" },
+      restaurantId: { S: restaurantId },
+      stripeEventId: { S: stripeEvent.id || "unknown" },
+      eventType: { S: stripeEvent.type },
+      status: { S: fields.subscriptionStatus || object.status || "received" },
+      amount: { N: String(Number.isFinite(amount) ? Math.round(amount) : 0) },
+      currency: { S: String(object.currency || "usd") },
+      description: { S: String(object.description || object.billing_reason || stripeEvent.type) },
+      occurredAt: { S: stripeEvent.created ? new Date(stripeEvent.created * 1000).toISOString() : now },
+      createdAt: { S: now },
+      updatedAt: { S: now }
+    }
+  }));
+}
+
 export const handler = async (event: LambdaUrlEvent) => {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
   const signatureHeader = getHeader(event.headers, "stripe-signature");
@@ -285,6 +315,7 @@ export const handler = async (event: LambdaUrlEvent) => {
   }
 
   await updateRestaurantBilling(restaurantId, getBillingFields(stripeEvent.type, stripeObject));
+  await recordBillingEvent(restaurantId, stripeEvent, stripeObject);
 
   return jsonResponse(200, {
     received: true

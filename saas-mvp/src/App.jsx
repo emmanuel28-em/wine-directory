@@ -18,6 +18,7 @@ import ManagerQuizzesPage from "./pages/ManagerQuizzesPage.jsx";
 import ManagerStaffProgressPage from "./pages/ManagerStaffProgressPage.jsx";
 import MyProgressPage from "./pages/MyProgressPage.jsx";
 import PlatformControlPage from "./pages/PlatformControlPage.jsx";
+import PlatformRestaurantHealthPage from "./pages/PlatformRestaurantHealthPage.jsx";
 import PlatformSupportPage from "./pages/PlatformSupportPage.jsx";
 import ReportIssuePage from "./pages/ReportIssuePage.jsx";
 import StaffDashboard from "./pages/StaffDashboard.jsx";
@@ -50,6 +51,14 @@ export default function App() {
           element={
             <PlatformRoute ownerOnly>
               <PlatformSupportPage />
+            </PlatformRoute>
+          }
+        />
+        <Route
+          path="/platform/restaurants/:restaurantId"
+          element={
+            <PlatformRoute ownerOnly>
+              <PlatformRestaurantHealthPage />
             </PlatformRoute>
           }
         />
