@@ -59,6 +59,7 @@ const schema = a.schema({
     lastName: a.string(),
     role: a.string(),
     expiresAt: a.datetime(),
+    isOpenInvite: a.boolean(),
     userProfileId: a.id(),
     membershipId: a.id()
   }),
@@ -260,6 +261,7 @@ const schema = a.schema({
       emailSendStatus: a.enum(["notSent", "sent", "failed"]),
       emailSendError: a.string(),
       lastEmailAttemptAt: a.datetime(),
+      isOpenInvite: a.boolean(),
       tenantGroup: a.string(),
       managerGroup: a.string()
     })

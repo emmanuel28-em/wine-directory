@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
-import { createInvite, createTeamMemberLoginInvite, listInvitesForRestaurant, makeInviteLink, sendLoginInviteForPendingInvite } from "../lib/invites.js";
+import {
+  createInvite,
+  createOpenStaffJoinLink,
+  createTeamMemberLoginInvite,
+  listInvitesForRestaurant,
+  makeInviteLink,
+  sendLoginInviteForPendingInvite
+} from "../lib/invites.js";
 import { canInviteRole } from "../lib/permissions.js";
 import { revokeInvite } from "../lib/settings.js";
 
@@ -128,6 +135,7 @@ export default function InviteTeamPage() {
   const [bulkResults, setBulkResults] = useState([]);
   const [invites, setInvites] = useState([]);
   const [createdInvite, setCreatedInvite] = useState(null);
+  const [staffJoinInvite, setStaffJoinInvite] = useState(null);
   const [isWorking, setIsWorking] = useState(false);
   const [message, setMessage] = useState("");
   const allowedRoles = useMemo(() => getAllowedRoles(workspace.role), [workspace.role]);
@@ -138,7 +146,9 @@ export default function InviteTeamPage() {
     }
 
     try {
-      setInvites(await listInvitesForRestaurant(workspace.restaurant.id));
+      const nextInvites = await listInvitesForRestaurant(workspace.restaurant.id);
+      setInvites(nextInvites);
+      setStaffJoinInvite(nextInvites.find((item) => item.isOpenInvite && item.status === "pending") || null);
     } catch (error) {
       setMessage(error.message || "Could not load invites.");
     }
@@ -205,6 +215,26 @@ export default function InviteTeamPage() {
       } catch (fallbackError) {
         setMessage(fallbackError.message || error.message || "Could not create invite.");
       }
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
+  async function createStaffJoinLink() {
+    setIsWorking(true);
+    setMessage("");
+
+    try {
+      const nextInvite = await createOpenStaffJoinLink({
+        restaurantId: workspace.restaurant.id,
+        invitedBy: workspace.userProfile.id,
+        currentRole: workspace.role
+      });
+      setStaffJoinInvite(nextInvite);
+      await loadInvites();
+      setMessage("Staff join link created. Copy it into Sling or your team group chat.");
+    } catch (error) {
+      setMessage(error.message || "Could not create a staff join link.");
     } finally {
       setIsWorking(false);
     }
@@ -380,6 +410,34 @@ export default function InviteTeamPage() {
       {message ? <p className="form-message page-message">{message}</p> : null}
 
       <div className="content-manager-grid">
+        <section className="form-card">
+          <h2>Staff Join Link</h2>
+          <p className="helper-text">
+            Best for Sling or a team group chat. Anyone with this link can create an account and join this restaurant as Staff.
+          </p>
+
+          {staffJoinInvite ? (
+            <>
+              <code className="invite-link">{makeInviteLink(staffJoinInvite.inviteToken)}</code>
+              <div className="form-button-row">
+                <button className="primary-button" type="button" onClick={() => copyInviteLink(staffJoinInvite)}>
+                  Copy Staff Join Link
+                </button>
+                <button className="secondary-button" type="button" onClick={createStaffJoinLink} disabled={isWorking}>
+                  Create New Link
+                </button>
+              </div>
+              <p className="helper-text">
+                Use `Create New Link` if the old one was posted somewhere you no longer trust. Then revoke the old link below.
+              </p>
+            </>
+          ) : (
+            <button className="primary-button full-width" type="button" onClick={createStaffJoinLink} disabled={isWorking || !allowedRoles.includes("staff")}>
+              Create Staff Join Link
+            </button>
+          )}
+        </section>
+
         <form className="form-card" onSubmit={submitBulkInvites}>
           <h2>Bulk Invite Employees</h2>
           <p className="helper-text">
@@ -536,22 +594,27 @@ export default function InviteTeamPage() {
                   <article className="operator-list-card" key={item.id}>
                     <div>
                       <span className="type-pill">{roleLabels[item.role] || item.role}</span>
+                      {item.isOpenInvite ? <span className="status-badge status-pending">Staff Join Link</span> : null}
                       <span className={`status-badge status-${item.status || "pending"}`}>{item.status || "pending"}</span>
-                      <span className={`status-badge status-${item.emailSendStatus || "notSent"}`}>
-                        Email: {emailStatusLabels[item.emailSendStatus] || item.emailSendStatus || "Not sent"}
-                      </span>
-                      <h4>{`${item.firstName || ""} ${item.lastName || ""}`.trim() || item.email}</h4>
-                      <p>{item.email}</p>
+                      {!item.isOpenInvite ? (
+                        <span className={`status-badge status-${item.emailSendStatus || "notSent"}`}>
+                          Email: {emailStatusLabels[item.emailSendStatus] || item.emailSendStatus || "Not sent"}
+                        </span>
+                      ) : null}
+                      <h4>{item.isOpenInvite ? "Reusable Staff Join Link" : `${item.firstName || ""} ${item.lastName || ""}`.trim() || item.email}</h4>
+                      <p>{item.isOpenInvite ? "Share this link in Sling or your team group chat." : item.email}</p>
                       <p>Created: {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "Not set"}</p>
                       <p>Expires: {item.expiresAt ? new Date(item.expiresAt).toLocaleDateString() : "Not set"}</p>
-                      {item.emailSendError ? <p>Email note: {item.emailSendError}</p> : null}
+                      {!item.isOpenInvite && item.emailSendError ? <p>Email note: {item.emailSendError}</p> : null}
                     </div>
                     <div className="card-actions">
                       {item.status === "pending" ? (
                         <>
-                          <button className="secondary-button" type="button" onClick={() => resendInvite(item)} disabled={isWorking}>
-                            Send Login Email
-                          </button>
+                          {!item.isOpenInvite ? (
+                            <button className="secondary-button" type="button" onClick={() => resendInvite(item)} disabled={isWorking}>
+                              Send Login Email
+                            </button>
+                          ) : null}
                           <button className="secondary-button" type="button" onClick={() => copyInviteLink(item)}>
                             Copy Link
                           </button>

@@ -66,6 +66,41 @@ export async function createInvite({ restaurantId, invite, invitedBy, currentRol
   );
 }
 
+export async function createOpenStaffJoinLink({ restaurantId, invitedBy, currentRole }) {
+  requireRestaurantId(restaurantId);
+
+  if (!canInviteRole(currentRole, "staff")) {
+    throw new Error("You do not have permission to create a staff join link.");
+  }
+
+  const dataClient = getDataClient();
+  const inviteToken = makeInviteToken();
+  const date = new Date();
+  date.setDate(date.getDate() + 30);
+
+  return assertNoErrors(
+    await dataClient.models.Invite.create({
+      restaurantId,
+      ...getWorkspaceGroups(restaurantId),
+      email: `staff-join-${restaurantId}@lineuptraining.com`,
+      firstName: "Staff",
+      lastName: "Join Link",
+      role: "staff",
+      status: "pending",
+      invitedBy,
+      inviteToken,
+      note: "Open staff join link for this restaurant workspace.",
+      expiresAt: date.toISOString(),
+      emailSendStatus: "notSent",
+      emailSendError: "",
+      emailSentAt: null,
+      lastEmailAttemptAt: null,
+      isOpenInvite: true
+    }),
+    "Staff join link was not created."
+  );
+}
+
 export async function createTeamMemberLoginInvite({ restaurantId, invite, currentRole }) {
   requireRestaurantId(restaurantId);
 
@@ -145,7 +180,8 @@ export async function getPendingInviteByToken(token) {
     lastName: result.data.lastName,
     role: result.data.role,
     status: result.data.status,
-    expiresAt: result.data.expiresAt
+    expiresAt: result.data.expiresAt,
+    isOpenInvite: result.data.isOpenInvite
   };
 
   return {

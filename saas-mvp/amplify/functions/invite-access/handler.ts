@@ -203,13 +203,14 @@ export const handler = async (event: InviteAccessEvent) => {
     const invite = await scanFirst(env("INVITE_TABLE_NAME"), "inviteToken = :token", { ":token": { S: token } });
     if (!invite) throw new Error("This invite link could not be found.");
     if (invite.status?.S !== "pending") throw new Error(`This invite is ${invite.status?.S || "unavailable"}.`);
+    const isOpenInvite = invite.isOpenInvite?.BOOL === true;
 
     if (invite.expiresAt?.S && new Date(invite.expiresAt.S) < new Date()) {
       await dynamo.send(new UpdateItemCommand({ TableName: env("INVITE_TABLE_NAME"), Key: { id: invite.id }, UpdateExpression: "SET #status = :expired", ExpressionAttributeNames: { "#status": "status" }, ExpressionAttributeValues: { ":expired": { S: "expired" } } }));
       throw new Error("This invite has expired. Ask your manager for a new invite.");
     }
 
-    if ((invite.email?.S || "").toLowerCase() !== identity.email) {
+    if (!isOpenInvite && (invite.email?.S || "").toLowerCase() !== identity.email) {
       throw new Error(`This invite was sent to ${invite.email?.S}. Sign in with that email address.`);
     }
 
@@ -228,6 +229,9 @@ export const handler = async (event: InviteAccessEvent) => {
         )
       : null;
     const invitedRole = invite.role?.S || "staff";
+    if (isOpenInvite && invitedRole !== "staff") {
+      throw new Error("Open join links can only grant Staff access.");
+    }
     if (!inviterMembership || inviterMembership.status?.S !== "active" || !canInviteRole(inviterMembership.role?.S || "staff", invitedRole)) {
       throw new Error("The person who created this invite is not allowed to grant that role. Ask an Admin or Account Owner for a new invite.");
     }
@@ -238,11 +242,12 @@ export const handler = async (event: InviteAccessEvent) => {
       status: "pending",
       restaurantId,
       restaurantName: restaurant.Item.name?.S || "Restaurant",
-      email: invite.email?.S || "",
+      email: isOpenInvite ? identity.email : invite.email?.S || "",
       firstName: invite.firstName?.S || "",
       lastName: invite.lastName?.S || "",
       role: invitedRole,
-      expiresAt: invite.expiresAt?.S || ""
+      expiresAt: invite.expiresAt?.S || "",
+      isOpenInvite
     };
 
     if (fieldName === "getInviteDetails") return details;
@@ -286,9 +291,11 @@ export const handler = async (event: InviteAccessEvent) => {
       await cognito.send(new AdminAddUserToGroupCommand({ UserPoolId: poolId, Username: identity.email, GroupName: managerGroup }));
     }
 
-    await dynamo.send(new UpdateItemCommand({ TableName: env("INVITE_TABLE_NAME"), Key: { id: invite.id }, UpdateExpression: "SET #status = :accepted, updatedAt = :now", ExpressionAttributeNames: { "#status": "status" }, ExpressionAttributeValues: { ":accepted": { S: "accepted" }, ":now": { S: now } } }));
+    if (!isOpenInvite) {
+      await dynamo.send(new UpdateItemCommand({ TableName: env("INVITE_TABLE_NAME"), Key: { id: invite.id }, UpdateExpression: "SET #status = :accepted, updatedAt = :now", ExpressionAttributeNames: { "#status": "status" }, ExpressionAttributeValues: { ":accepted": { S: "accepted" }, ":now": { S: now } } }));
+    }
 
-    return { ...details, status: "accepted", userProfileId, membershipId };
+    return { ...details, status: isOpenInvite ? "pending" : "accepted", userProfileId, membershipId };
   } catch (error) {
     return failure(error);
   }

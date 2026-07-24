@@ -198,17 +198,18 @@ export default function AcceptInvitePage() {
   const inviteEmail = inviteState.invite?.email || form.email;
   const emailMismatch =
     authSession.status === "authenticated" &&
+    !inviteState.invite?.isOpenInvite &&
     inviteState.invite?.email &&
     signedInEmail.toLowerCase() !== inviteState.invite.email.toLowerCase();
 
   return (
     <section className="page-section narrow-page">
       <div className="section-heading">
-        <p className="eyebrow">Accept Invite</p>
-        <h1>Join your restaurant on Line Up</h1>
-        <p>
-          Sign in or create an account with the email that received the invitation. Line Up will connect you to the correct restaurant.
-        </p>
+          <p className="eyebrow">Accept Invite</p>
+          <h1>Join your restaurant on Line Up</h1>
+          <p>
+          Sign in or create an account. Line Up will connect you to the correct restaurant.
+          </p>
       </div>
 
       {message ? <p className="form-message page-message">{message}</p> : null}
@@ -282,7 +283,8 @@ export default function AcceptInvitePage() {
                 You were invited as <strong>{roleLabels[inviteState.invite.role]}</strong>.
               </p>
               <p>
-                Invite email: <strong>{inviteEmail}</strong>
+                {inviteState.invite.isOpenInvite ? "Signed in as: " : "Invite email: "}
+                <strong>{inviteEmail}</strong>
               </p>
 
               {emailMismatch ? (

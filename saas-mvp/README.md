@@ -580,6 +580,18 @@ server@example.com
 6. Click `Send Bulk Invites`.
 7. Confirm the results list shows which accounts were emailed, updated, or need manual follow-up.
 8. If any row creates a fallback link, use `Copy Fallback Links` and send those links manually.
+
+Staff join link:
+
+1. Sign in as an Account Owner, Admin, or Manager.
+2. Go to `/manager/invite-team`.
+3. Use `Staff Join Link`.
+4. Click `Create Staff Join Link`.
+5. Copy the link into Sling, a team group chat, or a printed onboarding note.
+6. Staff members use that link to create their own account and join the restaurant as Staff.
+7. Revoke the link and create a new one if it gets shared somewhere it should not be.
+
+For production email delivery, use SES once the sending account is approved. Porkbun free email forwarding is useful for receiving messages at addresses such as `support@lineuptraining.com`, but it does not replace a transactional sender for automated app invites.
 2. Go to `/manager/invite-team`.
 3. Confirm only `Staff` is available as the invite role.
 4. Create a staff invite and accept it with the invited email.
