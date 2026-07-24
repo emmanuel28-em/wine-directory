@@ -559,6 +559,28 @@ Admin/Manager invites Staff:
 
 1. Sign in as an Admin or Manager.
 2. Go to `/manager/invite-team`.
+3. Choose `Staff`.
+4. Confirm Admins and Managers can invite Staff.
+5. Confirm Staff users cannot access `/manager/invite-team`.
+
+Bulk invite employees:
+
+1. Sign in as an Account Owner, Admin, or Manager.
+2. Go to `/manager/invite-team`.
+3. Use `Bulk Invite Employees`.
+4. Paste one employee per line, for example:
+
+```text
+Hannah Smith hannah@restaurant.com
+Joe Lee joe@restaurant.com
+server@example.com
+```
+
+5. Choose the role for everyone in that pasted list.
+6. Click `Send Bulk Invites`.
+7. Confirm the results list shows which accounts were emailed, updated, or need manual follow-up.
+8. If any row creates a fallback link, use `Copy Fallback Links` and send those links manually.
+2. Go to `/manager/invite-team`.
 3. Confirm only `Staff` is available as the invite role.
 4. Create a staff invite and accept it with the invited email.
 

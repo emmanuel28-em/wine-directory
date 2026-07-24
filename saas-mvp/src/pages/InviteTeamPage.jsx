@@ -24,6 +24,14 @@ const emailStatusLabels = {
   failed: "Failed"
 };
 
+const emptyBulkInvite = {
+  role: "staff",
+  note: "",
+  people: ""
+};
+
+const emailPattern = /[^\s,;<>]+@[^\s,;<>]+\.[^\s,;<>]+/;
+
 function getAllowedRoles(currentRole) {
   return ["admin", "manager", "staff"].filter((role) => canInviteRole(currentRole, role));
 }
@@ -40,9 +48,84 @@ function loginInviteMessage(result) {
   return `Account invite sent to ${result.email}. They will receive a temporary password by email, then create their permanent password.`;
 }
 
+function parseNameParts(rawLine, email) {
+  const withoutEmail = rawLine
+    .replace(email, "")
+    .replace(/[<>]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!withoutEmail) {
+    const emailName = email.split("@")[0].replace(/[._-]+/g, " ").trim();
+    const [firstName = "Team", ...rest] = emailName.split(" ").filter(Boolean);
+    return {
+      firstName,
+      lastName: rest.join(" ") || "Member"
+    };
+  }
+
+  const commaParts = withoutEmail.split(",").map((part) => part.trim()).filter(Boolean);
+  if (commaParts.length >= 2) {
+    return {
+      firstName: commaParts[0],
+      lastName: commaParts.slice(1).join(" ")
+    };
+  }
+
+  const [firstName = "Team", ...rest] = withoutEmail.split(" ").filter(Boolean);
+  return {
+    firstName,
+    lastName: rest.join(" ") || "Member"
+  };
+}
+
+function parseBulkInviteRows(text, role, note) {
+  const seenEmails = new Set();
+
+  return text
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line, index) => {
+      const email = line.match(emailPattern)?.[0]?.toLowerCase();
+
+      if (!email) {
+        return {
+          line,
+          rowNumber: index + 1,
+          status: "invalid",
+          error: "No email address found."
+        };
+      }
+
+      if (seenEmails.has(email)) {
+        return {
+          line,
+          email,
+          rowNumber: index + 1,
+          status: "invalid",
+          error: "Duplicate email in this list."
+        };
+      }
+
+      seenEmails.add(email);
+      const { firstName, lastName } = parseNameParts(line, email);
+
+      return {
+        firstName,
+        lastName,
+        email,
+        role,
+        note
+      };
+    });
+}
+
 export default function InviteTeamPage() {
   const workspace = useCurrentWorkspace();
   const [invite, setInvite] = useState(emptyInvite);
+  const [bulkInvite, setBulkInvite] = useState(emptyBulkInvite);
+  const [bulkResults, setBulkResults] = useState([]);
   const [invites, setInvites] = useState([]);
   const [createdInvite, setCreatedInvite] = useState(null);
   const [isWorking, setIsWorking] = useState(false);
@@ -68,6 +151,14 @@ export default function InviteTeamPage() {
   function updateInvite(event) {
     const { name, value } = event.target;
     setInvite((currentInvite) => ({
+      ...currentInvite,
+      [name]: value
+    }));
+  }
+
+  function updateBulkInvite(event) {
+    const { name, value } = event.target;
+    setBulkInvite((currentInvite) => ({
       ...currentInvite,
       [name]: value
     }));
@@ -117,6 +208,101 @@ export default function InviteTeamPage() {
     } finally {
       setIsWorking(false);
     }
+  }
+
+  async function submitBulkInvites(event) {
+    event.preventDefault();
+
+    if (!allowedRoles.includes(bulkInvite.role)) {
+      setMessage("You do not have permission to invite that role.");
+      return;
+    }
+
+    const parsedRows = parseBulkInviteRows(bulkInvite.people, bulkInvite.role, bulkInvite.note.trim());
+    const validRows = parsedRows.filter((row) => row.status !== "invalid");
+
+    if (!validRows.length) {
+      setBulkResults(parsedRows);
+      setMessage("Paste at least one valid employee email.");
+      return;
+    }
+
+    setIsWorking(true);
+    setMessage(`Sending ${validRows.length} invite${validRows.length === 1 ? "" : "s"}...`);
+    setCreatedInvite(null);
+    setBulkResults(parsedRows);
+
+    const results = [];
+
+    for (const row of parsedRows) {
+      if (row.status === "invalid") {
+        results.push(row);
+        setBulkResults([...results]);
+        continue;
+      }
+
+      try {
+        const loginInvite = await createTeamMemberLoginInvite({
+          restaurantId: workspace.restaurant.id,
+          invite: row,
+          currentRole: workspace.role
+        });
+
+        results.push({
+          ...row,
+          status: loginInvite.status || "emailSent",
+          message: loginInviteMessage(loginInvite)
+        });
+      } catch (error) {
+        try {
+          const fallbackInvite = await createInvite({
+            restaurantId: workspace.restaurant.id,
+            invite: row,
+            invitedBy: workspace.userProfile.id,
+            currentRole: workspace.role
+          });
+
+          results.push({
+            ...row,
+            status: "manualLink",
+            message: "Login email failed. Copy and send this secure invite link manually.",
+            inviteLink: makeInviteLink(fallbackInvite.inviteToken)
+          });
+        } catch (fallbackError) {
+          results.push({
+            ...row,
+            status: "failed",
+            error: fallbackError.message || error.message || "Could not create invite."
+          });
+        }
+      }
+
+      setBulkResults([...results]);
+    }
+
+    await loadInvites();
+
+    const sentCount = results.filter((result) => ["emailSent", "emailResent", "existingUser"].includes(result.status)).length;
+    const fallbackCount = results.filter((result) => result.status === "manualLink").length;
+    const failedCount = results.filter((result) => ["failed", "invalid"].includes(result.status)).length;
+
+    setMessage(`Bulk invite finished: ${sentCount} sent/updated, ${fallbackCount} manual fallback, ${failedCount} need review.`);
+    setIsWorking(false);
+  }
+
+  async function copyFallbackLinks() {
+    const links = bulkResults
+      .filter((result) => result.inviteLink)
+      .map((result) => `${result.firstName} ${result.lastName} <${result.email}>: ${result.inviteLink}`)
+      .join("\n");
+
+    if (!links) {
+      setMessage("There are no fallback links to copy.");
+      return;
+    }
+
+    await navigator.clipboard.writeText(links);
+    setMessage("Fallback invite links copied.");
   }
 
   async function copyInviteLink(inviteRecord) {
@@ -172,6 +358,10 @@ export default function InviteTeamPage() {
         ...currentInvite,
         role: allowedRoles[0]
       }));
+      setBulkInvite((currentInvite) => ({
+        ...currentInvite,
+        role: allowedRoles[0]
+      }));
     }
   }, [allowedRoles, invite.role]);
 
@@ -190,8 +380,71 @@ export default function InviteTeamPage() {
       {message ? <p className="form-message page-message">{message}</p> : null}
 
       <div className="content-manager-grid">
+        <form className="form-card" onSubmit={submitBulkInvites}>
+          <h2>Bulk Invite Employees</h2>
+          <p className="helper-text">
+            Paste one person per line. You can use `First Last email@restaurant.com`, `First, Last, email@restaurant.com`, or just an email.
+          </p>
+
+          <label>
+            Role for everyone in this list
+            <select name="role" value={bulkInvite.role} onChange={updateBulkInvite} required>
+              {allowedRoles.map((role) => (
+                <option key={role} value={role}>
+                  {roleLabels[role]}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            Employee list
+            <textarea
+              className="large-textarea"
+              name="people"
+              value={bulkInvite.people}
+              onChange={updateBulkInvite}
+              placeholder={"Hannah Smith hannah@restaurant.com\nJoe Lee joe@restaurant.com\nserver@example.com"}
+              required
+            />
+          </label>
+
+          <label>
+            Optional note
+            <textarea name="note" value={bulkInvite.note} onChange={updateBulkInvite} />
+          </label>
+
+          <button className="primary-button full-width" type="submit" disabled={isWorking || allowedRoles.length === 0}>
+            {isWorking ? "Sending invites..." : "Send Bulk Invites"}
+          </button>
+
+          {bulkResults.length ? (
+            <div className="bulk-invite-results">
+              <div className="data-list-heading">
+                <h3>Bulk Invite Results</h3>
+                <button className="secondary-button" type="button" onClick={copyFallbackLinks}>
+                  Copy Fallback Links
+                </button>
+              </div>
+
+              {bulkResults.map((result) => (
+                <article className="bulk-invite-result" key={`${result.email || result.line}-${result.rowNumber || ""}`}>
+                  <div>
+                    <strong>{result.email || result.line}</strong>
+                    <p>{result.firstName ? `${result.firstName} ${result.lastName}` : "Could not read this row."}</p>
+                    {result.message ? <p>{result.message}</p> : null}
+                    {result.error ? <p>{result.error}</p> : null}
+                    {result.inviteLink ? <code className="invite-link">{result.inviteLink}</code> : null}
+                  </div>
+                  <span className={`status-badge status-${result.status || "pending"}`}>{result.status || "pending"}</span>
+                </article>
+              ))}
+            </div>
+          ) : null}
+        </form>
+
         <form className="form-card" onSubmit={submitInvite}>
-          <h2>Create Invite</h2>
+          <h2>Invite One Person</h2>
 
           <div className="field-pair">
             <label>
