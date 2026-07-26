@@ -220,6 +220,38 @@ export default function InviteTeamPage() {
     }
   }
 
+  async function createManualInviteLink() {
+    if (!allowedRoles.includes(invite.role)) {
+      setMessage("You do not have permission to invite that role.");
+      return;
+    }
+
+    setIsWorking(true);
+    setMessage("");
+    setCreatedInvite(null);
+
+    try {
+      const nextInvite = await createInvite({
+        restaurantId: workspace.restaurant.id,
+        invite,
+        invitedBy: workspace.userProfile.id,
+        currentRole: workspace.role
+      });
+
+      setCreatedInvite(nextInvite);
+      setInvite({
+        ...emptyInvite,
+        role: allowedRoles[0] || "staff"
+      });
+      await loadInvites();
+      setMessage(`Manual ${roleLabels[nextInvite.role] || nextInvite.role} invite link created. Copy it and send it directly to ${nextInvite.email}.`);
+    } catch (error) {
+      setMessage(error.message || "Could not create a manual invite link.");
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
   async function createStaffJoinLink() {
     setIsWorking(true);
     setMessage("");
@@ -559,12 +591,20 @@ export default function InviteTeamPage() {
           <button className="primary-button full-width" type="submit" disabled={isWorking || allowedRoles.length === 0}>
             {isWorking ? "Sending invite..." : "Create Login & Send Email"}
           </button>
+
+          <button className="secondary-button full-width" type="button" onClick={createManualInviteLink} disabled={isWorking || allowedRoles.length === 0}>
+            Create Manual Link Only
+          </button>
+
+          <p className="helper-text">
+            Use manual links for Managers/Admins when email delivery is uncertain. The link is locked to the email above and should be sent directly to that person.
+          </p>
         </form>
 
         <section className="data-list-panel">
           <div className="form-card invite-link-panel">
             <h2>Manual Fallback</h2>
-            <p>If the account email cannot be sent, Line Up creates a secure invite link you can copy and send manually.</p>
+            <p>Create a manual link from the Invite One Person form, then copy it here and send it directly.</p>
 
             {createdInvite ? (
               <>
