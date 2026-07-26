@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import {
+  getAssignmentsForUser,
   getAssignedItemIdsForUser,
   listStaffGroupMembersForRestaurant,
   listTrainingAssignmentsForRestaurant
@@ -83,6 +84,18 @@ export default function StaffDashboard() {
       userProfileId: workspace.userProfile?.id,
       itemType: "trainingDoc"
     });
+    const assignedCollectionIds = getAssignedItemIdsForUser({
+      assignments: data.assignments,
+      groupMembers: data.groupMembers,
+      userProfileId: workspace.userProfile?.id,
+      itemType: "collection"
+    });
+    const collectionAssignments = getAssignmentsForUser({
+      assignments: data.assignments,
+      groupMembers: data.groupMembers,
+      userProfileId: workspace.userProfile?.id,
+      itemType: "collection"
+    });
     const assignedQuizIds = getAssignedItemIdsForUser({
       assignments: data.assignments,
       groupMembers: data.groupMembers,
@@ -109,7 +122,10 @@ export default function StaffDashboard() {
           (assignment.targetType === "group" && myGroupIds.has(assignment.targetId))
       );
     const assignmentByItemId = new Map(myAssignments.map((assignment) => [assignment.itemId, assignment]));
-    const assignedDocs = publishedDocs.filter((doc) => assignedDocIds.has(doc.id) && !reviewedDocIds.has(doc.id));
+    const collectionAssignmentById = new Map(collectionAssignments.map((assignment) => [assignment.itemId, assignment]));
+    const assignedDocs = publishedDocs.filter(
+      (doc) => (assignedDocIds.has(doc.id) || assignedCollectionIds.has(doc.collectionId)) && !reviewedDocIds.has(doc.id)
+    );
     const assignedQuizzes = data.quizzes.filter((quiz) => quiz.isPublished && assignedQuizIds.has(quiz.id) && !passedQuizIds.has(quiz.id));
     const publishedCertifications = data.certifications.filter((certification) => certification.status === "published");
     const certificationRows = publishedCertifications.map((certification) => ({
@@ -124,10 +140,13 @@ export default function StaffDashboard() {
     return {
       publishedDocs,
       reviewedDocIds,
+      assignedDocIds,
+      assignedCollectionIds,
       assignedDocs,
       assignedQuizzes,
       assignedCertifications,
       assignmentByItemId,
+      collectionAssignmentById,
       newDocs: publishedDocs.filter((doc) => !reviewedDocIds.has(doc.id) && wasPublishedRecently(doc)).slice(0, 6),
       needsStudy: publishedDocs.filter((doc) => !reviewedDocIds.has(doc.id)),
       reviewedCount: publishedDocs.filter((doc) => reviewedDocIds.has(doc.id)).length,
@@ -140,9 +159,9 @@ export default function StaffDashboard() {
   const assignedItems = [
     ...summary.assignedDocs.map((doc) => ({
       id: `doc-${doc.id}`,
-      label: "Training page",
+      label: summary.assignedDocIds?.has?.(doc.id) ? "Training page" : "Section card",
       title: doc.title,
-      detail: formatDueDate(summary.assignmentByItemId.get(doc.id)?.dueDate),
+      detail: formatDueDate(summary.assignmentByItemId.get(doc.id)?.dueDate || summary.collectionAssignmentById.get(doc.collectionId)?.dueDate),
       to: `/training-library?open=${doc.id}`
     })),
     ...summary.assignedQuizzes.map((quiz) => ({

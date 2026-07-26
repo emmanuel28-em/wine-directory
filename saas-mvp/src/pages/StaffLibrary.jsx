@@ -317,6 +317,7 @@ export default function StaffLibrary() {
   const [filePreviewUrls, setFilePreviewUrls] = useState({});
   const [acknowledgements, setAcknowledgements] = useState([]);
   const [assignedTrainingDocIds, setAssignedTrainingDocIds] = useState(new Set());
+  const [assignedCollectionIds, setAssignedCollectionIds] = useState(new Set());
   const [reviewingDocId, setReviewingDocId] = useState("");
   const [message, setMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -360,6 +361,14 @@ export default function StaffLibrary() {
           itemType: "trainingDoc"
         })
       );
+      setAssignedCollectionIds(
+        getAssignedItemIdsForUser({
+          assignments,
+          groupMembers,
+          userProfileId: workspace.userProfile.id,
+          itemType: "collection"
+        })
+      );
     } catch (error) {
       setMessage(error.message || "Could not load the staff library.");
     }
@@ -377,6 +386,7 @@ export default function StaffLibrary() {
       setFilePreviewUrls({});
       setAcknowledgements([]);
       setAssignedTrainingDocIds(new Set());
+      setAssignedCollectionIds(new Set());
     }
   }, [workspace.status, workspace.restaurant?.id]);
 
@@ -714,7 +724,7 @@ export default function StaffLibrary() {
                       const attachedFiles = fileAssets.filter((fileAsset) => fileAsset.trainingDocId === doc.id);
                       const primaryImage = attachedFiles.find((fileAsset) => filePreviewUrls[fileAsset.id]);
                       const acknowledgement = acknowledgements.find((item) => item.trainingDocId === doc.id);
-                      const isAssigned = assignedTrainingDocIds.has(doc.id);
+                      const isAssigned = assignedTrainingDocIds.has(doc.id) || assignedCollectionIds.has(doc.collectionId);
 
                       return (
                         <article className="staff-visual-card" key={`${row.id}-${doc.id}`}>

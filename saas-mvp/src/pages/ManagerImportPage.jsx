@@ -404,10 +404,11 @@ export default function ManagerImportPage() {
           <div>
             <p className="eyebrow">Material added</p>
             <h2>Your training pages are ready for the next step.</h2>
-            <p>Review the new pages, add photos where needed, create a quiz, or invite one staff member to begin testing the workspace.</p>
+            <p>Review the new pages, add photos where needed, assign them to staff, or create a quiz to begin testing readiness.</p>
           </div>
           <div className="import-next-actions">
             <Link className="secondary-button" to="/manager/content">Review and add photos</Link>
+            <Link className="primary-button" to="/manager/assignments">Assign training</Link>
             <Link className="primary-button" to="/manager/quizzes">Generate a quiz</Link>
             <Link className="secondary-button" to="/manager/invite-team">Invite your team</Link>
           </div>

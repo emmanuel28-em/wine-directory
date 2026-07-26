@@ -12,6 +12,7 @@ import {
   updateStaffGroupMembers
 } from "../lib/assignments.js";
 import { listCertificationsForRestaurant } from "../lib/certifications.js";
+import { listCollectionsForRestaurant } from "../lib/collections.js";
 import { listQuizzesForRestaurant } from "../lib/quizzes.js";
 import { listTeamMembersForRestaurant } from "../lib/settings.js";
 import { listTrainingDocsForRestaurant } from "../lib/trainingDocs.js";
@@ -44,14 +45,16 @@ function assignmentTargetLabel({ assignment, groups, members }) {
   return member ? memberLabel(member) : "Team member";
 }
 
-function assignmentItemLabel({ assignment, trainingDocs, quizzes, certifications }) {
+function assignmentItemLabel({ assignment, collections, trainingDocs, quizzes, certifications }) {
   if (assignment.itemType === "trainingDoc") return trainingDocs.find((doc) => doc.id === assignment.itemId)?.title || "Training page";
+  if (assignment.itemType === "collection") return collections.find((collection) => collection.id === assignment.itemId)?.name || "Library section";
   if (assignment.itemType === "quiz") return quizzes.find((quiz) => quiz.id === assignment.itemId)?.title || "Quiz";
   return certifications.find((certification) => certification.id === assignment.itemId)?.name || "Certification";
 }
 
 function assignmentTypeLabel(itemType) {
   if (itemType === "trainingDoc") return "Training Page";
+  if (itemType === "collection") return "Library Section";
   if (itemType === "quiz") return "Quiz";
   return "Certification";
 }
@@ -61,6 +64,7 @@ export default function ManagerAssignmentsPage() {
   const [groups, setGroups] = useState([]);
   const [groupMembers, setGroupMembers] = useState([]);
   const [members, setMembers] = useState([]);
+  const [collections, setCollections] = useState([]);
   const [trainingDocs, setTrainingDocs] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
   const [certifications, setCertifications] = useState([]);
@@ -79,6 +83,8 @@ export default function ManagerAssignmentsPage() {
   const assignableItems =
     assignmentForm.itemType === "trainingDoc"
       ? trainingDocs.filter((doc) => doc.status === "published")
+      : assignmentForm.itemType === "collection"
+        ? collections.filter((collection) => collection.status !== "archived")
       : assignmentForm.itemType === "quiz"
         ? quizzes.filter((quiz) => quiz.isPublished)
         : certifications.filter((certification) => certification.status === "published");
@@ -90,10 +96,11 @@ export default function ManagerAssignmentsPage() {
     setMessage("");
 
     try {
-      const [nextGroups, nextGroupMembers, nextMembers, nextTrainingDocs, nextQuizzes, nextCertifications, nextAssignments] = await Promise.all([
+      const [nextGroups, nextGroupMembers, nextMembers, nextCollections, nextTrainingDocs, nextQuizzes, nextCertifications, nextAssignments] = await Promise.all([
         listStaffGroupsForRestaurant(workspace.restaurant.id),
         listStaffGroupMembersForRestaurant(workspace.restaurant.id),
         listTeamMembersForRestaurant(workspace.restaurant.id),
+        listCollectionsForRestaurant(workspace.restaurant.id),
         listTrainingDocsForRestaurant(workspace.restaurant.id),
         listQuizzesForRestaurant(workspace.restaurant.id),
         listCertificationsForRestaurant(workspace.restaurant.id),
@@ -103,6 +110,7 @@ export default function ManagerAssignmentsPage() {
       setGroups(nextGroups);
       setGroupMembers(nextGroupMembers);
       setMembers(nextMembers);
+      setCollections(nextCollections);
       setTrainingDocs(nextTrainingDocs);
       setQuizzes(nextQuizzes);
       setCertifications(nextCertifications);
@@ -206,10 +214,14 @@ export default function ManagerAssignmentsPage() {
     setMessage("");
 
     try {
+      const collectionName = assignmentForm.itemType === "collection" ? collections.find((collection) => collection.id === assignmentForm.itemId)?.name : "";
       await createTrainingAssignment({
         restaurantId: workspace.restaurant.id,
         userProfileId: workspace.userProfile.id,
-        form: assignmentForm
+        form: {
+          ...assignmentForm,
+          note: collectionName && !assignmentForm.note.trim() ? `Complete all current cards in ${collectionName}.` : assignmentForm.note
+        }
       });
       setAssignmentForm(emptyAssignmentForm);
       await loadAssignmentsPage();
@@ -366,6 +378,7 @@ export default function ManagerAssignmentsPage() {
                   Assign
                   <select name="itemType" value={assignmentForm.itemType} onChange={updateAssignmentForm}>
                     <option value="trainingDoc">Training page</option>
+                    <option value="collection">Library section</option>
                     <option value="quiz">Quiz</option>
                     <option value="certification">Certification</option>
                   </select>
@@ -377,7 +390,7 @@ export default function ManagerAssignmentsPage() {
                     <option value="">Choose item</option>
                     {assignableItems.map((item) => (
                       <option key={item.id} value={item.id}>
-                        {assignmentForm.itemType === "certification" ? item.name : item.title}
+                        {assignmentForm.itemType === "certification" || assignmentForm.itemType === "collection" ? item.name : item.title}
                       </option>
                     ))}
                   </select>
@@ -442,7 +455,7 @@ export default function ManagerAssignmentsPage() {
                     <article className="operator-list-card" key={assignment.id}>
                       <div>
                         <span className="type-pill">{assignmentTypeLabel(assignment.itemType)}</span>
-                        <h4>{assignmentItemLabel({ assignment, trainingDocs, quizzes, certifications })}</h4>
+                        <h4>{assignmentItemLabel({ assignment, collections, trainingDocs, quizzes, certifications })}</h4>
                         <p>
                           Assigned to {assignmentTargetLabel({ assignment, groups, members })}
                           {assignment.dueDate ? ` · Due ${new Date(`${assignment.dueDate}T00:00:00`).toLocaleDateString()}` : ""}

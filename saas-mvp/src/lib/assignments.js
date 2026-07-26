@@ -162,3 +162,19 @@ export function getAssignedItemIdsForUser({ assignments, groupMembers, userProfi
       .map((assignment) => assignment.itemId)
   );
 }
+
+export function getAssignmentsForUser({ assignments, groupMembers, userProfileId, itemType }) {
+  const activeGroupIds = new Set(
+    groupMembers
+      .filter((member) => member.status === "active" && member.userProfileId === userProfileId)
+      .map((member) => member.staffGroupId)
+  );
+
+  return assignments
+    .filter((assignment) => assignment.status === "active" && assignment.itemType === itemType)
+    .filter(
+      (assignment) =>
+        (assignment.targetType === "member" && assignment.targetId === userProfileId) ||
+        (assignment.targetType === "group" && activeGroupIds.has(assignment.targetId))
+    );
+}
