@@ -4,7 +4,20 @@ import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import { listCollectionsForRestaurant, saveCollection } from "../lib/collections.js";
 import { parseBulkTrainingMaterial } from "../lib/bulkTrainingImport.js";
 import { finishImportRun, startImportRun } from "../lib/importRuns.js";
-import { listTrainingDocsForRestaurant, saveTrainingDoc } from "../lib/trainingDocs.js";
+import { buildContentJson, listTrainingDocsForRestaurant, saveTrainingDoc } from "../lib/trainingDocs.js";
+import { buildReviewQuestionsForDoc } from "../lib/reviewQuestions.js";
+
+const contentTypeToDocType = {
+  foodItem: "food",
+  wine: "wine",
+  cocktail: "cocktail",
+  sop: "sop",
+  serviceStandard: "custom",
+  menuOverview: "custom",
+  tastingMenuCourse: "pastaTasting",
+  eventNote: "custom",
+  custom: "custom"
+};
 
 function updateDraftAtIndex(drafts, index, field, value) {
   return drafts.map((draft, draftIndex) => (draftIndex === index ? { ...draft, [field]: value } : draft));
@@ -98,7 +111,34 @@ export default function ManagerImportPage() {
     setDrafts((currentDrafts) => currentDrafts.filter((_, draftIndex) => draftIndex !== index));
   }
 
-  async function importDrafts() {
+  function setSelectedDraftStatus(status) {
+    setDrafts((currentDrafts) =>
+      currentDrafts.map((draft) => (draft.selected ? { ...draft, status } : draft))
+    );
+  }
+
+  function setAllDraftSelection(selected) {
+    setDrafts((currentDrafts) => currentDrafts.map((draft) => ({ ...draft, selected })));
+  }
+
+  function buildReviewQuestionsForDraft({ draft, collectionId, existingDocs }) {
+    const tempDoc = {
+      id: draft.importId,
+      title: draft.title,
+      type: contentTypeToDocType[draft.contentType] || "custom",
+      category: draft.category,
+      collectionId,
+      contentJson: buildContentJson({
+        ...draft,
+        collectionId,
+        reviewQuestionsJson: "[]"
+      })
+    };
+
+    return buildReviewQuestionsForDoc(tempDoc, [tempDoc, ...existingDocs], { preferSaved: false });
+  }
+
+  async function importDrafts(statusOverride = "") {
     if (workspace.status !== "ready" || selectedCount === 0) {
       return;
     }
@@ -170,18 +210,27 @@ export default function ManagerImportPage() {
           continue;
         }
 
+        const reviewQuestions = buildReviewQuestionsForDraft({
+          draft,
+          collectionId,
+          existingDocs
+        });
+
+        const finalStatus = statusOverride || draft.status || "draft";
+
         await saveTrainingDoc({
           form: {
             ...draft,
             collectionId,
-            status: draft.status || "draft"
+            status: finalStatus,
+            reviewQuestionsJson: JSON.stringify(reviewQuestions)
           },
           editingDocId: null,
           restaurantId: workspace.restaurant.id,
           userProfileId: workspace.userProfile.id
         });
         createdCount += 1;
-        if (draft.status === "published") publishedCreatedCount += 1;
+        if (finalStatus === "published") publishedCreatedCount += 1;
         existingKeys.add(duplicateKey);
       }
 
@@ -193,7 +242,7 @@ export default function ManagerImportPage() {
       setMessage(
         `${createdCount} training page${createdCount === 1 ? " was" : "s were"} saved. ${publishedCreatedCount} published and ${draftCount} kept as ${draftCount === 1 ? "a draft" : "drafts"}.${
           skippedCount ? ` ${skippedCount} possible duplicate${skippedCount === 1 ? " was" : "s were"} skipped.` : ""
-        } Review the new pages, add photos, then publish anything that should be visible to staff.`
+        } Review the new pages, add photos, check the card questions, then assign the right sections to staff.`
       );
     } catch (error) {
       await finishImportRun({
@@ -307,9 +356,26 @@ export default function ManagerImportPage() {
               <h2>Check what Line Up found</h2>
               <p>{selectedCount} of {drafts.length} draft pages selected. You can edit titles, sections, notes, and visibility before saving.</p>
             </div>
-            <button className="primary-button" type="button" onClick={importDrafts} disabled={isWorking || selectedCount === 0}>
-              {isWorking ? "Saving..." : `Save ${selectedCount} Training Page${selectedCount === 1 ? "" : "s"}`}
-            </button>
+            <div className="import-review-actions">
+              <button className="secondary-button" type="button" onClick={() => setAllDraftSelection(true)}>
+                Select all
+              </button>
+              <button className="secondary-button" type="button" onClick={() => setAllDraftSelection(false)}>
+                Clear all
+              </button>
+              <button className="secondary-button" type="button" onClick={() => setSelectedDraftStatus("draft")} disabled={selectedCount === 0}>
+                Keep selected as drafts
+              </button>
+              <button className="secondary-button" type="button" onClick={() => setSelectedDraftStatus("published")} disabled={selectedCount === 0}>
+                Mark selected published
+              </button>
+              <button className="primary-button" type="button" onClick={() => importDrafts()} disabled={isWorking || selectedCount === 0}>
+                {isWorking ? "Saving..." : `Save ${selectedCount}`}
+              </button>
+              <button className="primary-button accent-button" type="button" onClick={() => importDrafts("published")} disabled={isWorking || selectedCount === 0}>
+                Publish selected
+              </button>
+            </div>
           </div>
 
           <div className="import-draft-list">
@@ -327,6 +393,13 @@ export default function ManagerImportPage() {
                   <button className="quiet-danger-button" type="button" onClick={() => removeDraft(index)}>
                     Remove
                   </button>
+                </div>
+
+                <div className="import-draft-checklist">
+                  <span className={draft.title ? "status-badge status-published" : "status-badge status-draft"}>Title</span>
+                  <span className={draft.collectionId || draft.suggestedCollectionName ? "status-badge status-published" : "status-badge status-draft"}>Section</span>
+                  <span className={draft.summary || draft.body ? "status-badge status-published" : "status-badge status-draft"}>Notes</span>
+                  <span className={draft.quizFactsJson && draft.quizFactsJson !== "[]" ? "status-badge status-published" : "status-badge status-draft"}>Quiz facts</span>
                 </div>
 
                 <div className="field-pair">

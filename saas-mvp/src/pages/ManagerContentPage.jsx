@@ -11,6 +11,7 @@ import {
 } from "../lib/fileAssets.js";
 import {
   deleteTrainingDoc,
+  buildContentJson,
   docToForm,
   emptyTrainingDocForm,
   listTrainingDocsForRestaurant,
@@ -18,6 +19,7 @@ import {
   saveTrainingDoc,
   updateTrainingDocStatus
 } from "../lib/trainingDocs.js";
+import { buildReviewQuestionsForDoc, reviewQuestionCount } from "../lib/reviewQuestions.js";
 
 const categoryTypeLabels = {
   foodMenu: "Food Menu",
@@ -41,6 +43,18 @@ const contentTypeLabels = {
   tastingMenuCourse: "Tasting Menu Course",
   eventNote: "Event Note",
   custom: "Custom"
+};
+
+const contentTypeToDocType = {
+  foodItem: "food",
+  wine: "wine",
+  cocktail: "cocktail",
+  sop: "sop",
+  serviceStandard: "custom",
+  menuOverview: "custom",
+  tastingMenuCourse: "pastaTasting",
+  eventNote: "custom",
+  custom: "custom"
 };
 
 // These starters help a busy manager begin with familiar restaurant material.
@@ -209,6 +223,15 @@ function makeEmptyKnowledgeItem() {
   };
 }
 
+function makeEmptyReviewQuestion() {
+  return {
+    prompt: "",
+    choices: ["", "", "", ""],
+    correctAnswer: "",
+    explanation: ""
+  };
+}
+
 function getCleanKnowledgeItems(items) {
   return items
     .map((item) => ({
@@ -218,6 +241,22 @@ function getCleanKnowledgeItems(items) {
       quizEligible: Boolean(item.quizEligible)
     }))
     .filter((item) => item.label || item.value || item.questionHint);
+}
+
+function getCleanReviewQuestions(items) {
+  return items
+    .map((item) => {
+      const correctAnswer = String(item.correctAnswer || "").trim();
+      const choices = [...new Set((item.choices || []).map((choice) => String(choice || "").trim()).filter(Boolean))];
+
+      return {
+        prompt: String(item.prompt || "").trim(),
+        choices: choices.includes(correctAnswer) ? choices : [correctAnswer, ...choices].filter(Boolean),
+        correctAnswer,
+        explanation: String(item.explanation || "").trim()
+      };
+    })
+    .filter((item) => item.prompt && item.correctAnswer && item.choices.length >= 2);
 }
 
 export default function ManagerContentPage() {
@@ -230,6 +269,7 @@ export default function ManagerContentPage() {
   const [fileAssets, setFileAssets] = useState([]);
   const [form, setForm] = useState(emptyTrainingDocForm);
   const [knowledgeItems, setKnowledgeItems] = useState([makeEmptyKnowledgeItem()]);
+  const [reviewQuestions, setReviewQuestions] = useState([]);
   const [editingDocId, setEditingDocId] = useState(null);
   const [selectedSourceFile, setSelectedSourceFile] = useState(null);
   const [isWorking, setIsWorking] = useState(false);
@@ -390,6 +430,46 @@ export default function ManagerContentPage() {
     );
   }
 
+  function updateReviewQuestion(index, field, value) {
+    setSaveState("Unsaved changes");
+    setReviewQuestions((currentQuestions) =>
+      currentQuestions.map((question, questionIndex) =>
+        questionIndex === index
+          ? {
+              ...question,
+              [field]: field === "choices" ? value.split("\n") : value
+            }
+          : question
+      )
+    );
+  }
+
+  function generateReviewQuestions() {
+    const cleanKnowledgeItems = getCleanKnowledgeItems(knowledgeItems);
+    const tempDoc = {
+      id: editingDocId || "unsaved-training-page",
+      title: form.title || "this training page",
+      type: contentTypeToDocType[form.contentType] || "custom",
+      category: form.category,
+      contentJson: buildContentJson({
+        ...form,
+        quizFactsJson: JSON.stringify(cleanKnowledgeItems),
+        reviewQuestionsJson: "[]"
+      })
+    };
+    const comparisonDocs = [tempDoc, ...docs.filter((doc) => doc.id !== editingDocId)];
+    const generatedQuestions = buildReviewQuestionsForDoc(tempDoc, comparisonDocs, { preferSaved: false });
+
+    if (generatedQuestions.length < reviewQuestionCount) {
+      setMessage("Add more one-liner, allergens, ingredients, notes, or testable staff knowledge before generating five questions.");
+      return;
+    }
+
+    setReviewQuestions(generatedQuestions);
+    setSaveState("Unsaved changes");
+    setMessage("Review questions generated. Edit anything that should be clearer before publishing.");
+  }
+
   function resetCategoryForm() {
     setCategoryForm(emptyCategoryForm);
     setEditingCategoryId(null);
@@ -399,6 +479,7 @@ export default function ManagerContentPage() {
   function resetPageForm() {
     setForm(emptyTrainingDocForm);
     setKnowledgeItems([makeEmptyKnowledgeItem()]);
+    setReviewQuestions([]);
     setEditingDocId(null);
     setSelectedSourceFile(null);
     setWorkspaceMode("list");
@@ -409,6 +490,7 @@ export default function ManagerContentPage() {
   function startNewPage() {
     setForm(emptyTrainingDocForm);
     setKnowledgeItems([makeEmptyKnowledgeItem()]);
+    setReviewQuestions([]);
     setEditingDocId(null);
     setSelectedSourceFile(null);
     setWorkspaceMode("editor");
@@ -423,6 +505,7 @@ export default function ManagerContentPage() {
       status: "draft",
       tags: currentForm.tags || template.tags
     }));
+    setReviewQuestions([]);
     setWorkspaceMode("editor");
     setSaveState("Unsaved changes");
     setMessage(
@@ -452,6 +535,13 @@ export default function ManagerContentPage() {
       setKnowledgeItems(Array.isArray(parsedItems) && parsedItems.length ? parsedItems : [makeEmptyKnowledgeItem()]);
     } catch {
       setKnowledgeItems([makeEmptyKnowledgeItem()]);
+    }
+
+    try {
+      const parsedQuestions = JSON.parse(nextForm.reviewQuestionsJson);
+      setReviewQuestions(Array.isArray(parsedQuestions) ? parsedQuestions : []);
+    } catch {
+      setReviewQuestions([]);
     }
 
     setEditingDocId(doc.id);
@@ -523,7 +613,8 @@ export default function ManagerContentPage() {
         form: {
           ...form,
           status: statusOverride || form.status,
-          quizFactsJson: JSON.stringify(getCleanKnowledgeItems(knowledgeItems))
+          quizFactsJson: JSON.stringify(getCleanKnowledgeItems(knowledgeItems)),
+          reviewQuestionsJson: JSON.stringify(getCleanReviewQuestions(reviewQuestions))
         },
         editingDocId,
         restaurantId: workspace.restaurant.id,
@@ -980,6 +1071,7 @@ export default function ManagerContentPage() {
                             const docFiles = fileAssets.filter((fileAsset) => fileAsset.trainingDocId === doc.id);
                             const previewFile = docFiles.find((fileAsset) => filePreviewUrls[fileAsset.id]);
                             const quizFactCount = (content.testableStaffKnowledge || content.quizFacts || []).filter((item) => item.quizEligible !== false).length;
+                            const cardQuestionCount = (content.reviewQuestions || []).length;
 
                             return (
                               <article className="visual-library-card" key={`${row.id}-${doc.id}`}>
@@ -1002,6 +1094,7 @@ export default function ManagerContentPage() {
                                 <div className="visual-card-meta">
                                   <span>{formatUpdatedDate(doc.updatedAt || doc.createdAt)}</span>
                                   <span>{quizFactCount ? `${quizFactCount} quiz facts` : "No quiz facts"}</span>
+                                  <span>{cardQuestionCount >= reviewQuestionCount ? "Review ready" : `${cardQuestionCount}/${reviewQuestionCount} review questions`}</span>
                                 </div>
                                 <div className="visual-card-actions">
                                   <button className="secondary-button" type="button" onClick={() => editPage(doc)}>Edit</button>
@@ -1216,6 +1309,89 @@ export default function ManagerContentPage() {
                         </button>
                       </div>
                     ))}
+                  </details>
+
+                  <details className="document-details-panel" open>
+                    <summary>Card review questions</summary>
+                    <p className="helper-text">
+                      Staff must answer at least {reviewQuestionCount} questions before this card is marked reviewed.
+                      Generate a starter set from the page, then edit the wording or answers before publishing.
+                    </p>
+                    <div className="review-question-toolbar">
+                      <button className="secondary-button" type="button" onClick={generateReviewQuestions}>
+                        Generate from this page
+                      </button>
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => {
+                          setSaveState("Unsaved changes");
+                          setReviewQuestions((questions) => [...questions, makeEmptyReviewQuestion()]);
+                        }}
+                      >
+                        Add question
+                      </button>
+                      <span className={getCleanReviewQuestions(reviewQuestions).length >= reviewQuestionCount ? "status-badge status-published" : "status-badge status-draft"}>
+                        {getCleanReviewQuestions(reviewQuestions).length}/{reviewQuestionCount} ready
+                      </span>
+                    </div>
+
+                    {reviewQuestions.length === 0 ? (
+                      <p className="empty-panel">No saved card questions yet. Generate a starter set or add questions manually.</p>
+                    ) : (
+                      <div className="review-question-editor-list">
+                        {reviewQuestions.map((question, index) => (
+                          <article className="knowledge-card review-question-editor" key={`${index}-${question.prompt}`}>
+                            <div className="document-block-heading">
+                              <h3>Question {index + 1}</h3>
+                              <button
+                                className="quiet-danger-button"
+                                type="button"
+                                onClick={() => {
+                                  setSaveState("Unsaved changes");
+                                  setReviewQuestions((questions) => questions.filter((_, questionIndex) => questionIndex !== index));
+                                }}
+                              >
+                                Remove
+                              </button>
+                            </div>
+                            <label>
+                              Question prompt
+                              <textarea
+                                value={question.prompt}
+                                onChange={(event) => updateReviewQuestion(index, "prompt", event.target.value)}
+                                placeholder="What allergens should staff know for this dish?"
+                              />
+                            </label>
+                            <label>
+                              Answer choices
+                              <textarea
+                                value={(question.choices || []).join("\n")}
+                                onChange={(event) => updateReviewQuestion(index, "choices", event.target.value)}
+                                placeholder={"Correct answer\nSimilar wrong answer\nAnother wrong answer\nFunny but clear wrong answer"}
+                              />
+                              <small>Put each answer choice on its own line. Include the correct answer exactly.</small>
+                            </label>
+                            <label>
+                              Correct answer
+                              <input
+                                value={question.correctAnswer}
+                                onChange={(event) => updateReviewQuestion(index, "correctAnswer", event.target.value)}
+                                placeholder="Copy the correct choice here"
+                              />
+                            </label>
+                            <label>
+                              Explanation optional
+                              <textarea
+                                value={question.explanation}
+                                onChange={(event) => updateReviewQuestion(index, "explanation", event.target.value)}
+                                placeholder="Why this answer is correct."
+                              />
+                            </label>
+                          </article>
+                        ))}
+                      </div>
+                    )}
                   </details>
 
                   <details className="document-details-panel">

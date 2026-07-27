@@ -1663,6 +1663,13 @@ textarea {
   gap: 18px;
 }
 
+.import-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
 .content-filter-bar {
   display: grid;
   grid-template-columns: minmax(260px, 1fr) minmax(150px, 220px) minmax(150px, 220px);
@@ -2273,6 +2280,12 @@ textarea {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+}
+
+.import-draft-checklist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .onboarding-progress-card {
@@ -3842,6 +3855,27 @@ code {
   background: var(--color-card);
   border: 1px solid var(--color-border);
   border-radius: 16px;
+}
+
+.review-question-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.review-question-editor-list {
+  display: grid;
+  gap: 14px;
+}
+
+.review-question-editor {
+  grid-template-columns: 1fr;
+  align-items: stretch;
+}
+
+.review-question-editor textarea {
+  min-height: 86px;
 }
 
 .knowledge-card label {

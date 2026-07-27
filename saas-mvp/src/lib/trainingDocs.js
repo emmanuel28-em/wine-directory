@@ -4,6 +4,7 @@ import { getWorkspaceGroups } from "./workspaceGroups.js";
 
 export const emptyTrainingDocForm = {
   collectionId: "",
+  sectionIds: [],
   contentType: "foodItem",
   title: "",
   category: "",
@@ -16,7 +17,8 @@ export const emptyTrainingDocForm = {
   ingredients: "",
   talkingPoints: "",
   serviceNotes: "",
-  quizFactsJson: "[]"
+  quizFactsJson: "[]",
+  reviewQuestionsJson: "[]"
 };
 
 const contentTypeToModelType = {
@@ -54,12 +56,18 @@ function assertNoErrors(result, fallbackMessage) {
 
 export function buildContentJson(form) {
   const testableStaffKnowledge = parseQuizFacts(form.quizFactsJson);
+  const reviewQuestions = parseReviewQuestionsJson(form.reviewQuestionsJson);
 
   return JSON.stringify({
     tags: form.tags
       .split(",")
       .map((tag) => tag.trim())
       .filter(Boolean),
+    sectionIds: Array.isArray(form.sectionIds)
+      ? form.sectionIds
+      : form.collectionId
+        ? [form.collectionId]
+        : [],
     contentType: form.contentType,
     summary: form.summary.trim(),
     body: form.body.trim(),
@@ -71,7 +79,9 @@ export function buildContentJson(form) {
     // The UI calls these "Testable Staff Knowledge" because that is clearer for restaurant managers.
     // quizFacts remains here so older quiz code can still read the same facts later.
     testableStaffKnowledge,
-    quizFacts: testableStaffKnowledge
+    quizFacts: testableStaffKnowledge,
+    // These are the exact card-level review questions staff answer before a page is marked reviewed.
+    reviewQuestions
   });
 }
 
@@ -88,25 +98,48 @@ export function parseQuizFacts(value) {
   }
 }
 
+function cleanText(value) {
+  return String(value || "").trim();
+}
+
+function unique(values) {
+  return [...new Set(values.map(cleanText).filter(Boolean))];
+}
+
+export function parseReviewQuestionsJson(value) {
+  if (!value) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed
+      .map((question) => {
+        const correctAnswer = cleanText(question.correctAnswer);
+        const choices = unique(Array.isArray(question.choices) ? question.choices : []);
+
+        return {
+          prompt: cleanText(question.prompt),
+          choices: choices.includes(correctAnswer) ? choices : unique([correctAnswer, ...choices]),
+          correctAnswer,
+          explanation: cleanText(question.explanation)
+        };
+      })
+      .filter((question) => question.prompt && question.correctAnswer && question.choices.length >= 2);
+  } catch {
+    return [];
+  }
+}
+
 export function parseContentJson(contentJson) {
   if (!contentJson) {
     return {
       tags: [],
-      summary: "",
-      body: "",
-      details: "",
-      allergens: "",
-      ingredients: "",
-      talkingPoints: "",
-      serviceNotes: "",
-      quizFacts: [],
-      testableStaffKnowledge: []
-    };
-  }
-
-  try {
-    return {
-      tags: [],
+      sectionIds: [],
       summary: "",
       body: "",
       details: "",
@@ -116,11 +149,30 @@ export function parseContentJson(contentJson) {
       serviceNotes: "",
       quizFacts: [],
       testableStaffKnowledge: [],
+      reviewQuestions: []
+    };
+  }
+
+  try {
+    return {
+      tags: [],
+      sectionIds: [],
+      summary: "",
+      body: "",
+      details: "",
+      allergens: "",
+      ingredients: "",
+      talkingPoints: "",
+      serviceNotes: "",
+      quizFacts: [],
+      testableStaffKnowledge: [],
+      reviewQuestions: [],
       ...JSON.parse(contentJson)
     };
   } catch {
     return {
       tags: [],
+      sectionIds: [],
       summary: "",
       body: contentJson,
       details: contentJson,
@@ -129,7 +181,8 @@ export function parseContentJson(contentJson) {
       talkingPoints: "",
       serviceNotes: "",
       quizFacts: [],
-      testableStaffKnowledge: []
+      testableStaffKnowledge: [],
+      reviewQuestions: []
     };
   }
 }
@@ -139,6 +192,11 @@ export function docToForm(doc) {
 
   return {
     collectionId: doc.collectionId || "",
+    sectionIds: Array.isArray(content.sectionIds) && content.sectionIds.length
+      ? content.sectionIds
+      : doc.collectionId
+        ? [doc.collectionId]
+        : [],
     contentType: content.contentType || modelTypeToContentType[doc.type] || "custom",
     title: doc.title || "",
     category: doc.category || "",
@@ -151,7 +209,8 @@ export function docToForm(doc) {
     ingredients: content.ingredients || "",
     talkingPoints: content.talkingPoints || "",
     serviceNotes: content.serviceNotes || "",
-    quizFactsJson: JSON.stringify(content.testableStaffKnowledge || content.quizFacts || [], null, 2)
+    quizFactsJson: JSON.stringify(content.testableStaffKnowledge || content.quizFacts || [], null, 2),
+    reviewQuestionsJson: JSON.stringify(content.reviewQuestions || [], null, 2)
   };
 }
 
@@ -182,7 +241,7 @@ export async function saveTrainingDoc({ form, editingDocId, restaurantId, userPr
   const payload = {
     restaurantId,
     ...getWorkspaceGroups(restaurantId),
-    collectionId: form.collectionId || null,
+    collectionId: Array.isArray(form.sectionIds) && form.sectionIds.length ? form.sectionIds[0] : form.collectionId || null,
     type: contentTypeToModelType[form.contentType] || "custom",
     title: form.title.trim(),
     category: form.category.trim(),

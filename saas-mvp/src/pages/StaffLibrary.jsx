@@ -9,6 +9,11 @@ import {
 import { listCollectionsForRestaurant } from "../lib/collections.js";
 import { getFileAssetUrl, isPreviewableImageFileAsset, listFileAssetsForRestaurant } from "../lib/fileAssets.js";
 import { isAdminOrManager } from "../lib/permissions.js";
+import {
+  buildReviewQuestionsForDoc,
+  reviewPassingScore,
+  reviewQuestionCount
+} from "../lib/reviewQuestions.js";
 import { listTrainingDocsForRestaurant, parseContentJson } from "../lib/trainingDocs.js";
 import {
   listMyTrainingAcknowledgements,
@@ -37,187 +42,9 @@ const collectionOrder = [
 ];
 
 const subsectionOrder = ["Antipasta", "Primi", "Secondi", "Verdure", "Course 1", "Course 2", "Course 3", "Course 4", "Course 5"];
-const reviewQuestionCount = 5;
-const reviewPassingScore = 4;
 
 function normalizeValue(value) {
   return String(value || "").trim().toLowerCase();
-}
-
-function cleanText(value) {
-  return String(value || "").trim();
-}
-
-function splitList(value) {
-  return cleanText(value)
-    .split(/\n|,|;|\|/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function unique(values) {
-  return [...new Set(values.map(cleanText).filter(Boolean))];
-}
-
-function firstSentence(value) {
-  const text = cleanText(value);
-  return text.split(/(?<=[.!?])\s+/)[0] || text;
-}
-
-function shuffle(values) {
-  return [...values].sort(() => Math.random() - 0.5);
-}
-
-function collectReviewAnswerPool(docs, fieldName) {
-  return unique(
-    docs.flatMap((doc) => {
-      const content = parseContentJson(doc.contentJson);
-
-      if (fieldName === "ingredients") return splitList(content.ingredients);
-      if (fieldName === "allergens") return splitList(content.allergens);
-      if (fieldName === "summary") return [content.summary];
-      if (fieldName === "serviceNotes") return [firstSentence(content.serviceNotes)];
-      if (fieldName === "category") return [doc.category, doc.type];
-
-      const facts = content.testableStaffKnowledge || content.quizFacts || [];
-      return facts
-        .filter((fact) => normalizeValue(fact.label).includes(fieldName))
-        .map((fact) => fact.value);
-    })
-  );
-}
-
-function makeReviewChoices({ correctAnswer, pool, fallback = [] }) {
-  const wrongAnswers = unique([...pool, ...fallback]).filter((choice) => choice !== correctAnswer).slice(0, 3);
-  const choices = unique([correctAnswer, ...wrongAnswers]);
-
-  while (choices.length < 4) {
-    choices.push(`Review the training notes option ${choices.length + 1}`);
-  }
-
-  return shuffle(choices).slice(0, 4);
-}
-
-function addReviewQuestion(questions, question) {
-  if (!question.correctAnswer || questions.some((item) => item.prompt === question.prompt)) {
-    return;
-  }
-
-  questions.push(question);
-}
-
-function buildReviewQuestionsForDoc(doc, allDocs) {
-  const content = parseContentJson(doc.contentJson);
-  const title = doc.title || "this item";
-  const questions = [];
-  const facts = content.testableStaffKnowledge || content.quizFacts || [];
-
-  facts
-    .filter((fact) => fact.quizEligible !== false && cleanText(fact.value))
-    .forEach((fact) => {
-      const label = cleanText(fact.label) || "detail";
-      const lowerLabel = normalizeValue(label);
-      const poolKey =
-        lowerLabel.includes("allergen")
-          ? "allergens"
-          : lowerLabel.includes("ingredient")
-            ? "ingredients"
-            : lowerLabel.includes("service")
-              ? "serviceNotes"
-              : "category";
-
-      addReviewQuestion(questions, {
-        prompt: fact.questionHint || `What should staff know about ${label} for ${title}?`,
-        correctAnswer: cleanText(fact.value),
-        choices: makeReviewChoices({
-          correctAnswer: cleanText(fact.value),
-          pool: collectReviewAnswerPool(allDocs, poolKey),
-          fallback: ["Ask a manager before service", "Check the most recent training page", "Review the dish notes"]
-        }),
-        explanation: `${label}: ${cleanText(fact.value)}`
-      });
-    });
-
-  addReviewQuestion(questions, {
-    prompt: `What is the correct one-liner for ${title}?`,
-    correctAnswer: content.summary,
-    choices: makeReviewChoices({
-      correctAnswer: content.summary,
-      pool: collectReviewAnswerPool(allDocs, "summary"),
-      fallback: ["A classic house favorite with seasonal garnish.", "A rich preparation with bright acidity.", "A staff-only note for pre-shift."]
-    }),
-    explanation: content.summary
-  });
-
-  addReviewQuestion(questions, {
-    prompt: `What allergens should staff know for ${title}?`,
-    correctAnswer: content.allergens,
-    choices: makeReviewChoices({
-      correctAnswer: content.allergens,
-      pool: collectReviewAnswerPool(allDocs, "allergens"),
-      fallback: ["Dairy, gluten", "Citrus, allium", "Nuts, egg"]
-    }),
-    explanation: content.allergens ? `${title} allergens: ${content.allergens}` : ""
-  });
-
-  splitList(content.ingredients).slice(0, 2).forEach((ingredient) => {
-    addReviewQuestion(questions, {
-      prompt: `Which ingredient is used in ${title}?`,
-      correctAnswer: ingredient,
-      choices: makeReviewChoices({
-        correctAnswer: ingredient,
-        pool: collectReviewAnswerPool(allDocs, "ingredients"),
-        fallback: ["Parmigiano", "Lemon", "Garlic"]
-      }),
-      explanation: `${ingredient} is listed for ${title}.`
-    });
-  });
-
-  addReviewQuestion(questions, {
-    prompt: `What service note should staff remember for ${title}?`,
-    correctAnswer: firstSentence(content.serviceNotes || content.talkingPoints || content.body),
-    choices: makeReviewChoices({
-      correctAnswer: firstSentence(content.serviceNotes || content.talkingPoints || content.body),
-      pool: collectReviewAnswerPool(allDocs, "serviceNotes"),
-      fallback: ["Confirm with a manager before promising changes.", "Serve only after the table is cleared.", "This is used during opening sidework."]
-    }),
-    explanation: firstSentence(content.serviceNotes || content.talkingPoints || content.body)
-  });
-
-  addReviewQuestion(questions, {
-    prompt: `Where is ${title} organized in the training library?`,
-    correctAnswer: doc.category || doc.type,
-    choices: makeReviewChoices({
-      correctAnswer: doc.category || doc.type,
-      pool: collectReviewAnswerPool(allDocs, "category"),
-      fallback: ["Dinner Menu", "Cocktails", "BTG Wines"]
-    }),
-    explanation: `${title} is organized as ${doc.category || doc.type}.`
-  });
-
-  addReviewQuestion(questions, {
-    prompt: "Which training page are you reviewing?",
-    correctAnswer: title,
-    choices: makeReviewChoices({
-      correctAnswer: title,
-      pool: allDocs.map((item) => item.title),
-      fallback: ["Opening Sidework", "Dinner Menu Overview", "Wine Service Standards"]
-    }),
-    explanation: `This review check is for ${title}.`
-  });
-
-  addReviewQuestion(questions, {
-    prompt: `What type of training page is ${title}?`,
-    correctAnswer: typeLabels[doc.type] || doc.type,
-    choices: makeReviewChoices({
-      correctAnswer: typeLabels[doc.type] || doc.type,
-      pool: Object.values(typeLabels),
-      fallback: ["Food", "Wine", "Cocktail"]
-    }),
-    explanation: `${title} is saved as ${typeLabels[doc.type] || doc.type}.`
-  });
-
-  return shuffle(questions).slice(0, reviewQuestionCount);
 }
 
 function getSectionLabel(doc, collection) {
