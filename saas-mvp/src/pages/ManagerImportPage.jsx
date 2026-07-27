@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
+import { createTrainingAssignment, listStaffGroupsForRestaurant } from "../lib/assignments.js";
 import { listCollectionsForRestaurant, saveCollection } from "../lib/collections.js";
 import { parseBulkTrainingMaterial } from "../lib/bulkTrainingImport.js";
 import { finishImportRun, startImportRun } from "../lib/importRuns.js";
@@ -31,23 +32,39 @@ export default function ManagerImportPage() {
   const workspace = useCurrentWorkspace();
   const [searchParams] = useSearchParams();
   const [collections, setCollections] = useState([]);
+  const [staffGroups, setStaffGroups] = useState([]);
   const [sourceText, setSourceText] = useState("");
   const [defaultCollectionId, setDefaultCollectionId] = useState("");
   const [drafts, setDrafts] = useState([]);
   const [isWorking, setIsWorking] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
   const [message, setMessage] = useState("");
   const [importSummary, setImportSummary] = useState(null);
+  const [postImportAssignment, setPostImportAssignment] = useState({
+    sectionId: "all",
+    targetGroupId: "",
+    dueDate: "",
+    note: "Review before service."
+  });
   const [sourceDetails, setSourceDetails] = useState({ type: "paste", name: "Pasted training material" });
 
   useEffect(() => {
-    async function loadCollections() {
+    async function loadSetupData() {
       if (workspace.status !== "ready") {
         return;
       }
 
       try {
-        const nextCollections = await listCollectionsForRestaurant(workspace.restaurant.id);
+        const [nextCollections, nextStaffGroups] = await Promise.all([
+          listCollectionsForRestaurant(workspace.restaurant.id),
+          listStaffGroupsForRestaurant(workspace.restaurant.id)
+        ]);
         setCollections(nextCollections);
+        setStaffGroups(nextStaffGroups.filter((group) => group.status === "active"));
+        setPostImportAssignment((current) => ({
+          ...current,
+          targetGroupId: current.targetGroupId || nextStaffGroups.find((group) => group.status === "active")?.id || ""
+        }));
         const requestedCollectionId = searchParams.get("collection");
         if (requestedCollectionId && nextCollections.some((collection) => collection.id === requestedCollectionId)) {
           setDefaultCollectionId(requestedCollectionId);
@@ -57,7 +74,7 @@ export default function ManagerImportPage() {
       }
     }
 
-    loadCollections();
+    loadSetupData();
   }, [workspace.status, workspace.restaurant?.id, searchParams]);
 
   const selectedCount = useMemo(() => drafts.filter((draft) => draft.selected).length, [drafts]);
@@ -138,6 +155,66 @@ export default function ManagerImportPage() {
     return buildReviewQuestionsForDoc(tempDoc, [tempDoc, ...existingDocs], { preferSaved: false });
   }
 
+  function updatePostImportAssignment(event) {
+    const { name, value } = event.target;
+    setPostImportAssignment((current) => ({
+      ...current,
+      [name]: value
+    }));
+  }
+
+  async function assignImportedSections() {
+    if (workspace.status !== "ready" || !importSummary?.sections?.length) {
+      return;
+    }
+
+    if (!postImportAssignment.targetGroupId) {
+      setMessage("Choose a staff group before assigning the imported training.");
+      return;
+    }
+
+    const selectedSections =
+      postImportAssignment.sectionId === "all"
+        ? importSummary.sections
+        : importSummary.sections.filter((section) => section.id === postImportAssignment.sectionId);
+
+    if (selectedSections.length === 0) {
+      setMessage("Choose an imported section to assign.");
+      return;
+    }
+
+    setIsAssigning(true);
+    setMessage("");
+
+    try {
+      for (const section of selectedSections) {
+        await createTrainingAssignment({
+          restaurantId: workspace.restaurant.id,
+          userProfileId: workspace.userProfile.id,
+          form: {
+            itemType: "collection",
+            itemId: section.id,
+            targetType: "group",
+            targetId: postImportAssignment.targetGroupId,
+            dueDate: postImportAssignment.dueDate,
+            note: postImportAssignment.note || `Review the ${section.name} training before service.`
+          }
+        });
+      }
+
+      const targetGroupName = staffGroups.find((group) => group.id === postImportAssignment.targetGroupId)?.name || "the selected group";
+      setImportSummary((current) => ({
+        ...current,
+        assignedCount: (current.assignedCount || 0) + selectedSections.length
+      }));
+      setMessage(`${selectedSections.length} section${selectedSections.length === 1 ? "" : "s"} assigned to ${targetGroupName}.`);
+    } catch (error) {
+      setMessage(error.message || "Could not assign this imported training.");
+    } finally {
+      setIsAssigning(false);
+    }
+  }
+
   async function importDrafts(statusOverride = "") {
     if (workspace.status !== "ready" || selectedCount === 0) {
       return;
@@ -173,6 +250,21 @@ export default function ManagerImportPage() {
         existingDocs.map((doc) => `${(doc.title || "").trim().toLowerCase()}::${doc.collectionId || ""}`)
       );
       const collectionIdByName = new Map(latestCollections.map((collection) => [normalizeName(collection.name), collection.id]));
+      const collectionNameById = new Map(latestCollections.map((collection) => [collection.id, collection.name]));
+      const touchedSectionIds = new Set();
+      const touchedSections = [];
+
+      function rememberSection(sectionId, sectionName) {
+        if (!sectionId || touchedSectionIds.has(sectionId)) {
+          return;
+        }
+
+        touchedSectionIds.add(sectionId);
+        touchedSections.push({
+          id: sectionId,
+          name: sectionName || "Imported section"
+        });
+      }
 
       for (const draft of drafts.filter((item) => item.selected)) {
         if (!draft.title.trim()) {
@@ -200,6 +292,7 @@ export default function ManagerImportPage() {
             });
             collectionId = createdCollection.id;
             collectionIdByName.set(suggestedKey, collectionId);
+            collectionNameById.set(collectionId, createdCollection.name);
           }
         }
 
@@ -217,6 +310,7 @@ export default function ManagerImportPage() {
         });
 
         const finalStatus = statusOverride || draft.status || "draft";
+        rememberSection(collectionId, collectionNameById.get(collectionId) || draft.suggestedCollectionName);
 
         await saveTrainingDoc({
           form: {
@@ -236,7 +330,14 @@ export default function ManagerImportPage() {
 
       setDrafts([]);
       setSourceText("");
-      setImportSummary({ createdCount, skippedCount });
+      const nextCollections = await listCollectionsForRestaurant(workspace.restaurant.id).catch(() => collections);
+      setCollections(nextCollections);
+      setImportSummary({
+        createdCount,
+        skippedCount,
+        publishedCreatedCount,
+        sections: touchedSections
+      });
       await finishImportRun({ importRunId, status: "completed", createdCount, skippedCount }).catch(() => null);
       const draftCount = createdCount - publishedCreatedCount;
       setMessage(
@@ -477,11 +578,93 @@ export default function ManagerImportPage() {
           <div>
             <p className="eyebrow">Material added</p>
             <h2>Your training pages are ready for the next step.</h2>
-            <p>Review the new pages, add photos where needed, assign them to staff, or create a quiz to begin testing readiness.</p>
+            <p>
+              {importSummary.createdCount} page{importSummary.createdCount === 1 ? "" : "s"} saved.
+              {importSummary.publishedCreatedCount ? ` ${importSummary.publishedCreatedCount} published for staff.` : " Publish drafts when they are ready."}
+              {importSummary.sections?.length ? ` Imported into ${importSummary.sections.length} section${importSummary.sections.length === 1 ? "" : "s"}.` : ""}
+            </p>
           </div>
+
+          <div className="post-import-assignment-card">
+            <div>
+              <p className="eyebrow">Assign now</p>
+              <h3>Send this training to the right team</h3>
+              <p className="helper-text">
+                Assign the imported section to Servers, Bar Team, Captains, New Hires, or any group you created.
+                Staff will see the cards as assigned study work.
+              </p>
+            </div>
+
+            {staffGroups.length === 0 ? (
+              <div className="empty-panel">
+                Create a staff group first, then come back to assign imported sections.
+                <Link className="secondary-button full-width" to="/manager/assignments">Create staff groups</Link>
+              </div>
+            ) : importSummary.sections?.length ? (
+              <div className="post-import-assignment-form">
+                <div className="field-pair">
+                  <label>
+                    Imported section
+                    <select name="sectionId" value={postImportAssignment.sectionId} onChange={updatePostImportAssignment}>
+                      <option value="all">All imported sections</option>
+                      {importSummary.sections.map((section) => (
+                        <option key={section.id} value={section.id}>
+                          {section.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    Assign to
+                    <select name="targetGroupId" value={postImportAssignment.targetGroupId} onChange={updatePostImportAssignment}>
+                      <option value="">Choose group</option>
+                      {staffGroups.map((group) => (
+                        <option key={group.id} value={group.id}>
+                          {group.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <div className="field-pair">
+                  <label>
+                    Due date optional
+                    <input name="dueDate" type="date" value={postImportAssignment.dueDate} onChange={updatePostImportAssignment} />
+                  </label>
+
+                  <label>
+                    Staff note optional
+                    <input
+                      name="note"
+                      value={postImportAssignment.note}
+                      onChange={updatePostImportAssignment}
+                      placeholder="Example: Study before pre-shift."
+                    />
+                  </label>
+                </div>
+
+                <button
+                  className="primary-button full-width"
+                  type="button"
+                  onClick={assignImportedSections}
+                  disabled={isAssigning || !postImportAssignment.targetGroupId}
+                >
+                  {isAssigning ? "Assigning..." : "Assign imported training"}
+                </button>
+                {importSummary.assignedCount ? (
+                  <p className="helper-text">{importSummary.assignedCount} imported section assignment{importSummary.assignedCount === 1 ? "" : "s"} created.</p>
+                ) : null}
+              </div>
+            ) : (
+              <div className="empty-panel">No imported section was available to assign. Review the pages and add them to a section first.</div>
+            )}
+          </div>
+
           <div className="import-next-actions">
             <Link className="secondary-button" to="/manager/content">Review and add photos</Link>
-            <Link className="primary-button" to="/manager/assignments">Assign training</Link>
+            <Link className="secondary-button" to="/manager/assignments">Open assignments</Link>
             <Link className="primary-button" to="/manager/quizzes">Generate a quiz</Link>
             <Link className="secondary-button" to="/manager/invite-team">Invite your team</Link>
           </div>

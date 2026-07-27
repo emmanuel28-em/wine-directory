@@ -3994,6 +3994,31 @@ code {
   gap: 24px;
 }
 
+.post-import-assignment-card {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+  padding: 18px;
+  color: var(--color-text);
+  background: var(--color-card);
+  border: 1px solid rgba(255, 253, 248, 0.45);
+  border-radius: 18px;
+}
+
+.post-import-assignment-card h3,
+.post-import-assignment-card p {
+  margin: 0;
+}
+
+.post-import-assignment-card .eyebrow {
+  color: var(--color-accent);
+}
+
+.post-import-assignment-form {
+  display: grid;
+  gap: 14px;
+}
+
 .import-next-actions {
   display: flex;
   flex-wrap: wrap;
