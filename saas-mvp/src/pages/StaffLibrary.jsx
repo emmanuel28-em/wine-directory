@@ -223,7 +223,8 @@ function buildReviewQuestionsForDoc(doc, allDocs) {
 function getSectionLabel(doc, collection) {
   const name = collection?.name || "";
   const category = doc.category || "";
-  const combined = normalizeValue(`${name} ${category}`);
+  const type = doc.type || "";
+  const combined = normalizeValue(`${name} ${category} ${type}`);
 
   if (combined.includes("lunch")) return "Lunch Menu";
   if (combined.includes("brunch")) return "Brunch Menu";
@@ -232,6 +233,12 @@ function getSectionLabel(doc, collection) {
   if (combined.includes("pasta") || combined.includes("pairing")) return "Pasta Tasting Menu";
   if (combined.includes("btg") || combined.includes("by-the-glass")) return "BTG Wines";
   if (combined.includes("sop") || combined.includes("procedure")) return "SOPs";
+
+  if (type === "cocktail") return "Cocktails";
+  if (type === "pastaTasting") return "Pasta Tasting Menu";
+  if (type === "wine") return "BTG Wines";
+  if (type === "sop") return "SOPs";
+  if (type === "food") return "Food Items";
 
   return name || "Unassigned";
 }
