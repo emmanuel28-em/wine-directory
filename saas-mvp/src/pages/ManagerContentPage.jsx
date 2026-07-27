@@ -112,6 +112,15 @@ const emptyCategoryForm = {
   sortOrder: "0"
 };
 
+// Older imported cocktail pages may not have been assigned to a collection.
+// This virtual section keeps them easy to find without changing the saved data.
+const inferredCocktailSectionId = "__inferred_cocktails__";
+
+function isCocktailDoc(doc) {
+  const content = parseContentJson(doc.contentJson);
+  return content.contentType === "cocktail" || doc.type === "cocktail";
+}
+
 function getCategoryName(categories, categoryId) {
   return categories.find((category) => category.id === categoryId)?.name || "Unassigned";
 }
@@ -162,13 +171,41 @@ function getDocSearchText(doc, categories) {
 }
 
 function getSectionCounts(docs, categories) {
-  return categories.map((category) => ({
+  const sections = categories.map((category) => ({
     ...category,
     pageCount: docs.filter((doc) => getDocSectionIds(doc).includes(category.id)).length
   }));
+  const hasCocktailSection = categories.some((category) =>
+    category.categoryType === "cocktail" || String(category.name || "").toLowerCase().includes("cocktail")
+  );
+  const cocktailPageCount = docs.filter(isCocktailDoc).length;
+
+  if (!hasCocktailSection && cocktailPageCount > 0) {
+    sections.push({
+      id: inferredCocktailSectionId,
+      name: "Cocktails",
+      description: "Cocktail training pages",
+      categoryType: "cocktail",
+      pageCount: cocktailPageCount,
+      inferred: true
+    });
+  }
+
+  return sections;
 }
 
 function getVisualRowsForDocs(docs, categories, selectedSectionId) {
+  if (selectedSectionId === inferredCocktailSectionId) {
+    return docs.length
+      ? [{
+          id: inferredCocktailSectionId,
+          name: "Cocktails",
+          description: "Cocktail training pages",
+          pages: docs
+        }]
+      : [];
+  }
+
   const visibleCategories = categories.filter((category) => category.status !== "archived");
   const rows = [];
 
@@ -770,7 +807,10 @@ export default function ManagerContentPage() {
             : "";
     const matchesSidebarView = !viewStatus || doc.status === viewStatus;
     const matchesStatus = pageStatusFilter === "all" || doc.status === pageStatusFilter;
-    const matchesSection = selectedSectionId === "all" || sectionIds.includes(selectedSectionId);
+    const matchesSection =
+      selectedSectionId === "all"
+      || sectionIds.includes(selectedSectionId)
+      || (selectedSectionId === inferredCocktailSectionId && isCocktailDoc(doc));
     const contentType = content.contentType || doc.type || "custom";
     const matchesType = pageTypeFilter === "all" || contentType === pageTypeFilter || doc.type === pageTypeFilter;
 
@@ -786,7 +826,7 @@ export default function ManagerContentPage() {
   const editingDoc = docs.find((doc) => doc.id === editingDocId);
   const editingDocFiles = fileAssets.filter((fileAsset) => fileAsset.trainingDocId === editingDocId);
   const sectionCounts = getSectionCounts(docs, categories.filter((category) => category.status !== "archived"));
-  const selectedSection = categories.find((category) => category.id === selectedSectionId);
+  const selectedSection = sectionCounts.find((category) => category.id === selectedSectionId);
   const draftCount = docs.filter((doc) => doc.status === "draft").length;
   const publishedCount = docs.filter((doc) => doc.status === "published").length;
   const archivedCount = docs.filter((doc) => doc.status === "archived").length;
@@ -961,10 +1001,12 @@ export default function ManagerContentPage() {
                         <span>{category.name}</span>
                         <strong>{category.pageCount}</strong>
                       </button>
-                      <div className="sidebar-section-actions">
-                        <button className="text-button" type="button" onClick={() => editCategory(category)}>Edit</button>
-                        <button className="text-button danger-text-button" type="button" onClick={() => archiveExistingCategory(category)}>Archive</button>
-                      </div>
+                      {!category.inferred ? (
+                        <div className="sidebar-section-actions">
+                          <button className="text-button" type="button" onClick={() => editCategory(category)}>Edit</button>
+                          <button className="text-button danger-text-button" type="button" onClick={() => archiveExistingCategory(category)}>Archive</button>
+                        </div>
+                      ) : null}
                     </div>
                   ))}
                 </div>
