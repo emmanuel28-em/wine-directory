@@ -365,7 +365,7 @@ export default function ManagerImportPage() {
     <section className="page-section">
       <div className="dashboard-header">
         <div>
-          <p className="eyebrow">Library builder</p>
+          <p className="eyebrow">Bulk import</p>
           <h1>Let Line Up create your training library for you</h1>
           <p>Paste a large menu packet, wine list, cocktail specs, SOPs, or manager notes. Line Up separates the material into draft pages and suggests sections.</p>
         </div>

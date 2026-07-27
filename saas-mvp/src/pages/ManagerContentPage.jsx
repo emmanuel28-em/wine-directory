@@ -853,9 +853,18 @@ export default function ManagerContentPage() {
           <button className="primary-button" type="button" onClick={startNewPage}>
             New page
           </button>
-          <Link className="secondary-button" to="/manager/import">Let Line Up build it</Link>
+          <Link className="secondary-button" to="/manager/import">Import training material</Link>
           <Link className="secondary-button" to="/training-library">View as staff</Link>
         </div>
+      </div>
+
+      <div className="training-import-banner">
+        <div>
+          <p className="eyebrow">Bulk import</p>
+          <h2>Bring in an existing training library</h2>
+          <p>Paste menus, tech sheets, cocktail specs, wine notes, or SOPs. Line Up separates them into draft cards for you to review.</p>
+        </div>
+        <Link className="primary-button" to="/manager/import">Import multiple pages</Link>
       </div>
 
       {workspace.status === "loading" || isWorking ? <div className="empty-panel">Working...</div> : null}
@@ -1076,7 +1085,7 @@ export default function ManagerContentPage() {
                     <p>Create a blank page or import existing menus, tech sheets, SOPs, wine lists, or cocktail specs.</p>
                     <div className="form-button-row">
                       <button className="primary-button" type="button" onClick={startNewPage}>New page</button>
-                      <Link className="secondary-button" to="/manager/import">Let Line Up build it</Link>
+                      <Link className="secondary-button" to="/manager/import">Import training material</Link>
                     </div>
                   </div>
                 ) : sortedDocs.length === 0 ? (

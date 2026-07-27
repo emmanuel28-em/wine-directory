@@ -270,8 +270,8 @@ export default function ManagerDashboard() {
 
             <div className="home-action-grid">
               <Link className="home-action" to="/manager/import">
-                <span>Training</span>
-                <h3>Let Line Up build your library</h3>
+                <span>Bulk import</span>
+                <h3>Import training material</h3>
                 <p>Paste menus, tech sheets, cocktail specs, or SOPs and review the draft pages Line Up creates.</p>
               </Link>
               <Link className="home-action" to="/manager/content#training-page-form">

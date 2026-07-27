@@ -1701,6 +1701,41 @@ textarea {
   margin: 0;
 }
 
+.training-import-banner {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: center;
+  margin-bottom: 22px;
+  padding: 20px 22px;
+  background: rgba(164, 182, 154, 0.16);
+  border: 1px solid rgba(31, 61, 46, 0.12);
+  border-radius: 16px;
+}
+
+.training-import-banner h2,
+.training-import-banner p {
+  margin: 0;
+}
+
+.training-import-banner h2 {
+  margin-bottom: 6px;
+  font-size: 1.15rem;
+}
+
+.training-import-banner .eyebrow {
+  margin-bottom: 6px;
+}
+
+.training-import-banner > div > p:last-child {
+  max-width: 760px;
+  color: var(--color-muted);
+}
+
+.training-import-banner .primary-button {
+  flex: 0 0 auto;
+}
+
 .training-search {
   display: grid;
   gap: 8px;
@@ -4403,6 +4438,7 @@ code {
   }
 
   .header-actions,
+  .training-import-banner,
   .home-account-bar,
   .home-success-panel,
   .setup-help-strip,
@@ -4413,6 +4449,7 @@ code {
   }
 
   .header-actions > a,
+  .training-import-banner > a,
   .home-success-panel > a {
     width: 100%;
   }
