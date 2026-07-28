@@ -118,7 +118,8 @@ export default function ManagedSetupPage() {
         <p className="eyebrow">Done-for-you setup</p>
         <h1>Send us your existing docs. We’ll organize Line Up for you.</h1>
         <p>
-          Menus, tech sheets, SOPs, wine lists, cocktail specs, Google Docs, and training manuals can be turned into a clean staff training library.
+          Send your menus, tech sheets, SOPs, wine lists, cocktail specs, Google Docs, training manuals, and team list.
+          We can organize your sections, build the staff pages and questions, and set up staff groups for you.
         </p>
       </div>
 

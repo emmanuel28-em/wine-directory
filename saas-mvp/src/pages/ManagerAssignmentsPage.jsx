@@ -79,6 +79,10 @@ export default function ManagerAssignmentsPage() {
     () => members.filter((member) => member.membership?.status === "active" && member.membership?.role === "staff"),
     [members]
   );
+  const activeMembers = useMemo(
+    () => members.filter((member) => member.membership?.status === "active"),
+    [members]
+  );
   const activeGroups = useMemo(() => groups.filter((group) => group.status !== "archived"), [groups]);
   const assignableItems =
     assignmentForm.itemType === "trainingDoc"
@@ -164,6 +168,14 @@ export default function ManagerAssignmentsPage() {
   function resetGroupForm() {
     setEditingGroupId("");
     setGroupForm(emptyGroupForm);
+  }
+
+  function groupsForMember(userProfileId) {
+    const groupIds = groupMembers
+      .filter((member) => member.userProfileId === userProfileId && member.status === "active")
+      .map((member) => member.staffGroupId);
+
+    return activeGroups.filter((group) => groupIds.includes(group.id)).map((group) => group.name);
   }
 
   async function submitGroup(event) {
@@ -267,13 +279,14 @@ export default function ManagerAssignmentsPage() {
     <section className="page-section">
       <div className="dashboard-header">
         <div>
-          <p className="eyebrow">Assignments</p>
-          <h1>Assign Training to the Right People</h1>
-          <p>Create groups like Server, Captain, Bar Team, or New Hires, then assign pages, quizzes, and certifications.</p>
+          <p className="eyebrow">Team</p>
+          <h1>Your team and their training</h1>
+          <p>See everyone in this restaurant, organize staff groups, and assign what each person needs to study.</p>
         </div>
-        <Link className="secondary-button" to="/manager/staff-progress">
-          View Results
-        </Link>
+        <div className="header-actions">
+          <Link className="primary-button" to="/manager/invite-team">Invite team</Link>
+          <Link className="secondary-button" to="/manager/staff-progress">View readiness</Link>
+        </div>
       </div>
 
       {message ? <p className="form-message page-message">{message}</p> : null}
@@ -289,6 +302,44 @@ export default function ManagerAssignmentsPage() {
 
       {workspace.status === "ready" ? (
         <>
+          <section className="operator-section team-roster-section">
+            <div className="operator-section-heading">
+              <div>
+                <p className="eyebrow">People</p>
+                <h2>Everyone with access</h2>
+                <p>Invite someone first, then add staff to groups such as Servers, Captains, Bar Team, or New Hires.</p>
+              </div>
+              <Link to="/manager/invite-team">Invite or review invitations</Link>
+            </div>
+
+            {activeMembers.length === 0 ? (
+              <p className="empty-panel">No active team members yet.</p>
+            ) : (
+              <div className="team-roster-grid">
+                {activeMembers.map((member) => {
+                  const memberGroups = groupsForMember(member.profile?.id);
+                  const role = member.membership?.role || "staff";
+
+                  return (
+                    <article className="team-roster-card" key={member.membership.id}>
+                      <span className="account-avatar" aria-hidden="true">
+                        {memberLabel(member).charAt(0).toUpperCase()}
+                      </span>
+                      <div>
+                        <h3>{memberLabel(member)}</h3>
+                        <p>{member.profile?.email || "No email found"}</p>
+                        <small>{role === "owner" ? "Account Owner" : role.charAt(0).toUpperCase() + role.slice(1)}</small>
+                      </div>
+                      <div className="team-member-groups">
+                        {memberGroups.length ? memberGroups.map((groupName) => <span key={groupName}>{groupName}</span>) : <span>Not in a group</span>}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
           <div className="content-manager-grid">
             <form className="form-card" onSubmit={submitGroup}>
               <h2>{editingGroupId ? "Edit Group Members" : "Create Staff Group"}</h2>

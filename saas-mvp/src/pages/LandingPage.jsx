@@ -36,9 +36,14 @@ export default function LandingPage() {
         <p>
           A calm training workspace for menus, tech sheets, SOPs, quizzes, and staff progress.
         </p>
-        <Link className="primary-button hero-cta" to="/trial">
-          Start Your Free Trial
-        </Link>
+        <div className="hero-actions">
+          <Link className="primary-button hero-cta" to="/trial">
+            Start Your Free Trial
+          </Link>
+          <Link className="secondary-button hero-cta" to="/managed-setup">
+            Let Line Up Build Your Library
+          </Link>
+        </div>
         <div className="scroll-cue" aria-hidden="true" />
       </section>
 
@@ -103,7 +108,7 @@ export default function LandingPage() {
           <h2>Start with a 30-day free trial.</h2>
           <p>
             Build your own training library, or ask for setup help if you want us to organize menus,
-            Google Docs, wine lists, cocktail specs, and SOPs.
+            Google Docs, wine lists, cocktail specs, SOPs, staff groups, and review questions.
           </p>
         </div>
 
@@ -125,7 +130,7 @@ export default function LandingPage() {
             Start Your Free Trial
           </Link>
           <Link className="text-link" to="/managed-setup">
-            Get Setup Help
+            Let Line Up Build Your Library
           </Link>
         </div>
       </section>

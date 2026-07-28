@@ -11,6 +11,7 @@ import ManagerBillingPage from "./pages/ManagerBillingPage.jsx";
 import ManagerAssignmentsPage from "./pages/ManagerAssignmentsPage.jsx";
 import ManagerCertificationsPage from "./pages/ManagerCertificationsPage.jsx";
 import ManagerContentPage from "./pages/ManagerContentPage.jsx";
+import ManagerCreateTrainingPage from "./pages/ManagerCreateTrainingPage.jsx";
 import ManagerDashboard from "./pages/ManagerDashboard.jsx";
 import ManagerImportPage from "./pages/ManagerImportPage.jsx";
 import ManagerOnboardingPage from "./pages/ManagerOnboardingPage.jsx";
@@ -75,6 +76,14 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={ownerAdminRoles}>
               <ManagerBillingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/create-training"
+          element={
+            <ProtectedRoute allowedRoles={managerRoles}>
+              <ManagerCreateTrainingPage />
             </ProtectedRoute>
           }
         />

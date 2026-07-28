@@ -93,10 +93,10 @@ export default function ManagerDashboard() {
       },
       {
         title: "Add training material",
-        description: "Paste existing notes in bulk or create one training page at a time.",
+        description: "Write or paste one training update. Line Up creates the staff page and its review questions.",
         complete: overview.pages > 0,
-        to: "/manager/import",
-        action: "Add training"
+        to: "/manager/create-training",
+        action: "Create training"
       },
       {
         title: "Invite your team",
@@ -180,7 +180,7 @@ export default function ManagerDashboard() {
               <small>{workspace.restaurant?.trialEndsAt ? `Trial ends ${formatDate(workspace.restaurant.trialEndsAt)}` : ""}</small>
             </div>
             <div className="home-account-actions">
-              <Link to="/managed-setup">Get help importing</Link>
+              <Link to="/managed-setup">Have Line Up build it</Link>
               {isWorkspaceAdmin ? <Link to="/manager/settings">Restaurant settings</Link> : null}
               {isOwnerOrAdmin(workspace.role) ? <Link to="/manager/billing">Plan & billing</Link> : null}
             </div>
@@ -192,11 +192,11 @@ export default function ManagerDashboard() {
                 <p className="eyebrow">Today’s training update</p>
                 <h2 id="daily-flow-title">From menu change to staff-ready</h2>
               </div>
-              <Link className="primary-button" to="/manager/import">Paste today’s update</Link>
+              <Link className="primary-button" to="/manager/create-training">Create today’s update</Link>
             </div>
             <div className="daily-flow-steps">
-              <Link to="/manager/import"><strong>1</strong><span>Paste update</span></Link>
-              <Link to="/manager/content"><strong>2</strong><span>Review cards</span></Link>
+              <Link to="/manager/create-training"><strong>1</strong><span>Write or paste</span></Link>
+              <Link to="/manager/create-training"><strong>2</strong><span>Review questions</span></Link>
               <Link to="/manager/content"><strong>3</strong><span>Publish</span></Link>
               <Link to="/manager/assignments"><strong>4</strong><span>Assign team</span></Link>
               <Link to="/manager/staff-progress"><strong>5</strong><span>Track completion</span></Link>
@@ -269,20 +269,15 @@ export default function ManagerDashboard() {
             </div>
 
             <div className="home-action-grid">
-              <Link className="home-action" to="/manager/import">
-                <span>Bulk import</span>
-                <h3>Import training material</h3>
-                <p>Paste menus, tech sheets, cocktail specs, or SOPs and review the draft pages Line Up creates.</p>
-              </Link>
-              <Link className="home-action" to="/manager/content#training-page-form">
+              <Link className="home-action home-action-primary" to="/manager/create-training">
                 <span>Training</span>
-                <h3>Create one page</h3>
-                <p>Add or update a dish, wine, cocktail, service standard, or procedure.</p>
+                <h3>Create a training page</h3>
+                <p>Write or paste an update, add a photo, and let Line Up create the review questions.</p>
               </Link>
-              <Link className="home-action" to="/manager/invite-team">
+              <Link className="home-action" to="/manager/assignments">
                 <span>Team</span>
-                <h3>Invite someone</h3>
-                <p>Give managers or staff the right access to this restaurant.</p>
+                <h3>Manage team</h3>
+                <p>See employees, organize groups, invite people, and assign training.</p>
               </Link>
               <Link className="home-action" to="/manager/staff-progress">
                 <span>Results</span>
@@ -294,10 +289,10 @@ export default function ManagerDashboard() {
                 <h3>Create certifications</h3>
                 <p>Name the skills staff need to master and choose which quizzes count toward each one.</p>
               </Link>
-              <Link className="home-action" to="/manager/assignments">
-                <span>Assignments</span>
-                <h3>Assign training</h3>
-                <p>Create groups like Server or Captain, then assign quizzes and certifications to the right people.</p>
+              <Link className="home-action" to="/managed-setup">
+                <span>Done for you</span>
+                <h3>Let Line Up build your library</h3>
+                <p>Send us your menus, tech sheets, SOPs, and team details. We organize and build everything for you.</p>
               </Link>
               <Link className="home-action" to="/report-issue">
                 <span>Help</span>

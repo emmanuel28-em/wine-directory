@@ -36,6 +36,15 @@ function firstSentence(value) {
   return text.split(/(?<=[.!?])\s+/)[0] || text;
 }
 
+function studyStatements(value) {
+  return unique(
+    cleanText(value)
+      .split(/\n+|(?<=[.!?])\s+/)
+      .map((item) => item.replace(/^[-*•]\s*/, "").trim())
+      .filter((item) => item.length >= 18)
+  );
+}
+
 function shuffle(values) {
   return [...values].sort(() => Math.random() - 0.5);
 }
@@ -49,6 +58,7 @@ function collectReviewAnswerPool(docs, fieldName) {
       if (fieldName === "allergens") return splitList(content.allergens);
       if (fieldName === "summary") return [content.summary];
       if (fieldName === "serviceNotes") return [firstSentence(content.serviceNotes)];
+      if (fieldName === "body") return studyStatements(content.body || content.details);
       if (fieldName === "category") return [doc.category, doc.type];
 
       const facts = content.testableStaffKnowledge || content.quizFacts || [];
@@ -192,6 +202,28 @@ export function buildReviewQuestionsForDoc(doc, allDocs, { preferSaved = true } 
     }),
     explanation: firstSentence(content.serviceNotes || content.talkingPoints || content.body)
   });
+
+  // A manager can write naturally instead of filling out a rigid form. Pull
+  // useful statements from those notes so every page still receives five
+  // study questions before it reaches staff.
+  studyStatements([content.body, content.details, content.talkingPoints, content.serviceNotes].filter(Boolean).join("\n"))
+    .slice(0, reviewQuestionCount)
+    .forEach((statement, index) => {
+      addReviewQuestion(questions, {
+        prompt: `Which training detail is correct for ${title}? (${index + 1})`,
+        correctAnswer: statement,
+        choices: makeReviewChoices({
+          correctAnswer: statement,
+          pool: collectReviewAnswerPool(allDocs, "body"),
+          fallback: [
+            "This detail is not part of the current training page.",
+            "Confirm this with a manager before sharing it with a guest.",
+            "This information belongs to a different training item."
+          ]
+        }),
+        explanation: statement
+      });
+    });
 
   addReviewQuestion(questions, {
     prompt: `Where is ${title} organized in the training library?`,

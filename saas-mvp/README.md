@@ -43,6 +43,19 @@ The app currently includes:
 
 It does **not** include public unauthenticated file uploads or AI document extraction yet. Restaurant data now uses backend tenant authorization; Storage still needs a stricter server-side file layer before opening the product beyond a controlled pilot.
 
+## Everyday Restaurant Workflow
+
+The main manager workflow is intentionally short:
+
+1. Open **Create Training**.
+2. Add a title, write or paste the staff notes, and optionally add a photo.
+3. Line Up creates five review questions. The manager can preview and edit them if needed.
+4. Save a draft or publish the page for staff.
+5. Open **Team** to see employees, organize groups, and assign training.
+6. Open **Readiness** to see who completed the work.
+
+The full Training Library editor and bulk importer still exist as advanced tools. Restaurants that do not want to organize their own material can choose **Let Line Up Build Your Library** and submit a managed-setup request.
+
 ## Why This Folder Exists
 
 The old static app is still useful as a demo/reference version.

@@ -850,21 +850,18 @@ export default function ManagerContentPage() {
           />
         </label>
         <div className="header-actions">
-          <button className="primary-button" type="button" onClick={startNewPage}>
-            New page
-          </button>
-          <Link className="secondary-button" to="/manager/import">Import training material</Link>
+          <Link className="primary-button" to="/manager/create-training">Create training page</Link>
           <Link className="secondary-button" to="/training-library">View as staff</Link>
         </div>
       </div>
 
       <div className="training-import-banner">
         <div>
-          <p className="eyebrow">Bulk import</p>
-          <h2>Bring in an existing training library</h2>
-          <p>Paste menus, tech sheets, cocktail specs, wine notes, or SOPs. Line Up separates them into draft cards for you to review.</p>
+          <p className="eyebrow">Done-for-you setup</p>
+          <h2>Let Line Up create your training library</h2>
+          <p>Send us your menus, tech sheets, SOPs, wine lists, and team details. We organize the sections, pages, questions, and staff groups for you.</p>
         </div>
-        <Link className="primary-button" to="/manager/import">Import multiple pages</Link>
+        <Link className="secondary-button" to="/managed-setup">Request setup help</Link>
       </div>
 
       {workspace.status === "loading" || isWorking ? <div className="empty-panel">Working...</div> : null}
@@ -1082,10 +1079,10 @@ export default function ManagerContentPage() {
                 {docs.length === 0 ? (
                   <div className="empty-panel document-empty-state">
                     <h3>No training pages yet</h3>
-                    <p>Create a blank page or import existing menus, tech sheets, SOPs, wine lists, or cocktail specs.</p>
+                    <p>Create your first page by writing or pasting the information staff need to know.</p>
                     <div className="form-button-row">
-                      <button className="primary-button" type="button" onClick={startNewPage}>New page</button>
-                      <Link className="secondary-button" to="/manager/import">Import training material</Link>
+                      <Link className="primary-button" to="/manager/create-training">Create training page</Link>
+                      <Link className="secondary-button" to="/managed-setup">Have Line Up build it</Link>
                     </div>
                   </div>
                 ) : sortedDocs.length === 0 ? (

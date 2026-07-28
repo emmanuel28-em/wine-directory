@@ -4860,3 +4860,192 @@ code {
     grid-column: auto;
   }
 }
+
+/* The everyday manager workflow uses one calm writing surface. The larger
+   library editor remains available for detailed edits after a page is saved. */
+.simple-training-page {
+  max-width: 1080px;
+}
+
+.simple-training-composer {
+  display: grid;
+  gap: 20px;
+  padding: clamp(20px, 4vw, 36px);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 16px 42px rgba(31, 61, 46, 0.08);
+}
+
+.simple-training-composer label,
+.simple-training-composer fieldset {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  color: var(--color-text);
+  font-weight: 800;
+}
+
+.simple-composer-heading,
+.simple-composer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.simple-composer-heading h2,
+.simple-composer-heading p,
+.simple-training-success h2,
+.simple-training-success p,
+.team-roster-card h3,
+.team-roster-card p {
+  margin: 0;
+}
+
+.simple-composer-heading p,
+.simple-image-picker small,
+.simple-question-review small {
+  color: var(--color-muted);
+}
+
+.simple-training-editor {
+  min-height: 330px;
+  padding: 18px;
+  line-height: 1.65;
+  resize: vertical;
+}
+
+.simple-section-picker {
+  padding: 18px;
+  background: rgba(164, 182, 154, 0.13);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.simple-section-picker legend span,
+.simple-image-picker > span {
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.simple-section-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.simple-section-options label {
+  display: flex;
+  grid-template-columns: none;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.simple-section-options input {
+  width: auto;
+  min-height: 0;
+}
+
+.simple-question-review {
+  padding: 16px 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.simple-question-review summary {
+  cursor: pointer;
+}
+
+.simple-question-review summary span {
+  display: grid;
+  gap: 2px;
+}
+
+.simple-question-review > button {
+  margin: 16px 0;
+}
+
+.simple-question-review article {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 16px;
+  background: var(--color-background);
+  border-radius: 8px;
+}
+
+.simple-training-success,
+.simple-training-recent,
+.team-roster-section {
+  margin-top: 24px;
+}
+
+.team-roster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.team-roster-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 15px;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.team-roster-card p,
+.team-roster-card small {
+  color: var(--color-muted);
+}
+
+.team-member-groups {
+  display: flex;
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.team-member-groups span {
+  padding: 5px 8px;
+  color: var(--color-primary);
+  font-size: 0.76rem;
+  font-weight: 800;
+  background: rgba(164, 182, 154, 0.22);
+  border-radius: 999px;
+}
+
+.home-action-primary {
+  border-color: var(--color-secondary);
+  background: rgba(164, 182, 154, 0.18);
+}
+
+@media (max-width: 640px) {
+  .simple-training-composer {
+    padding: 18px;
+  }
+
+  .simple-composer-heading,
+  .simple-composer-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .simple-composer-actions button {
+    width: 100%;
+  }
+
+  .simple-training-editor {
+    min-height: 260px;
+  }
+}
