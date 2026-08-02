@@ -126,6 +126,7 @@ export default function AppLayout() {
   const authSession = useAuthSession();
   const currentWorkspace = useCurrentWorkspace();
   const hasPlatformAccess = ["platform_owner", "platform_developer"].includes(authSession.platformRole);
+  const isAuthenticated = authSession.status === "authenticated";
   const authenticatedHome = currentWorkspace.role === "staff" ? "/staff" : "/manager";
 
   async function handleLogout() {
@@ -141,8 +142,8 @@ export default function AppLayout() {
 
   return (
     <div className="app-shell">
-      <header className="site-header">
-        <NavLink className="brand" to={authSession.status === "authenticated" ? authenticatedHome : "/"}>
+      <header className={isAuthenticated ? "site-header is-authenticated" : "site-header"}>
+        <NavLink className="brand" to={isAuthenticated ? authenticatedHome : "/"}>
           <span className="brand-mark" aria-hidden="true">
             <span className="brand-l">L</span>
             <span className="brand-u">U</span>
@@ -162,20 +163,23 @@ export default function AppLayout() {
           />
         </nav>
 
-        <details className="mobile-nav-menu">
-          <summary>Menu</summary>
-          <nav className="mobile-nav-links" aria-label="Mobile navigation">
-            <NavigationLinks
-              authSession={authSession}
-              currentWorkspace={currentWorkspace}
-              hasPlatformAccess={hasPlatformAccess}
-              location={location}
-            />
-          </nav>
-        </details>
+        {!isAuthenticated ? (
+          <details className="mobile-nav-menu" key={location.pathname}>
+            <summary>Menu</summary>
+            <nav className="mobile-nav-links" aria-label="Mobile navigation">
+              <NavigationLinks
+                authSession={authSession}
+                currentWorkspace={currentWorkspace}
+                hasPlatformAccess={hasPlatformAccess}
+                location={location}
+              />
+            </nav>
+          </details>
+        ) : null}
 
-        {authSession.status === "authenticated" && !currentWorkspace.isLoading ? (
+        {isAuthenticated && !currentWorkspace.isLoading ? (
           <AccountMenu
+            key={location.pathname}
             authSession={authSession}
             currentWorkspace={currentWorkspace}
             hasPlatformAccess={hasPlatformAccess}

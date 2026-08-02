@@ -204,6 +204,7 @@ export default function ManagerReadinessPage() {
 
           <details className="data-list-panel progress-detail-panel">
             <summary>Readiness by training section</summary>
+            <p className="table-scroll-hint">Swipe sideways to see every training section.</p>
             <div className="readiness-matrix-wrap">
               <table className="readiness-matrix">
                 <thead>
