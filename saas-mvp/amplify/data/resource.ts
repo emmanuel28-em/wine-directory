@@ -381,6 +381,29 @@ const schema = a.schema({
       allow.groupDefinedIn("managerGroup").to(["read"])
     ]),
 
+  // A LeaderboardEntry contains only restaurant-safe learning totals. Staff
+  // can compare progress without receiving another employee's email address,
+  // membership record, individual answers, or detailed quiz attempts.
+  LeaderboardEntry: a
+    .model({
+      restaurantId: a.id().required(),
+      userProfileId: a.id().required(),
+      cognitoUserId: a.string(),
+      displayName: a.string(),
+      reviewedPages: a.integer(),
+      passedQuizzes: a.integer(),
+      quizFactsMastered: a.integer(),
+      currentStreak: a.integer(),
+      lastStudyAt: a.datetime(),
+      tenantGroup: a.string(),
+      managerGroup: a.string()
+    })
+    .authorization((allow) => [
+      allow.groupDefinedIn("tenantGroup").to(["read"]),
+      allow.ownerDefinedIn("cognitoUserId").identityClaim("sub").to(["create", "read", "update"]),
+      allow.groupDefinedIn("managerGroup").to(["create", "update"])
+    ]),
+
   // A FileAsset stores metadata for a file uploaded to S3.
   // The actual file lives in Storage; this model ties it to a restaurant and optionally a Training Page.
   FileAsset: a

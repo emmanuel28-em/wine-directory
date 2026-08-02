@@ -102,7 +102,7 @@ export default function ManagerDashboard() {
         title: "Check staff readiness",
         description: "See which pages each staff member completed and which sections still need attention.",
         complete: overview.members > 1 && overview.publishedPages > 0,
-        to: "/manager/staff-progress",
+        to: "/manager/readiness",
         action: "View readiness"
       }
     ],
@@ -178,7 +178,7 @@ export default function ManagerDashboard() {
               <Link to="/managed-setup"><strong>1</strong><span>Send material</span></Link>
               <Link to="/manager/content"><strong>2</strong><span>Review library</span></Link>
               <Link to="/manager/assignments"><strong>3</strong><span>Assign team</span></Link>
-              <Link to="/manager/staff-progress"><strong>4</strong><span>Track readiness</span></Link>
+              <Link to="/manager/readiness"><strong>4</strong><span>Track readiness</span></Link>
             </div>
           </section>
 
@@ -198,7 +198,7 @@ export default function ManagerDashboard() {
               <span>Published quizzes</span>
               <small>{overview.quizzes} total</small>
             </Link>
-            <Link to="/manager/staff-progress">
+            <Link to="/manager/readiness">
               <strong>View</strong>
               <span>Staff readiness</span>
               <small>Scores and completion</small>
@@ -258,7 +258,7 @@ export default function ManagerDashboard() {
                 <h3>Manage team</h3>
                 <p>See employees, organize groups, invite people, and assign training.</p>
               </Link>
-              <Link className="home-action" to="/manager/staff-progress">
+              <Link className="home-action" to="/manager/readiness">
                 <span>Results</span>
                 <h3>Check staff readiness</h3>
                 <p>Review quiz scores and see where the team may need more training.</p>

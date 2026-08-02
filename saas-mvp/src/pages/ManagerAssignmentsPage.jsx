@@ -285,7 +285,7 @@ export default function ManagerAssignmentsPage() {
         </div>
         <div className="header-actions">
           <Link className="primary-button" to="/manager/invite-team">Invite team</Link>
-          <Link className="secondary-button" to="/manager/staff-progress">View readiness</Link>
+          <Link className="secondary-button" to="/manager/readiness">View readiness</Link>
         </div>
       </div>
 

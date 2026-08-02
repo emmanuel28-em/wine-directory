@@ -5,6 +5,7 @@ import PlatformRoute from "./components/PlatformRoute.jsx";
 import AcceptInvitePage from "./pages/AcceptInvitePage.jsx";
 import InviteTeamPage from "./pages/InviteTeamPage.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
+import LeaderboardPage from "./pages/LeaderboardPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import ManagedSetupPage from "./pages/ManagedSetupPage.jsx";
 import ManagerBillingPage from "./pages/ManagerBillingPage.jsx";
@@ -16,7 +17,7 @@ import ManagerDashboard from "./pages/ManagerDashboard.jsx";
 import ManagerImportPage from "./pages/ManagerImportPage.jsx";
 import ManagerOnboardingPage from "./pages/ManagerOnboardingPage.jsx";
 import ManagerQuizzesPage from "./pages/ManagerQuizzesPage.jsx";
-import ManagerStaffProgressPage from "./pages/ManagerStaffProgressPage.jsx";
+import ManagerReadinessPage from "./pages/ManagerReadinessPage.jsx";
 import MyProgressPage from "./pages/MyProgressPage.jsx";
 import PlatformControlPage from "./pages/PlatformControlPage.jsx";
 import PlatformRestaurantHealthPage from "./pages/PlatformRestaurantHealthPage.jsx";
@@ -128,10 +129,18 @@ export default function App() {
           }
         />
         <Route
+          path="/manager/readiness"
+          element={
+            <ProtectedRoute allowedRoles={managerRoles}>
+              <ManagerReadinessPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/manager/staff-progress"
           element={
             <ProtectedRoute allowedRoles={managerRoles}>
-              <ManagerStaffProgressPage />
+              <Navigate to="/manager/readiness" replace />
             </ProtectedRoute>
           }
         />
@@ -180,6 +189,14 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={activeMemberRoles}>
               <StaffQuizzesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/leaderboard"
+          element={
+            <ProtectedRoute allowedRoles={activeMemberRoles}>
+              <LeaderboardPage />
             </ProtectedRoute>
           }
         />

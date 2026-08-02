@@ -6,6 +6,7 @@ import {
   listStaffGroupMembersForRestaurant,
   listTrainingAssignmentsForRestaurant
 } from "../lib/assignments.js";
+import { syncMyLeaderboardEntry } from "../lib/leaderboard.js";
 import { listQuestionsForQuiz, listQuizzesForRestaurant, parseChoices, parseAnswersJson, saveQuizAttempt } from "../lib/quizzes.js";
 
 function getResultLabel(passed) {
@@ -127,6 +128,13 @@ export default function StaffQuizzesPage() {
         answers
       });
       setResult(attempt);
+      syncMyLeaderboardEntry({
+        restaurantId: workspace.restaurant.id,
+        userProfile: workspace.userProfile,
+        membership: workspace.membership
+      }).catch(() => {
+        // Quiz results remain saved even if the leaderboard refresh is delayed.
+      });
       setMessage("Quiz submitted.");
     } catch (error) {
       setMessage(error.message || "Could not save quiz attempt.");

@@ -472,7 +472,8 @@ To test tenant separation:
 - `/manager/content` protected content management page for Account Owners, Admins, and Managers
 - `/manager/quizzes` protected quiz builder for Account Owners, Admins, and Managers
 - `/manager/certifications` protected certification builder for Account Owners, Admins, and Managers
-- `/manager/staff-progress` protected quiz results page for Account Owners, Admins, and Managers
+- `/manager/readiness` protected team readiness page for Account Owners, Admins, and Managers
+- `/leaderboard` shared restaurant learning leaderboard for every active member
 - `/manager/settings` protected Workspace Settings and Team Management page
 - `/manager/invite-team` protected invite team page
 - `/training-library` protected staff-facing Training Library for all active members
@@ -889,7 +890,7 @@ Staff takes a quiz:
 Manager views staff results:
 
 1. Sign back in as the Account Owner, Admin, or Manager.
-2. Go to `/manager/staff-progress`.
+2. Go to `/manager/readiness`.
 3. Confirm the staff user's quiz result appears with name/email, quiz title, score, status, and completion date.
 
 Staff views personal progress:
@@ -904,7 +905,7 @@ Restaurant A vs Restaurant B quiz safety:
 2. Create and publish a quiz.
 3. Accept a staff invite for Restaurant A and submit the quiz.
 4. Create Restaurant B with a separate account.
-5. Visit `/quizzes` and `/manager/staff-progress` in Restaurant B.
+5. Visit `/quizzes` and `/manager/readiness` in Restaurant B.
 6. Confirm Restaurant B cannot see Restaurant A quizzes or quiz results.
 
 ## Testing File Uploads And Attached Resources
@@ -1108,7 +1109,7 @@ Testing Restaurant A vs Restaurant B isolation:
 2. Add training content and a quiz.
 3. Invite Staff A to Restaurant A.
 4. Confirm Staff A can view Restaurant A published content and take Restaurant A quizzes.
-5. Confirm Staff A cannot access `/manager`, `/manager/content`, `/manager/quizzes`, `/manager/staff-progress`, or `/manager/invite-team`.
+5. Confirm Staff A cannot access `/manager`, `/manager/content`, `/manager/quizzes`, `/manager/readiness`, or `/manager/invite-team`.
 6. Create Restaurant B owner.
 7. Confirm Restaurant B cannot see Restaurant A content, quizzes, invites, or results.
 8. Confirm Staff A cannot see Restaurant B data.
@@ -1142,6 +1143,32 @@ The first-use flow now connects restaurant setup to the work a manager actually 
 PDF and Word extraction is not automatic yet. Managers can paste their text or use Request Setup Help for larger document migrations.
 
 Staff can select **Mark as reviewed** on a published Training Page after studying it. The Staff Progress page shows these review confirmations separately from quiz attempts. This distinction is intentional: a review confirms that staff saw the material, while a passing quiz demonstrates knowledge.
+
+## Shared Study Experience And Readiness
+
+Every active restaurant member studies from `/training-library`. Account Owners, Admins, and Managers see the same learner-first layout with two extra controls: **Add New Card** in the page header and **Edit** on each training card. Staff do not receive those content-management actions.
+
+Each card requires a five-question study check before it is marked complete. If a manager edits that published card later, its earlier acknowledgement becomes stale and the card returns to **Needs Review** for staff.
+
+The shared `/leaderboard` route displays restaurant-safe totals only: display name, pages studied, quiz facts mastered, and study streak. Private emails, membership records, answers, and detailed attempts remain restricted.
+
+Managers use `/manager/readiness` to:
+
+- filter staff by restaurant-created team groups such as Servers or Bartenders
+- compare completion percentages across all published cards
+- see last study activity and recent updates still needing review
+- inspect section readiness and detailed review/quiz history
+
+Test the workflow:
+
+1. Sign in as an Account Owner, Admin, or Manager and open `/training-library`.
+2. Confirm **Add New Card** and each card's **Edit** action are visible.
+3. Sign in as Staff and confirm the same study layout appears without editing controls.
+4. Complete a card's five-question check and confirm its badge reads `5/5 Quiz Facts Studied`.
+5. Open `/leaderboard` as both roles and confirm the restaurant ranking appears.
+6. Open `/manager/readiness` as a Manager and filter the team by a Staff Group.
+7. Edit the completed Training Page, then confirm the Staff card returns to **Needs Review**.
+8. Confirm Staff is redirected away from `/manager/readiness`.
 
 To test the guided pilot flow:
 

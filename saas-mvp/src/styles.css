@@ -5154,7 +5154,383 @@ code {
   background: rgba(164, 182, 154, 0.18);
 }
 
+/* Shared study-first library */
+.header-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.staff-library-context-bar {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.7fr) minmax(320px, 1.3fr);
+  align-items: end;
+}
+
+.staff-library-context-bar .quick-filter-row {
+  grid-column: 1 / -1;
+}
+
+.staff-library-search span {
+  font-size: 0.8rem;
+}
+
+.quiz-progress-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 9px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  border-radius: 999px;
+}
+
+.quiz-progress-badge.is-complete {
+  color: var(--color-primary);
+  background: rgba(164, 182, 154, 0.3);
+}
+
+.quiz-progress-badge.is-review {
+  color: #8a4029;
+  background: rgba(200, 107, 74, 0.15);
+}
+
+.staff-visual-actions.is-manager {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.staff-visual-actions.is-manager .primary-button,
+.staff-visual-actions.is-manager .secondary-button {
+  width: auto;
+}
+
+/* Shared leaderboard exposes totals only, never private employee records. */
+.leaderboard-list {
+  display: grid;
+  gap: 10px;
+}
+
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 42px minmax(230px, 1fr) repeat(3, minmax(105px, 0.45fr));
+  gap: 14px;
+  align-items: center;
+  padding: 16px 18px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+}
+
+.leaderboard-row:first-child {
+  border-color: rgba(200, 107, 74, 0.46);
+  box-shadow: 0 14px 30px rgba(31, 42, 36, 0.08);
+}
+
+.leaderboard-row.is-current-user {
+  background: rgba(164, 182, 154, 0.15);
+  border-color: rgba(31, 61, 46, 0.34);
+}
+
+.leaderboard-rank {
+  color: var(--color-accent);
+  font-size: 1.15rem;
+  font-weight: 950;
+  text-align: center;
+}
+
+.leaderboard-person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.leaderboard-person h2,
+.leaderboard-person p {
+  margin: 0;
+}
+
+.leaderboard-person h2 {
+  overflow: hidden;
+  font-size: 1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaderboard-person p,
+.leaderboard-stat span {
+  color: var(--color-muted);
+  font-size: 0.78rem;
+}
+
+.leaderboard-avatar {
+  display: grid;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  color: #fff;
+  font-weight: 900;
+  background: var(--color-primary);
+  border-radius: 50%;
+  place-items: center;
+}
+
+.leaderboard-stat {
+  display: grid;
+  gap: 2px;
+}
+
+.leaderboard-stat strong {
+  color: var(--color-primary);
+  font-size: 1.1rem;
+}
+
+/* Manager-only readiness keeps the first screen focused on decisions. */
+.readiness-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.readiness-summary-grid article {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.readiness-summary-grid span,
+.readiness-filter-panel p {
+  color: var(--color-muted);
+}
+
+.readiness-summary-grid strong {
+  color: var(--color-primary);
+  font-size: 1.7rem;
+}
+
+.readiness-filter-panel {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 0;
+}
+
+.readiness-filter-panel h2,
+.readiness-filter-panel p {
+  margin: 0;
+}
+
+.readiness-filter-panel p {
+  margin-top: 4px;
+}
+
+.team-readiness-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.team-readiness-card {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+}
+
+.team-readiness-person {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.team-readiness-person h2,
+.team-readiness-person p {
+  margin: 0;
+}
+
+.team-readiness-person h2 {
+  font-size: 1rem;
+}
+
+.team-readiness-person p,
+.readiness-progress-heading span {
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+
+.readiness-status {
+  padding: 6px 9px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  border-radius: 999px;
+}
+
+.readiness-status.is-ready {
+  color: var(--color-primary);
+  background: rgba(164, 182, 154, 0.28);
+}
+
+.readiness-status.is-review {
+  color: #8a4029;
+  background: rgba(200, 107, 74, 0.15);
+}
+
+.readiness-progress-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.readiness-progress-track {
+  overflow: hidden;
+  height: 8px;
+  background: rgba(111, 120, 111, 0.13);
+  border-radius: 999px;
+}
+
+.readiness-progress-track span {
+  display: block;
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: inherit;
+}
+
+.team-readiness-details {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.team-readiness-details div {
+  display: grid;
+  gap: 3px;
+}
+
+.team-readiness-details dt {
+  color: var(--color-muted);
+  font-size: 0.72rem;
+}
+
+.team-readiness-details dd {
+  margin: 0;
+  font-size: 0.83rem;
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .leaderboard-row {
+    grid-template-columns: 36px minmax(180px, 1fr) repeat(3, minmax(80px, 0.4fr));
+  }
+
+  .readiness-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 640px) {
+  .header-action-row {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .header-action-row .primary-button,
+  .header-action-row .secondary-button {
+    flex: 1 1 auto;
+  }
+
+  .staff-library-context-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-library-context-bar .quick-filter-row {
+    grid-column: 1;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 3px;
+  }
+
+  .staff-library-sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    padding: 8px;
+    background: rgba(255, 253, 248, 0.96);
+    border-radius: 12px;
+  }
+
+  .staff-library-sidebar .sidebar-section:first-of-type {
+    display: flex;
+    gap: 6px;
+    width: max-content;
+  }
+
+  .staff-library-sidebar .sidebar-section:not(:first-of-type),
+  .staff-library-sidebar > .secondary-button {
+    display: none;
+  }
+
+  .staff-library-sidebar .sidebar-filter {
+    flex: 0 0 auto;
+    width: auto;
+    min-height: 40px;
+  }
+
+  .leaderboard-row {
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    padding: 14px 12px;
+  }
+
+  .leaderboard-stat:nth-of-type(3),
+  .leaderboard-stat:nth-of-type(4) {
+    display: none;
+  }
+
+  .leaderboard-stat {
+    text-align: right;
+  }
+
+  .readiness-filter-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .readiness-filter-panel .quick-filter-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .team-readiness-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .team-readiness-person {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .team-readiness-person .readiness-status {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .team-readiness-details {
+    grid-template-columns: 1fr;
+  }
+
   .simple-training-composer {
     padding: 18px;
   }

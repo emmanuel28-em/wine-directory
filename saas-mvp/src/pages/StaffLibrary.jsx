@@ -9,6 +9,7 @@ import {
 import { listCollectionsForRestaurant } from "../lib/collections.js";
 import { getFileAssetUrl, isPreviewableImageFileAsset, listFileAssetsForRestaurant } from "../lib/fileAssets.js";
 import { isAdminOrManager } from "../lib/permissions.js";
+import { syncMyLeaderboardEntry } from "../lib/leaderboard.js";
 import {
   buildReviewQuestionsForDoc,
   reviewPassingScore,
@@ -19,6 +20,7 @@ import {
   listMyTrainingAcknowledgements,
   markTrainingDocReviewed
 } from "../lib/trainingAcknowledgements.js";
+import { isTrainingReviewCurrent } from "../lib/studyProgress.js";
 
 const typeLabels = {
   wine: "Wine",
@@ -326,7 +328,11 @@ export default function StaffLibrary() {
     return safeOrderA - safeOrderB || a.localeCompare(b);
   });
   const normalizedSearch = normalizeValue(searchTerm);
-  const reviewedDocIds = new Set(acknowledgements.map((item) => item.trainingDocId));
+  const reviewedDocIds = new Set(
+    acknowledgements
+      .filter((acknowledgement) => isTrainingReviewCurrent(docs.find((doc) => doc.id === acknowledgement.trainingDocId), acknowledgement))
+      .map((item) => item.trainingDocId)
+  );
   const isAssignedDoc = (doc) => assignedTrainingDocIds.has(doc.id) || assignedCollectionIds.has(doc.collectionId);
   const filteredItems = decoratedDocs
     .filter((item) => sectionFilter === allFilter || item.section === sectionFilter)
@@ -345,8 +351,11 @@ export default function StaffLibrary() {
   const activeReaderContent = activeReaderDoc ? parseContentJson(activeReaderDoc.contentJson) : null;
   const activeReaderFiles = activeReaderDoc ? fileAssets.filter((fileAsset) => fileAsset.trainingDocId === activeReaderDoc.id) : [];
   const activeReaderImage = activeReaderFiles.find((fileAsset) => filePreviewUrls[fileAsset.id]);
-  const activeReaderAcknowledgement = activeReaderDoc
+  const activeReaderAcknowledgementRecord = activeReaderDoc
     ? acknowledgements.find((item) => item.trainingDocId === activeReaderDoc.id)
+    : null;
+  const activeReaderAcknowledgement = isTrainingReviewCurrent(activeReaderDoc, activeReaderAcknowledgementRecord)
+    ? activeReaderAcknowledgementRecord
     : null;
   const activeSectionLabel = sectionFilter === allFilter ? "All" : sectionFilter.replace(" Menu", "");
   const activeSubsectionLabel = subsectionFilter === allFilter ? "" : subsectionFilter;
@@ -433,6 +442,13 @@ export default function StaffLibrary() {
         existingId: existing?.id
       });
       setAcknowledgements((current) => [...current.filter((item) => item.trainingDocId !== doc.id), saved]);
+      syncMyLeaderboardEntry({
+        restaurantId: workspace.restaurant.id,
+        userProfile: workspace.userProfile,
+        membership: workspace.membership
+      }).catch(() => {
+        // Finishing a study check should still succeed if the optional ranking refresh is delayed.
+      });
       setReviewResult({
         passed: true,
         score: correctCount,
@@ -453,9 +469,12 @@ export default function StaffLibrary() {
           <h1>{workspace.restaurant?.name || "Training Library"}</h1>
           <p>Everything your team needs to study, organized by your restaurant.</p>
         </div>
-        <button className="secondary-button" type="button" onClick={loadStaffLibrary}>
-          Refresh
-        </button>
+        <div className="header-action-row">
+          {canManageLibrary ? (
+            <Link className="primary-button" to="/manager/create-training">+ Add New Card</Link>
+          ) : null}
+          <button className="secondary-button" type="button" onClick={loadStaffLibrary}>Refresh</button>
+        </div>
       </div>
 
       {workspace.status === "loading" ? (
@@ -481,16 +500,6 @@ export default function StaffLibrary() {
       {workspace.status === "ready" && docs.length > 0 ? (
         <div className="staff-visual-library">
           <aside className="staff-library-sidebar" aria-label="Browse training sections">
-            <label className="staff-sidebar-search">
-              <span>Search</span>
-              <input
-                type="search"
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Search menu item, allergen, wine, SOP..."
-              />
-            </label>
-
             <div className="sidebar-section">
               <button
                 className={sectionFilter === allFilter ? "sidebar-filter is-active" : "sidebar-filter"}
@@ -598,6 +607,42 @@ export default function StaffLibrary() {
                 <h2>{activeSectionLabel}{activeSubsectionLabel ? ` · ${activeSubsectionLabel}` : ""}</h2>
                 <p>{filteredDocs.length} of {docs.length} training pages · {reviewedDocIds.size} reviewed</p>
               </div>
+              <label className="staff-library-search">
+                <span>Quick search</span>
+                <input
+                  type="search"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder="Search a dish, allergen, wine, cocktail, or SOP"
+                />
+              </label>
+              <div className="quick-filter-row" aria-label="Quick study filters">
+                {[
+                  [allFilter, "All"],
+                  [toStudyFilter, "Needs Review"],
+                  [assignedFilter, "Assigned"],
+                  [reviewedFilter, "Studied"]
+                ].map(([value, label]) => (
+                  <button
+                    className={studyStatusFilter === value ? "filter-chip active-filter-chip" : "filter-chip"}
+                    type="button"
+                    key={value}
+                    onClick={() => setStudyStatusFilter(value)}
+                  >
+                    {label}
+                  </button>
+                ))}
+                {availableSubsections.slice(0, 6).map((subsection) => (
+                  <button
+                    className={subsectionFilter === subsection ? "filter-chip active-filter-chip" : "filter-chip"}
+                    type="button"
+                    key={subsection}
+                    onClick={() => setSubsectionFilter(subsectionFilter === subsection ? allFilter : subsection)}
+                  >
+                    {subsection}
+                  </button>
+                ))}
+              </div>
             </section>
 
             {filteredDocs.length === 0 ? (
@@ -621,7 +666,8 @@ export default function StaffLibrary() {
                       const content = parseContentJson(doc.contentJson);
                       const attachedFiles = fileAssets.filter((fileAsset) => fileAsset.trainingDocId === doc.id);
                       const primaryImage = attachedFiles.find((fileAsset) => filePreviewUrls[fileAsset.id]);
-                      const acknowledgement = acknowledgements.find((item) => item.trainingDocId === doc.id);
+                      const acknowledgementRecord = acknowledgements.find((item) => item.trainingDocId === doc.id);
+                      const acknowledgement = isTrainingReviewCurrent(doc, acknowledgementRecord) ? acknowledgementRecord : null;
                       const isAssigned = assignedTrainingDocIds.has(doc.id) || assignedCollectionIds.has(doc.collectionId);
 
                       return (
@@ -645,12 +691,14 @@ export default function StaffLibrary() {
                             </div>
                           </button>
                           <div className="staff-card-status-row">
-                            <span className={acknowledgement ? "status-badge status-published" : "status-badge status-draft"}>
-                              {acknowledgement ? "Reviewed" : "Unreviewed"}
+                            <span className={acknowledgement ? "quiz-progress-badge is-complete" : "quiz-progress-badge is-review"}>
+                              {acknowledgement
+                                ? `${reviewQuestionCount}/${reviewQuestionCount} Quiz Facts Studied`
+                                : `0/${reviewQuestionCount} Quiz Facts Studied · Needs Review`}
                             </span>
                             {isAssigned ? <span className="status-badge status-review">Assigned</span> : null}
                           </div>
-                          <div className="staff-visual-actions">
+                          <div className={canManageLibrary ? "staff-visual-actions is-manager" : "staff-visual-actions"}>
                             <button
                               className={acknowledgement ? "secondary-button" : "primary-button"}
                               type="button"
@@ -658,6 +706,11 @@ export default function StaffLibrary() {
                             >
                               {acknowledgement ? "Review again" : "Study"}
                             </button>
+                            {canManageLibrary ? (
+                              <Link className="secondary-button" to={`/manager/content?edit=${doc.id}#training-page-form`}>
+                                Edit
+                              </Link>
+                            ) : null}
                           </div>
                         </article>
                       );
