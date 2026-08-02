@@ -31,7 +31,7 @@ function AccountMenu({ authSession, currentWorkspace, hasPlatformAccess, isSigni
         {currentWorkspace.isActiveMember && currentWorkspace.role !== "staff" ? (
           <>
             <NavLink to="/training-library">View staff library</NavLink>
-            <NavLink to="/manager/content">Advanced library editor</NavLink>
+            <NavLink to="/manager/content">Library tools</NavLink>
             <NavLink to="/manager/onboarding">Getting started</NavLink>
             {isOwnerOrAdmin(currentWorkspace.role) ? <NavLink to="/manager/settings">Restaurant settings</NavLink> : null}
             {isOwnerOrAdmin(currentWorkspace.role) ? <NavLink to="/manager/billing">Plan & billing</NavLink> : null}
@@ -80,7 +80,7 @@ function NavigationLinks({ authSession, currentWorkspace, hasPlatformAccess, loc
     return (
       <>
         <NavLink end to="/manager">Home</NavLink>
-        <NavLink to="/manager/create-training">Create Training</NavLink>
+        <NavLink to="/manager/content">Library</NavLink>
         <NavLink to="/manager/assignments">Team</NavLink>
         <NavLink to="/manager/staff-progress">Readiness</NavLink>
       </>
@@ -113,7 +113,7 @@ function MobileBottomNav({ authSession, currentWorkspace, location }) {
   return (
     <nav className="bottom-nav" aria-label="Manager quick navigation">
       <NavLink end to="/manager">Home</NavLink>
-      <NavLink to="/manager/create-training">Create</NavLink>
+      <NavLink to="/manager/content">Library</NavLink>
       <NavLink to="/manager/assignments">Team</NavLink>
       <NavLink to="/manager/staff-progress">Readiness</NavLink>
     </nav>

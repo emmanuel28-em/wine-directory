@@ -30,14 +30,22 @@ const typeLabels = {
 };
 
 const allFilter = "all";
+const toStudyFilter = "to-study";
+const assignedFilter = "assigned";
+const reviewedFilter = "reviewed";
 
 const collectionOrder = [
   "Lunch Menu",
   "Brunch Menu",
   "Dinner Menu",
-  "Cocktails",
   "Pasta Tasting Menu",
+  "Vegetarian Pasta Tasting",
+  "Desserts",
+  "Cocktails",
   "BTG Wines",
+  "Wine Pairings",
+  "Spirits",
+  "SOPs",
   "Food Items"
 ];
 
@@ -56,9 +64,25 @@ function getSectionLabel(doc, collection) {
   if (combined.includes("lunch")) return "Lunch Menu";
   if (combined.includes("brunch")) return "Brunch Menu";
   if (combined.includes("dinner")) return "Dinner Menu";
+  if (combined.includes("vegetarian") && combined.includes("pasta")) return "Vegetarian Pasta Tasting";
+  if (combined.includes("dessert") || combined.includes("gelati") || combined.includes("sorbet")) return "Desserts";
   if (combined.includes("cocktail")) return "Cocktails";
-  if (combined.includes("pasta") || combined.includes("pairing")) return "Pasta Tasting Menu";
+  if (combined.includes("pasta")) return "Pasta Tasting Menu";
+  if (combined.includes("pairing")) return "Wine Pairings";
   if (combined.includes("btg") || combined.includes("by-the-glass")) return "BTG Wines";
+  if (
+    combined.includes("spirit") ||
+    combined.includes("agave") ||
+    combined.includes("amari") ||
+    combined.includes("aperitivo") ||
+    combined.includes("beer") ||
+    combined.includes("gin") ||
+    combined.includes("grappa") ||
+    combined.includes("liqueur") ||
+    combined.includes("vermouth") ||
+    combined.includes("vodka") ||
+    combined.includes("whiskey")
+  ) return "Spirits";
   if (combined.includes("sop") || combined.includes("procedure")) return "SOPs";
 
   if (type === "cocktail") return "Cocktails";
@@ -84,7 +108,7 @@ function getSubsectionLabel(doc) {
   if (normalized.includes("course 4")) return "Course 4";
   if (normalized.includes("course 5")) return "Course 5";
 
-  return "";
+  return category.trim();
 }
 
 function docMatchesSearch(doc, collection, searchTerm) {
@@ -157,6 +181,7 @@ export default function StaffLibrary() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sectionFilter, setSectionFilter] = useState(allFilter);
   const [subsectionFilter, setSubsectionFilter] = useState(allFilter);
+  const [studyStatusFilter, setStudyStatusFilter] = useState(allFilter);
   const [activeReviewDocId, setActiveReviewDocId] = useState("");
   const [activeReaderDocId, setActiveReaderDocId] = useState("");
   const [reviewQuestions, setReviewQuestions] = useState([]);
@@ -301,9 +326,17 @@ export default function StaffLibrary() {
     return safeOrderA - safeOrderB || a.localeCompare(b);
   });
   const normalizedSearch = normalizeValue(searchTerm);
+  const reviewedDocIds = new Set(acknowledgements.map((item) => item.trainingDocId));
+  const isAssignedDoc = (doc) => assignedTrainingDocIds.has(doc.id) || assignedCollectionIds.has(doc.collectionId);
   const filteredItems = decoratedDocs
     .filter((item) => sectionFilter === allFilter || item.section === sectionFilter)
     .filter((item) => subsectionFilter === allFilter || item.subsection === subsectionFilter)
+    .filter((item) => {
+      if (studyStatusFilter === reviewedFilter) return reviewedDocIds.has(item.doc.id);
+      if (studyStatusFilter === assignedFilter) return isAssignedDoc(item.doc) && !reviewedDocIds.has(item.doc.id);
+      if (studyStatusFilter === toStudyFilter) return !reviewedDocIds.has(item.doc.id);
+      return true;
+    })
     .filter((item) => docMatchesSearch(item.doc, item.collection, normalizedSearch));
   const filteredDocs = filteredItems.map((item) => item.doc);
   const visualRows = groupStaffRows(filteredItems);
@@ -312,6 +345,9 @@ export default function StaffLibrary() {
   const activeReaderContent = activeReaderDoc ? parseContentJson(activeReaderDoc.contentJson) : null;
   const activeReaderFiles = activeReaderDoc ? fileAssets.filter((fileAsset) => fileAsset.trainingDocId === activeReaderDoc.id) : [];
   const activeReaderImage = activeReaderFiles.find((fileAsset) => filePreviewUrls[fileAsset.id]);
+  const activeReaderAcknowledgement = activeReaderDoc
+    ? acknowledgements.find((item) => item.trainingDocId === activeReaderDoc.id)
+    : null;
   const activeSectionLabel = sectionFilter === allFilter ? "All" : sectionFilter.replace(" Menu", "");
   const activeSubsectionLabel = subsectionFilter === allFilter ? "" : subsectionFilter;
 
@@ -325,6 +361,15 @@ export default function StaffLibrary() {
     } catch (error) {
       setMessage(error.message || "Could not open this resource.");
     }
+  }
+
+  function openReader(doc) {
+    setActiveReaderDocId(doc.id);
+    setActiveReviewDocId("");
+    setReviewQuestions([]);
+    setReviewAnswers({});
+    setReviewResult(null);
+    setMessage("");
   }
 
   function startReviewCheck(doc) {
@@ -393,9 +438,6 @@ export default function StaffLibrary() {
         score: correctCount,
         message: `Passed ${correctCount}/${reviewQuestionCount}. This page is now marked reviewed.`
       });
-      setActiveReviewDocId("");
-      setReviewQuestions([]);
-      setReviewAnswers({});
     } catch (error) {
       setMessage(error.message || "Could not mark this page as reviewed.");
     } finally {
@@ -481,6 +523,27 @@ export default function StaffLibrary() {
               })}
             </div>
 
+            <div className="sidebar-section">
+              <div className="sidebar-heading-row">
+                <h2>Study status</h2>
+              </div>
+              {[
+                [allFilter, "Everything"],
+                [toStudyFilter, "To study"],
+                [assignedFilter, "Assigned"],
+                [reviewedFilter, "Reviewed"]
+              ].map(([value, label]) => (
+                <button
+                  className={studyStatusFilter === value ? "sidebar-filter is-active" : "sidebar-filter"}
+                  type="button"
+                  key={value}
+                  onClick={() => setStudyStatusFilter(value)}
+                >
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
+
             {availableSubsections.length > 0 ? (
               <div className="sidebar-section">
                 <div className="sidebar-heading-row">
@@ -520,6 +583,7 @@ export default function StaffLibrary() {
               onClick={() => {
                 setSectionFilter(allFilter);
                 setSubsectionFilter(allFilter);
+                setStudyStatusFilter(allFilter);
                 setSearchTerm("");
               }}
             >
@@ -532,7 +596,7 @@ export default function StaffLibrary() {
               <div>
                 <p className="eyebrow">Viewing</p>
                 <h2>{activeSectionLabel}{activeSubsectionLabel ? ` · ${activeSubsectionLabel}` : ""}</h2>
-                <p>{filteredDocs.length} of {docs.length} published training pages</p>
+                <p>{filteredDocs.length} of {docs.length} training pages · {reviewedDocIds.size} reviewed</p>
               </div>
             </section>
 
@@ -562,7 +626,7 @@ export default function StaffLibrary() {
 
                       return (
                         <article className="staff-visual-card" key={`${row.id}-${doc.id}`}>
-                          <button className="staff-visual-open" type="button" onClick={() => setActiveReaderDocId(doc.id)}>
+                          <button className="staff-visual-open" type="button" onClick={() => openReader(doc)}>
                             <div className="staff-visual-media">
                               {primaryImage ? (
                                 <img src={filePreviewUrls[primaryImage.id]} alt="" />
@@ -587,81 +651,14 @@ export default function StaffLibrary() {
                             {isAssigned ? <span className="status-badge status-review">Assigned</span> : null}
                           </div>
                           <div className="staff-visual-actions">
-                            <button className="secondary-button" type="button" onClick={() => setActiveReaderDocId(doc.id)}>
-                              Open
-                            </button>
                             <button
                               className={acknowledgement ? "secondary-button" : "primary-button"}
                               type="button"
-                              onClick={() => startReviewCheck(doc)}
-                              disabled={reviewingDocId === doc.id}
+                              onClick={() => openReader(doc)}
                             >
-                              {acknowledgement ? "Retake review" : "Review check"}
+                              {acknowledgement ? "Review again" : "Study"}
                             </button>
-                            {canManageLibrary ? (
-                              <Link className="manager-edit-link" to={`/manager/content?edit=${doc.id}#training-page-form`}>
-                                Edit
-                              </Link>
-                            ) : null}
                           </div>
-
-                          {activeReviewDocId === doc.id ? (
-                            <div className="inline-review-check staff-visual-review">
-                              <div>
-                                <p className="eyebrow">Review check</p>
-                                <h3>{doc.title}</h3>
-                                <p>Score at least {reviewPassingScore}/{reviewQuestionCount} to mark this page reviewed.</p>
-                              </div>
-
-                              {reviewQuestions.map((question, questionIndex) => (
-                                <fieldset className="review-question" key={`${doc.id}-${question.prompt}`}>
-                                  <legend>{questionIndex + 1}. {question.prompt}</legend>
-                                  {question.choices.map((choice) => (
-                                    <label className="quiz-choice" key={choice}>
-                                      <input
-                                        type="radio"
-                                        name={`${doc.id}-review-${questionIndex}`}
-                                        value={choice}
-                                        checked={reviewAnswers[questionIndex] === choice}
-                                        onChange={() => updateReviewAnswer(questionIndex, choice)}
-                                      />
-                                      <span>{choice}</span>
-                                    </label>
-                                  ))}
-                                </fieldset>
-                              ))}
-
-                              {reviewResult ? (
-                                <div className={reviewResult.passed ? "quiz-result quiz-result-pass" : "quiz-result quiz-result-review"}>
-                                  <h3>{reviewResult.passed ? "Ready" : "Needs review"}</h3>
-                                  <p>{reviewResult.message}</p>
-                                </div>
-                              ) : null}
-
-                              <div className="form-button-row">
-                                <button
-                                  className="primary-button"
-                                  type="button"
-                                  onClick={() => submitReviewCheck(doc)}
-                                  disabled={reviewingDocId === doc.id}
-                                >
-                                  {reviewingDocId === doc.id ? "Saving..." : "Submit review check"}
-                                </button>
-                                <button
-                                  className="secondary-button"
-                                  type="button"
-                                  onClick={() => {
-                                    setActiveReviewDocId("");
-                                    setReviewQuestions([]);
-                                    setReviewAnswers({});
-                                    setReviewResult(null);
-                                  }}
-                                >
-                                  Close
-                                </button>
-                              </div>
-                            </div>
-                          ) : null}
                         </article>
                       );
                     })}
@@ -685,6 +682,18 @@ export default function StaffLibrary() {
               <button className="secondary-button" type="button" onClick={() => setActiveReaderDocId("")}>
                 Close
               </button>
+            </div>
+
+            <div className="staff-reader-status">
+              <span className={activeReaderAcknowledgement ? "status-badge status-published" : "status-badge status-draft"}>
+                {activeReaderAcknowledgement ? "Reviewed" : "To study"}
+              </span>
+              <span>{reviewQuestionCount} questions · Pass {reviewPassingScore} to complete</span>
+              {canManageLibrary ? (
+                <Link className="manager-edit-link" to={`/manager/content?edit=${activeReaderDoc.id}#training-page-form`}>
+                  Edit this page
+                </Link>
+              ) : null}
             </div>
 
             {activeReaderImage ? (
@@ -752,41 +761,84 @@ export default function StaffLibrary() {
                 </div>
               </div>
             ) : null}
+
+            {activeReviewDocId !== activeReaderDoc.id ? (
+              <section className="staff-reader-check-prompt">
+                <div>
+                  <p className="eyebrow">Knowledge check</p>
+                  <h3>{activeReaderAcknowledgement ? "Want to review it again?" : "Ready to complete this page?"}</h3>
+                  <p>Answer five questions based on the training notes. Passing marks this page reviewed.</p>
+                </div>
+                <button className="primary-button" type="button" onClick={() => startReviewCheck(activeReaderDoc)}>
+                  {activeReaderAcknowledgement ? "Retake 5-question check" : "Take 5-question check"}
+                </button>
+              </section>
+            ) : (
+              <section className="inline-review-check staff-reader-review">
+                <div>
+                  <p className="eyebrow">5-question check</p>
+                  <h3>{activeReaderDoc.title}</h3>
+                  <p>Score at least {reviewPassingScore}/{reviewQuestionCount} to mark this page reviewed.</p>
+                </div>
+
+                {reviewQuestions.map((question, questionIndex) => (
+                  <fieldset className="review-question" key={`${activeReaderDoc.id}-${question.prompt}`}>
+                    <legend>{questionIndex + 1}. {question.prompt}</legend>
+                    {question.choices.map((choice) => (
+                      <label className="quiz-choice" key={choice}>
+                        <input
+                          type="radio"
+                          name={`${activeReaderDoc.id}-review-${questionIndex}`}
+                          value={choice}
+                          checked={reviewAnswers[questionIndex] === choice}
+                          onChange={() => updateReviewAnswer(questionIndex, choice)}
+                        />
+                        <span>{choice}</span>
+                      </label>
+                    ))}
+                  </fieldset>
+                ))}
+
+                {reviewResult ? (
+                  <div className={reviewResult.passed ? "quiz-result quiz-result-pass" : "quiz-result quiz-result-review"}>
+                    <h3>{reviewResult.passed ? "Page complete" : "Needs review"}</h3>
+                    <p>{reviewResult.message}</p>
+                  </div>
+                ) : null}
+
+                <div className="form-button-row">
+                  <button
+                    className="primary-button"
+                    type="button"
+                    onClick={() => submitReviewCheck(activeReaderDoc)}
+                    disabled={reviewingDocId === activeReaderDoc.id || reviewResult?.passed}
+                  >
+                    {reviewingDocId === activeReaderDoc.id ? "Saving..." : reviewResult?.passed ? "Completed" : "Submit answers"}
+                  </button>
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => {
+                      setActiveReviewDocId("");
+                      setReviewQuestions([]);
+                      setReviewAnswers({});
+                      setReviewResult(null);
+                    }}
+                  >
+                    Back to notes
+                  </button>
+                </div>
+              </section>
+            )}
           </section>
         </div>
       ) : null}
 
       {workspace.status === "ready" ? (
-        <section className="setup-steps staff-next-steps">
-          <div className="dashboard-grid">
-            <article className="stat-card" id="quizzes">
-              <span>Quizzes</span>
-              <h2>Take a Quiz</h2>
-              <p>Show that you understand the training pages your restaurant publishes.</p>
-              <Link className="secondary-button card-action" to="/quizzes">
-                Start Quiz
-              </Link>
-            </article>
-
-            <article className="stat-card" id="progress">
-              <span>My Progress</span>
-              <h2>Review My Progress</h2>
-              <p>See your quiz scores and whether you are ready for service.</p>
-              <Link className="secondary-button card-action" to="/my-progress">
-                View Progress
-              </Link>
-            </article>
-
-            <article className="stat-card" id="report-issue">
-              <span>Report Issue</span>
-              <h2>Something not right?</h2>
-              <p>Report outdated information or a problem using Line Up.</p>
-              <Link className="secondary-button card-action" to="/report-issue">
-                Get Help
-              </Link>
-            </article>
-          </div>
-        </section>
+        <div className="staff-library-footer-links">
+          <Link to="/my-progress">See my full progress</Link>
+          <Link to="/report-issue">Report outdated information</Link>
+        </div>
       ) : null}
     </section>
   );

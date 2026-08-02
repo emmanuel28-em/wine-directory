@@ -85,46 +85,25 @@ export default function ManagerDashboard() {
   const gettingStartedSteps = useMemo(
     () => [
       {
-        title: "Organize your library",
-        description: "Choose simple sections such as Dinner Menu, Wine, Cocktails, or Opening Procedures.",
-        complete: overview.collections > 0,
-        to: "/manager/onboarding",
-        action: "Choose sections"
-      },
-      {
-        title: "Add training material",
-        description: "Write or paste one training update. Line Up creates the staff page and its review questions.",
+        title: "Build your training library",
+        description: "Send Line Up your menus, tech sheets, and SOPs, or use the library tools to add a page yourself.",
         complete: overview.pages > 0,
-        to: "/manager/create-training",
-        action: "Create training"
+        to: "/managed-setup",
+        action: "Send your material"
       },
       {
         title: "Invite your team",
-        description: "Bring in a manager or staff member when the first pages are ready.",
+        description: "Invite staff when the first training sections are ready to study.",
         complete: overview.members > 1,
         to: "/manager/invite-team",
         action: "Invite someone"
       },
       {
-        title: "Publish a quiz",
-        description: "Turn the facts in your training pages into a short knowledge check.",
-        complete: overview.publishedQuizzes > 0,
-        to: "/manager/quizzes",
-        action: "Create a quiz"
-      },
-      {
-        title: "Create a certification",
-        description: "Bundle quizzes into a named staff mastery goal, such as Wine Certified or Service Ready.",
-        complete: overview.certifications > 0,
-        to: "/manager/certifications",
-        action: "Create certification"
-      },
-      {
-        title: "Assign training",
-        description: "Send quizzes or certifications to groups such as Servers, Captains, Bar Team, or New Hires.",
-        complete: overview.assignments > 0,
-        to: "/manager/assignments",
-        action: "Assign training"
+        title: "Check staff readiness",
+        description: "See which pages each staff member completed and which sections still need attention.",
+        complete: overview.members > 1 && overview.publishedPages > 0,
+        to: "/manager/staff-progress",
+        action: "View readiness"
       }
     ],
     [overview]
@@ -189,17 +168,17 @@ export default function ManagerDashboard() {
           <section className="daily-training-flow" aria-labelledby="daily-flow-title">
             <div className="daily-flow-heading">
               <div>
-                <p className="eyebrow">Today’s training update</p>
-                <h2 id="daily-flow-title">From menu change to staff-ready</h2>
+                <p className="eyebrow">Need new training added?</p>
+                <h2 id="daily-flow-title">Send the material. Line Up builds the library.</h2>
+                <p>Menus, tech sheets, SOPs, wine lists, and photos can all become organized staff training.</p>
               </div>
-              <Link className="primary-button" to="/manager/create-training">Create today’s update</Link>
+              <Link className="primary-button" to="/managed-setup">Send material to Line Up</Link>
             </div>
             <div className="daily-flow-steps">
-              <Link to="/manager/create-training"><strong>1</strong><span>Write or paste</span></Link>
-              <Link to="/manager/create-training"><strong>2</strong><span>Review questions</span></Link>
-              <Link to="/manager/content"><strong>3</strong><span>Publish</span></Link>
-              <Link to="/manager/assignments"><strong>4</strong><span>Assign team</span></Link>
-              <Link to="/manager/staff-progress"><strong>5</strong><span>Track completion</span></Link>
+              <Link to="/managed-setup"><strong>1</strong><span>Send material</span></Link>
+              <Link to="/manager/content"><strong>2</strong><span>Review library</span></Link>
+              <Link to="/manager/assignments"><strong>3</strong><span>Assign team</span></Link>
+              <Link to="/manager/staff-progress"><strong>4</strong><span>Track readiness</span></Link>
             </div>
           </section>
 
@@ -269,10 +248,10 @@ export default function ManagerDashboard() {
             </div>
 
             <div className="home-action-grid">
-              <Link className="home-action home-action-primary" to="/manager/create-training">
-                <span>Training</span>
-                <h3>Create a training page</h3>
-                <p>Write or paste an update, add a photo, and let Line Up create the review questions.</p>
+              <Link className="home-action home-action-primary" to="/manager/content">
+                <span>Library</span>
+                <h3>Review the training library</h3>
+                <p>See published pages, drafts, images, and the sections available to staff.</p>
               </Link>
               <Link className="home-action" to="/manager/assignments">
                 <span>Team</span>
@@ -284,20 +263,10 @@ export default function ManagerDashboard() {
                 <h3>Check staff readiness</h3>
                 <p>Review quiz scores and see where the team may need more training.</p>
               </Link>
-              <Link className="home-action" to="/manager/certifications">
-                <span>Mastery</span>
-                <h3>Create certifications</h3>
-                <p>Name the skills staff need to master and choose which quizzes count toward each one.</p>
-              </Link>
               <Link className="home-action" to="/managed-setup">
                 <span>Done for you</span>
                 <h3>Let Line Up build your library</h3>
                 <p>Send us your menus, tech sheets, SOPs, and team details. We organize and build everything for you.</p>
-              </Link>
-              <Link className="home-action" to="/report-issue">
-                <span>Help</span>
-                <h3>Report a problem</h3>
-                <p>Tell Line Up what failed, looks wrong, or would make training easier for your restaurant.</p>
               </Link>
             </div>
           </section>

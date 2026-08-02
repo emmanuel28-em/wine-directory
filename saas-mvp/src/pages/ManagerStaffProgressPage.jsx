@@ -136,6 +136,12 @@ export default function ManagerStaffProgressPage() {
       }),
     [activeStaffMembers, acknowledgements, attempts, publishedDocs, collections]
   );
+  const readinessSections = useMemo(
+    () =>
+      buildSectionReadiness({ docs: publishedDocs, collections, acknowledgements: [] })
+        .map((section) => section.sectionName),
+    [publishedDocs, collections]
+  );
 
   return (
     <section className="page-section">
@@ -172,34 +178,51 @@ export default function ManagerStaffProgressPage() {
           {activeStaffMembers.length === 0 ? (
             <div className="empty-panel">No staff members yet. Invite staff before tracking readiness.</div>
           ) : (
-            <div className="operator-table">
-              {staffReadinessRows.map((row) => (
-                <article className="operator-table-row progress-row" key={row.member.membership.id}>
-                  <div>
-                    <h4>{row.member.profile?.name || "Team Member"}</h4>
-                    <p>{row.member.profile?.email || "No email found"}</p>
-                  </div>
-                  <div>
-                    <h4>{row.reviewedCards}/{row.totalCards} cards reviewed</h4>
-                    <p>{row.attempts.length} quiz attempt{row.attempts.length === 1 ? "" : "s"}</p>
-                  </div>
-                  <div>
-                    <span className={row.missingSections.length === 0 && row.totalCards > 0 ? "status-badge status-published" : "status-badge status-draft"}>
-                      {row.missingSections.length === 0 && row.totalCards > 0 ? "Fully Ready" : "Needs Review"}
-                    </span>
-                    <p>{row.earnedSections.length} section certificate{row.earnedSections.length === 1 ? "" : "s"} current</p>
-                  </div>
-                  <div>
-                    <h4>Needs work</h4>
-                    <p>{row.missingSections.slice(0, 3).map((section) => section.sectionName).join(", ") || "Nothing right now"}</p>
-                  </div>
-                </article>
-              ))}
+            <div className="readiness-matrix-wrap">
+              <table className="readiness-matrix">
+                <thead>
+                  <tr>
+                    <th>Team member</th>
+                    <th>Overall</th>
+                    {readinessSections.map((sectionName) => <th key={sectionName}>{sectionName}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {staffReadinessRows.map((row) => {
+                    const sectionByName = new Map(
+                      [...row.earnedSections, ...row.missingSections].map((section) => [section.sectionName, section])
+                    );
+                    return (
+                      <tr key={row.member.membership.id}>
+                        <th scope="row">
+                          <strong>{row.member.profile?.name || "Team Member"}</strong>
+                          <small>{row.member.profile?.email || "No email found"}</small>
+                        </th>
+                        <td>
+                          <strong>{row.reviewedCards}/{row.totalCards}</strong>
+                          <small>pages</small>
+                        </td>
+                        {readinessSections.map((sectionName) => {
+                          const section = sectionByName.get(sectionName);
+                          return (
+                            <td key={sectionName}>
+                              <span className={section?.earned ? "matrix-status is-ready" : section?.reviewedCards ? "matrix-status is-progress" : "matrix-status"}>
+                                {section?.earned ? "Ready" : section ? `${section.reviewedCards}/${section.totalCards}` : "—"}
+                              </span>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </section>
 
-        <section className="data-list-panel">
+        <details className="data-list-panel progress-detail-panel">
+          <summary>Training page review history ({acknowledgements.length})</summary>
           <div className="data-list-heading">
             <h2>Training Pages Reviewed</h2>
             <span>{acknowledgements.length} confirmations</span>
@@ -236,9 +259,10 @@ export default function ManagerStaffProgressPage() {
                 })}
             </div>
           )}
-        </section>
+        </details>
 
-        <section className="data-list-panel">
+        <details className="data-list-panel progress-detail-panel">
+          <summary>Quiz attempt history ({attempts.length})</summary>
           <div className="data-list-heading">
             <h2>Quiz Attempts</h2>
             <button className="secondary-button" type="button" onClick={loadProgress}>
@@ -279,7 +303,7 @@ export default function ManagerStaffProgressPage() {
               })}
             </div>
           )}
-        </section>
+        </details>
         </>
       ) : null}
     </section>

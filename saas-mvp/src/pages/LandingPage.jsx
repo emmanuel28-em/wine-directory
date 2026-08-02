@@ -8,16 +8,16 @@ const problemPoints = [
 
 const solutionCards = [
   {
-    title: "Organize",
-    text: "Create a clean training library for menus, wine, cocktails, SOPs, and service standards."
+    title: "Send",
+    text: "Share the menus, tech sheets, wine lists, cocktail specs, and SOPs you already use."
   },
   {
-    title: "Publish",
-    text: "Keep staff-facing pages current so the team studies the same information."
+    title: "We organize",
+    text: "Line Up turns that material into a clean, current training library for your restaurant."
   },
   {
-    title: "Measure",
-    text: "Turn key knowledge into quizzes and track readiness before the shift starts."
+    title: "Your team studies",
+    text: "Staff completes five-question checks while leaders see readiness before service."
   }
 ];
 
@@ -34,14 +34,14 @@ export default function LandingPage() {
         <p className="eyebrow">Line Up</p>
         <h1>Restaurant training, organized before service.</h1>
         <p>
-          A calm training workspace for menus, tech sheets, SOPs, quizzes, and staff progress.
+          Send us the material you already have. We turn it into a simple training library your team can study.
         </p>
         <div className="hero-actions">
-          <Link className="primary-button hero-cta" to="/trial">
-            Start Your Free Trial
-          </Link>
-          <Link className="secondary-button hero-cta" to="/managed-setup">
+          <Link className="primary-button hero-cta" to="/managed-setup">
             Let Line Up Build Your Library
+          </Link>
+          <Link className="secondary-button hero-cta" to="/trial">
+            Start Your Free Trial
           </Link>
         </div>
         <div className="scroll-cue" aria-hidden="true" />
@@ -67,7 +67,7 @@ export default function LandingPage() {
           <p className="eyebrow">The solution</p>
           <h2>One place to keep the team lined up.</h2>
           <p>
-            Line Up helps managers keep training pages organized, published, and ready to become staff quizzes.
+            Line Up keeps restaurant knowledge organized, gives staff a clear study path, and shows leaders who is ready.
           </p>
         </div>
 
