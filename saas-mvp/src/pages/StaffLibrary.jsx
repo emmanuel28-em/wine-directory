@@ -570,9 +570,9 @@ export default function StaffLibrary() {
     <section className="page-section">
       <div className="dashboard-header">
         <div>
-          <p className="eyebrow">Staff library</p>
-          <h1>{workspace.restaurant?.name || "Training Library"}</h1>
-          <p>Everything your team needs to study, organized by your restaurant.</p>
+          <p className="eyebrow">{workspace.restaurant?.name || "Restaurant"}</p>
+          <h1>Training Library</h1>
+          <p>Search the complete catalog or browse by menu, beverage section, allergen, and study status.</p>
         </div>
         <div className="header-action-row">
           {canManageLibrary ? (
@@ -618,9 +618,7 @@ export default function StaffLibrary() {
               </div>
             </div>
             <div className="service-readiness-actions">
-              <button className="practice-launch-button" type="button" onClick={() => startPracticeSession()}>
-                Start 2-Minute Practice
-              </button>
+              <Link className="practice-launch-button" to="/home">Launch Daily Flashcards</Link>
               <label className="readiness-search">
                 <span>Search training</span>
                 <input

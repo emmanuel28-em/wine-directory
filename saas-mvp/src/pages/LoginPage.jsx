@@ -54,7 +54,7 @@ function getFriendlyAuthError(error, fallback) {
 
 function getSignedInDestination(authSession, returnTo) {
   if (authSession.platformRole) return "/platform";
-  return returnTo || "/manager";
+  return returnTo || "/home";
 }
 
 async function getFreshSignInDestination(returnTo) {
@@ -65,7 +65,7 @@ async function getFreshSignInDestination(returnTo) {
     return "/platform";
   }
 
-  return returnTo || "/manager";
+  return returnTo || "/home";
 }
 
 export default function LoginPage() {
@@ -73,7 +73,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const amplifySetup = useAmplifySetup();
   const authSession = useAuthSession();
-  const returnTo = location.state?.from || "/manager";
+  const returnTo = location.state?.from || "/home";
   const [form, setForm] = useState(emptyForm);
   const [phase, setPhase] = useState("signIn");
   const [isWorking, setIsWorking] = useState(false);

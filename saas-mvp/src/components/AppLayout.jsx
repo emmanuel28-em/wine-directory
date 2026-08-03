@@ -30,9 +30,11 @@ function AccountMenu({ authSession, currentWorkspace, hasPlatformAccess, isSigni
 
         {currentWorkspace.isActiveMember && currentWorkspace.role !== "staff" ? (
           <>
-            <NavLink to="/training-library">View staff library</NavLink>
+            <NavLink to="/home">Daily study</NavLink>
+            <NavLink to="/library">View training library</NavLink>
             <NavLink to="/leaderboard">Team leaderboard</NavLink>
             <NavLink to="/manager/readiness">Team readiness</NavLink>
+            <NavLink to="/manager">Manager dashboard</NavLink>
             <NavLink to="/manager/content">Library tools</NavLink>
             <NavLink to="/manager/onboarding">Getting started</NavLink>
             {isOwnerOrAdmin(currentWorkspace.role) ? <NavLink to="/manager/settings">Restaurant settings</NavLink> : null}
@@ -71,8 +73,8 @@ function NavigationLinks({ authSession, currentWorkspace, hasPlatformAccess, loc
   if (currentWorkspace.role === "staff") {
     return (
       <>
-        <NavLink end to="/staff">Home</NavLink>
-        <NavLink to="/training-library">Library</NavLink>
+        <NavLink end to="/home">Home</NavLink>
+        <NavLink to="/library">Library</NavLink>
         <NavLink to="/leaderboard">Leaderboard</NavLink>
         <NavLink to="/my-progress">My progress</NavLink>
       </>
@@ -82,8 +84,8 @@ function NavigationLinks({ authSession, currentWorkspace, hasPlatformAccess, loc
   if (currentWorkspace.isActiveMember) {
     return (
       <>
-        <NavLink end to="/manager">Home</NavLink>
-        <NavLink to="/training-library">Library</NavLink>
+        <NavLink end to="/home">Home</NavLink>
+        <NavLink to="/library">Library</NavLink>
         <NavLink to="/leaderboard">Leaderboard</NavLink>
         <NavLink to="/manager/readiness">Readiness</NavLink>
       </>
@@ -101,8 +103,8 @@ function MobileBottomNav({ authSession, currentWorkspace, location }) {
   if (currentWorkspace.role === "staff") {
     return (
       <nav className="bottom-nav" aria-label="Staff quick navigation">
-        <NavLink end to="/staff">Home</NavLink>
-        <NavLink to="/training-library">Library</NavLink>
+        <NavLink end to="/home">Home</NavLink>
+        <NavLink to="/library">Library</NavLink>
         <NavLink to="/leaderboard">Leaders</NavLink>
         <NavLink to="/my-progress">Progress</NavLink>
       </nav>
@@ -111,8 +113,8 @@ function MobileBottomNav({ authSession, currentWorkspace, location }) {
 
   return (
     <nav className="bottom-nav" aria-label="Manager quick navigation">
-      <NavLink end to="/manager">Home</NavLink>
-      <NavLink to="/training-library">Library</NavLink>
+      <NavLink end to="/home">Home</NavLink>
+      <NavLink to="/library">Library</NavLink>
       <NavLink to="/leaderboard">Leaders</NavLink>
       <NavLink to="/manager/readiness">Readiness</NavLink>
     </nav>
@@ -127,7 +129,7 @@ export default function AppLayout() {
   const currentWorkspace = useCurrentWorkspace();
   const hasPlatformAccess = ["platform_owner", "platform_developer"].includes(authSession.platformRole);
   const isAuthenticated = authSession.status === "authenticated";
-  const authenticatedHome = currentWorkspace.role === "staff" ? "/staff" : "/manager";
+  const authenticatedHome = currentWorkspace.isActiveMember ? "/home" : hasPlatformAccess ? "/platform" : "/home";
 
   async function handleLogout() {
     setIsSigningOut(true);

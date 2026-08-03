@@ -171,11 +171,7 @@ export default function AcceptInvitePage() {
 
       await authSession.refreshSession();
 
-      if (result.membership.role === "staff") {
-        navigate("/staff", { replace: true });
-      } else {
-        navigate("/manager", { replace: true });
-      }
+      navigate("/home", { replace: true });
     } catch (error) {
       setMessage(error.message || "Could not accept invite.");
     } finally {

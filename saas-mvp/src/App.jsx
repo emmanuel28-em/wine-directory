@@ -23,10 +23,10 @@ import PlatformControlPage from "./pages/PlatformControlPage.jsx";
 import PlatformRestaurantHealthPage from "./pages/PlatformRestaurantHealthPage.jsx";
 import PlatformSupportPage from "./pages/PlatformSupportPage.jsx";
 import ReportIssuePage from "./pages/ReportIssuePage.jsx";
-import StaffDashboard from "./pages/StaffDashboard.jsx";
 import StaffCertificationsPage from "./pages/StaffCertificationsPage.jsx";
 import StaffLibrary from "./pages/StaffLibrary.jsx";
 import StaffQuizzesPage from "./pages/StaffQuizzesPage.jsx";
+import StudyHomePage from "./pages/StudyHomePage.jsx";
 import TrialPage from "./pages/TrialPage.jsx";
 import WorkspaceSettingsPage from "./pages/WorkspaceSettingsPage.jsx";
 import { activeMemberRoles, adminManagerRoles as managerRoles, ownerAdminRoles } from "./lib/permissions.js";
@@ -169,10 +169,19 @@ export default function App() {
           }
         />
         <Route
-          path="/staff"
+          path="/home"
           element={
             <ProtectedRoute allowedRoles={activeMemberRoles}>
-              <StaffDashboard />
+              <StudyHomePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/staff" element={<Navigate to="/home" replace />} />
+        <Route
+          path="/library"
+          element={
+            <ProtectedRoute allowedRoles={activeMemberRoles}>
+              <StaffLibrary />
             </ProtectedRoute>
           }
         />
