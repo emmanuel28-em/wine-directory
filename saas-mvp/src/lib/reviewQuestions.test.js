@@ -109,3 +109,40 @@ test("replaces stale saved questions that do not cover the current tech sheet", 
   assert.ok(questions.some((question) => /allergens/i.test(question.prompt)));
   assert.ok(questions.some((question) => /ingredient/i.test(question.prompt)));
 });
+
+test("uses relevant same-type distractors for food service facts", () => {
+  const foodDoc = {
+    id: "cacio",
+    title: "Cacio e Pepe in Emilia",
+    type: "food",
+    category: "Antipasta",
+    contentJson: JSON.stringify({
+      summary: "Gem lettuce with pecorino, parmigiano dressing, and black pepper.",
+      allergens: "Dairy, Citrus, Pepper, Egg, Vinegar",
+      ingredients: "Gem Lettuce\nPecorino\nParmigiano\nBlack pepper",
+      testableStaffKnowledge: [
+        { label: "Mise", value: "Small Fork, knife", questionHint: "What mise is needed?", quizEligible: true }
+      ]
+    })
+  };
+  const otherFoodDoc = {
+    id: "steak",
+    title: "Cow Grazing",
+    type: "food",
+    category: "Secondi",
+    contentJson: JSON.stringify({
+      summary: "Sirloin steak with sauces from Emilia-Romagna.",
+      allergens: "Dairy, Beef, Citrus",
+      ingredients: "Sirloin Steak\nSalsa Verde\nParmigiano Crema",
+      mise: "Large Fork, Steak Knife"
+    })
+  };
+  const questions = buildReviewQuestionsForDoc(foodDoc, [foodDoc, otherFoodDoc, ...comparisonDocs], { preferSaved: false });
+  const miseQuestion = questions.find((question) => /mise/i.test(question.prompt));
+  const oneLinerQuestion = questions.find((question) => /one-liner/i.test(question.prompt));
+
+  assert.ok(miseQuestion);
+  assert.ok(miseQuestion.choices.includes("Large Fork, Steak Knife"));
+  assert.ok(!miseQuestion.choices.includes("Cocktails"));
+  assert.ok(oneLinerQuestion.choices.includes("Sirloin steak with sauces from Emilia-Romagna."));
+});

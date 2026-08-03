@@ -190,6 +190,8 @@ function collectReviewAnswerPool(docs, fieldName) {
       if (fieldName === "farming") return [content.farming, content.farmingPractices];
       if (fieldName === "glassware") return [content.glassware];
       if (fieldName === "garnish") return [content.garnish];
+      if (fieldName === "mise") return [content.mise];
+      if (fieldName === "method") return [content.method];
       return [];
     })
   );
@@ -287,6 +289,8 @@ export function buildReviewQuestionsForDoc(doc, allDocs, { preferSaved = true } 
   const questions = [];
   const ingredients = splitList(content.ingredients);
   const isFoodOrDrink = ["food", "cocktail", "pastaTasting"].includes(doc.type);
+  const sameTypeDocs = allDocs.filter((candidate) => candidate.type === doc.type);
+  const comparisonDocs = sameTypeDocs.length > 1 ? sameTypeDocs : allDocs;
 
   // Food and beverage staff should encounter these core facts first. They are
   // regenerated from the latest page content whenever old saved questions are
@@ -296,7 +300,7 @@ export function buildReviewQuestionsForDoc(doc, allDocs, { preferSaved = true } 
     correctAnswer: content.summary,
     choices: makeReviewChoices({
       correctAnswer: content.summary,
-      pool: collectReviewAnswerPool(allDocs, "summary"),
+      pool: collectReviewAnswerPool(comparisonDocs, "summary"),
       fallback: [
         "A seasonal preparation with a bright, savory finish.",
         "A classic house preparation designed for sharing.",
@@ -312,7 +316,7 @@ export function buildReviewQuestionsForDoc(doc, allDocs, { preferSaved = true } 
       correctAnswer: content.allergens,
       choices: makeReviewChoices({
         correctAnswer: content.allergens,
-        pool: collectReviewAnswerPool(allDocs, "allergens"),
+        pool: collectReviewAnswerPool(comparisonDocs, "allergens"),
         fallback: ["Dairy and gluten", "Citrus and allium", "Tree nuts and egg"]
       }),
       explanation: content.allergens ? `${title} allergens: ${content.allergens}` : ""
@@ -326,7 +330,7 @@ export function buildReviewQuestionsForDoc(doc, allDocs, { preferSaved = true } 
         correctAnswer: ingredient,
         choices: makeReviewChoices({
           correctAnswer: ingredient,
-          pool: collectReviewAnswerPool(allDocs, "ingredients"),
+          pool: collectReviewAnswerPool(comparisonDocs, "ingredients"),
           exclude: ingredients,
           fallback: ["Parmigiano", "Lemon", "Garlic", "Extra virgin olive oil"]
         }),
@@ -348,7 +352,7 @@ export function buildReviewQuestionsForDoc(doc, allDocs, { preferSaved = true } 
         correctAnswer: answer,
         choices: makeReviewChoices({
           correctAnswer: answer,
-          pool: collectReviewAnswerPool(allDocs, poolName),
+          pool: collectReviewAnswerPool(comparisonDocs, poolName),
           fallback: poolName === "vintage"
             ? ["2024", "2023", "2022", "2021"]
             : ["Piemonte", "Toscana", "Emilia-Romagna", "Veneto"]
@@ -366,7 +370,7 @@ export function buildReviewQuestionsForDoc(doc, allDocs, { preferSaved = true } 
       addReviewQuestion(questions, {
         prompt: `${promptStart} ${title}?`,
         correctAnswer: answer,
-        choices: makeReviewChoices({ correctAnswer: answer, pool: collectReviewAnswerPool(allDocs, poolName), fallback }),
+        choices: makeReviewChoices({ correctAnswer: answer, pool: collectReviewAnswerPool(comparisonDocs, poolName), fallback }),
         explanation: answer
       });
     });
@@ -390,17 +394,32 @@ export function buildReviewQuestionsForDoc(doc, allDocs, { preferSaved = true } 
         ? "allergens"
         : lowerLabel.includes("ingredient")
           ? "ingredients"
+          : lowerLabel.includes("mise")
+            ? "mise"
+            : lowerLabel.includes("glass")
+              ? "glassware"
+              : lowerLabel.includes("garnish")
+                ? "garnish"
+                : lowerLabel.includes("method")
+                  ? "method"
           : lowerLabel.includes("service")
             ? "serviceNotes"
             : "category";
+      const factFallbacks = {
+        mise: ["Small Fork", "Large Fork", "Steak Knife", "No additional mise"],
+        glassware: ["Coupe", "Collins", "Nick & Nora", "Rocks"],
+        garnish: ["Lemon twist", "Orange peel", "Fresh flowers", "No garnish"],
+        method: ["Build over ice", "Shake and strain", "Stir and strain", "Dry shake, then wet shake"],
+        serviceNotes: ["Confirm with a manager", "Serve immediately", "Present tableside"]
+      };
 
       addReviewQuestion(questions, {
         prompt: fact.questionHint || `What should staff know about ${label} for ${title}?`,
         correctAnswer: cleanText(fact.value),
         choices: makeReviewChoices({
           correctAnswer: cleanText(fact.value),
-          pool: collectReviewAnswerPool(allDocs, poolKey),
-          fallback: ["Ask a manager before service", "Review the current menu", "Check the service notes"]
+          pool: collectReviewAnswerPool(comparisonDocs, poolKey),
+          fallback: factFallbacks[poolKey] || ["Ask a manager before service", "Review the current menu", "Check the service notes"]
         }),
         explanation: `${label}: ${cleanText(fact.value)}`
       });
@@ -411,7 +430,7 @@ export function buildReviewQuestionsForDoc(doc, allDocs, { preferSaved = true } 
     correctAnswer: firstSentence(content.serviceNotes || content.talkingPoints),
     choices: makeReviewChoices({
       correctAnswer: firstSentence(content.serviceNotes || content.talkingPoints),
-      pool: collectReviewAnswerPool(allDocs, "serviceNotes"),
+      pool: collectReviewAnswerPool(comparisonDocs, "serviceNotes"),
       fallback: [
         "Confirm modifications before promising them.",
         "Present this only after the table is cleared.",
@@ -427,7 +446,7 @@ export function buildReviewQuestionsForDoc(doc, allDocs, { preferSaved = true } 
       correctAnswer: statement,
       choices: makeReviewChoices({
         correctAnswer: statement,
-        pool: collectReviewAnswerPool(allDocs, "body"),
+        pool: collectReviewAnswerPool(comparisonDocs, "body"),
         fallback: [
           "This item is served without additional preparation.",
           "This description belongs to a different training item.",
