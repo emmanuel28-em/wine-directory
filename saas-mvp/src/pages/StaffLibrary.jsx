@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import StudyPracticeDeck from "../components/StudyPracticeDeck.jsx";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import {
   getAssignedItemIdsForUser,
@@ -9,6 +10,13 @@ import {
 import { listCollectionsForRestaurant } from "../lib/collections.js";
 import { getFileAssetUrl, isPreviewableImageFileAsset, listFileAssetsForRestaurant } from "../lib/fileAssets.js";
 import { isAdminOrManager } from "../lib/permissions.js";
+import {
+  getPracticeStorageKey,
+  hasPracticedPrompt,
+  markPracticePrompt,
+  parsePracticeProgress,
+  practiceSessionSize
+} from "../lib/practiceProgress.js";
 import { syncMyLeaderboardEntry } from "../lib/leaderboard.js";
 import {
   buildReviewQuestionsForDoc,
@@ -55,6 +63,13 @@ const subsectionOrder = ["Antipasta", "Primi", "Secondi", "Verdure", "Course 1",
 
 function normalizeValue(value) {
   return String(value || "").trim().toLowerCase();
+}
+
+function splitLabelList(value) {
+  return String(value || "")
+    .split(/\n|,|;|\|/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 function getSectionLabel(doc, collection) {
@@ -189,6 +204,8 @@ export default function StaffLibrary() {
   const [reviewQuestions, setReviewQuestions] = useState([]);
   const [reviewAnswers, setReviewAnswers] = useState({});
   const [reviewResult, setReviewResult] = useState(null);
+  const [practiceProgress, setPracticeProgress] = useState({});
+  const [practiceDeck, setPracticeDeck] = useState([]);
 
   async function loadStaffLibrary() {
     if (workspace.status !== "ready") {
@@ -250,6 +267,18 @@ export default function StaffLibrary() {
       setAssignedCollectionIds(new Set());
     }
   }, [workspace.status, workspace.restaurant?.id]);
+
+  // Flashcard practice is intentionally lightweight and device-local. The
+  // official five-question review still saves to the shared restaurant data.
+  useEffect(() => {
+    if (workspace.status !== "ready") {
+      setPracticeProgress({});
+      return;
+    }
+
+    const storageKey = getPracticeStorageKey(workspace.restaurant.id, workspace.userProfile.id);
+    setPracticeProgress(parsePracticeProgress(window.localStorage.getItem(storageKey)));
+  }, [workspace.status, workspace.restaurant?.id, workspace.userProfile?.id]);
 
   // Dashboard assignment links can open the requested published page directly.
   useEffect(() => {
@@ -359,6 +388,21 @@ export default function StaffLibrary() {
     : null;
   const activeSectionLabel = sectionFilter === allFilter ? "All" : sectionFilter.replace(" Menu", "");
   const activeSubsectionLabel = subsectionFilter === allFilter ? "" : subsectionFilter;
+  const assignedItems = decoratedDocs.filter((item) => isAssignedDoc(item.doc));
+  const readinessItems = assignedItems.length > 0
+    ? assignedItems
+    : sectionFilter === allFilter
+      ? decoratedDocs
+      : decoratedDocs.filter((item) => item.section === sectionFilter);
+  const readinessReviewedCount = readinessItems.filter((item) => reviewedDocIds.has(item.doc.id)).length;
+  const readinessPercent = readinessItems.length
+    ? Math.round((readinessReviewedCount / readinessItems.length) * 100)
+    : 0;
+  const readinessScope = assignedItems.length > 0
+    ? "Assigned training"
+    : sectionFilter === allFilter
+      ? "Published library"
+      : sectionFilter;
 
   async function openAttachedResource(fileAsset) {
     try {
@@ -394,6 +438,67 @@ export default function StaffLibrary() {
     setReviewAnswers({});
     setReviewResult(null);
     setMessage("");
+  }
+
+  function startPracticeSession(preferredDoc = null) {
+    const prioritizedItems = preferredDoc
+      ? decoratedDocs.filter((item) => item.doc.id === preferredDoc.id)
+      : [
+          ...assignedItems.filter((item) => !reviewedDocIds.has(item.doc.id)),
+          ...filteredItems.filter((item) => !reviewedDocIds.has(item.doc.id)),
+          ...filteredItems.filter((item) => reviewedDocIds.has(item.doc.id))
+        ];
+    const seenDocIds = new Set();
+    const uniqueItems = prioritizedItems.filter((item) => {
+      if (seenDocIds.has(item.doc.id)) return false;
+      seenDocIds.add(item.doc.id);
+      return true;
+    });
+    const cards = [];
+
+    uniqueItems.forEach((item) => {
+      if (cards.length >= practiceSessionSize && !preferredDoc) return;
+
+      const questions = buildReviewQuestionsForDoc(item.doc, docs);
+      const unpracticedQuestions = questions.filter(
+        (question) => !hasPracticedPrompt(practiceProgress, item.doc.id, question.prompt)
+      );
+      const selectedQuestions = preferredDoc
+        ? [...unpracticedQuestions, ...questions.filter((question) => !unpracticedQuestions.includes(question))].slice(0, reviewQuestionCount)
+        : [unpracticedQuestions[0] || questions[0]].filter(Boolean);
+
+      selectedQuestions.forEach((question) => {
+        cards.push({
+          id: `${item.doc.id}-${question.prompt}`,
+          trainingDocId: item.doc.id,
+          docTitle: item.doc.title,
+          section: item.subsection ? `${item.section} · ${item.subsection}` : item.section,
+          prompt: question.prompt,
+          answer: question.correctAnswer,
+          explanation: question.explanation
+        });
+      });
+    });
+
+    if (cards.length === 0) {
+      setMessage("These pages need more training details before Line Up can create practice cards.");
+      return;
+    }
+
+    setPracticeDeck(cards.slice(0, preferredDoc ? reviewQuestionCount : practiceSessionSize));
+    setMessage("");
+  }
+
+  function saveMasteredPracticePrompt(card) {
+    setPracticeProgress((current) => {
+      const next = markPracticePrompt(current, {
+        trainingDocId: card.trainingDocId,
+        prompt: card.prompt
+      });
+      const storageKey = getPracticeStorageKey(workspace.restaurant.id, workspace.userProfile.id);
+      window.localStorage.setItem(storageKey, JSON.stringify(next));
+      return next;
+    });
   }
 
   function updateReviewAnswer(questionIndex, answer) {
@@ -497,8 +602,38 @@ export default function StaffLibrary() {
         </div>
       ) : null}
 
+      {message && workspace.status === "ready" ? <div className="inline-alert">{message}</div> : null}
+
       {workspace.status === "ready" && docs.length > 0 ? (
-        <div className="staff-visual-library">
+        <>
+          <section className="service-readiness-banner" aria-label="Training readiness">
+            <div className="service-readiness-copy">
+              <p className="eyebrow">{readinessScope}</p>
+              <div className="service-readiness-heading">
+                <h2>{readinessPercent}% ready</h2>
+                <span>{readinessReviewedCount} of {readinessItems.length} pages reviewed</span>
+              </div>
+              <div className="service-readiness-track" aria-label={`${readinessPercent}% ready`}>
+                <span style={{ width: `${readinessPercent}%` }} />
+              </div>
+            </div>
+            <div className="service-readiness-actions">
+              <button className="practice-launch-button" type="button" onClick={() => startPracticeSession()}>
+                Start 2-Minute Practice
+              </button>
+              <label className="readiness-search">
+                <span>Search training</span>
+                <input
+                  type="search"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder="Dish, allergen, wine, cocktail..."
+                />
+              </label>
+            </div>
+          </section>
+
+          <div className="staff-visual-library">
           <aside className="staff-library-sidebar" aria-label="Browse training sections">
             <div className="sidebar-section">
               <button
@@ -607,15 +742,6 @@ export default function StaffLibrary() {
                 <h2>{activeSectionLabel}{activeSubsectionLabel ? ` · ${activeSubsectionLabel}` : ""}</h2>
                 <p>{filteredDocs.length} of {docs.length} training pages · {reviewedDocIds.size} reviewed</p>
               </div>
-              <label className="staff-library-search">
-                <span>Quick search</span>
-                <input
-                  type="search"
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                  placeholder="Search a dish, allergen, wine, cocktail, or SOP"
-                />
-              </label>
               <div className="quick-filter-row" aria-label="Quick study filters">
                 {[
                   [allFilter, "All"],
@@ -669,6 +795,12 @@ export default function StaffLibrary() {
                       const acknowledgementRecord = acknowledgements.find((item) => item.trainingDocId === doc.id);
                       const acknowledgement = isTrainingReviewCurrent(doc, acknowledgementRecord) ? acknowledgementRecord : null;
                       const isAssigned = assignedTrainingDocIds.has(doc.id) || assignedCollectionIds.has(doc.collectionId);
+                      const practicedCount = Math.min(
+                        reviewQuestionCount,
+                        practiceProgress[doc.id]?.masteredPrompts?.length || 0
+                      );
+                      const allergenChips = splitLabelList(content.allergens).slice(0, 3);
+                      const cardStatus = acknowledgement ? "Mastered" : practicedCount > 0 ? "Studying" : isAssigned ? "Assigned" : "New";
 
                       return (
                         <article className="staff-visual-card" key={`${row.id}-${doc.id}`}>
@@ -681,30 +813,40 @@ export default function StaffLibrary() {
                                   <span>{typeLabels[doc.type] || doc.type || "Training"}</span>
                                 </div>
                               )}
-                              {acknowledgement ? <span className="reviewed-pill">Reviewed</span> : null}
-                              {!acknowledgement && isAssigned ? <span className="assigned-pill">Assigned</span> : null}
+                              <span className={`study-state-pill is-${cardStatus.toLowerCase()}`}>{cardStatus}</span>
                             </div>
                             <div className="staff-visual-copy">
-                              <span className="type-pill">{typeLabels[doc.type] || doc.type}</span>
+                              <div className="staff-card-kicker">
+                                <span className="type-pill">{typeLabels[doc.type] || doc.type}</span>
+                                <span>{doc.category || "Training"}</span>
+                              </div>
                               <h3>{doc.title}</h3>
                               <p>{content.summary || doc.category || "Open this page to study the full training notes."}</p>
+                              {allergenChips.length > 0 ? (
+                                <div className="allergen-chip-row" aria-label={`Allergens for ${doc.title}`}>
+                                  {allergenChips.map((allergen) => <span key={allergen}>{allergen}</span>)}
+                                </div>
+                              ) : null}
                             </div>
                           </button>
                           <div className="staff-card-status-row">
                             <span className={acknowledgement ? "quiz-progress-badge is-complete" : "quiz-progress-badge is-review"}>
                               {acknowledgement
-                                ? `${reviewQuestionCount}/${reviewQuestionCount} Quiz Facts Studied`
-                                : `0/${reviewQuestionCount} Quiz Facts Studied · Needs Review`}
+                                ? `${reviewQuestionCount}/${reviewQuestionCount} check passed`
+                                : `${practicedCount}/${reviewQuestionCount} facts practiced`}
                             </span>
-                            {isAssigned ? <span className="status-badge status-review">Assigned</span> : null}
+                            {!acknowledgement ? <span className="status-badge status-review">Needs Review</span> : null}
                           </div>
                           <div className={canManageLibrary ? "staff-visual-actions is-manager" : "staff-visual-actions"}>
                             <button
-                              className={acknowledgement ? "secondary-button" : "primary-button"}
+                              className="secondary-button"
                               type="button"
                               onClick={() => openReader(doc)}
                             >
-                              {acknowledgement ? "Review again" : "Study"}
+                              Open notes
+                            </button>
+                            <button className="primary-button" type="button" onClick={() => startPracticeSession(doc)}>
+                              Practice card
                             </button>
                             {canManageLibrary ? (
                               <Link className="secondary-button" to={`/manager/content?edit=${doc.id}#training-page-form`}>
@@ -720,7 +862,16 @@ export default function StaffLibrary() {
               ))}
             </div>
           </main>
-        </div>
+          </div>
+        </>
+      ) : null}
+
+      {practiceDeck.length > 0 ? (
+        <StudyPracticeDeck
+          cards={practiceDeck}
+          onClose={() => setPracticeDeck([])}
+          onMasterPrompt={saveMasteredPracticePrompt}
+        />
       ) : null}
 
       {activeReaderDoc ? (

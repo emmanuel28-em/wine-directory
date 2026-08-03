@@ -5893,3 +5893,476 @@ summary,
     padding: 15px;
   }
 }
+
+/* Service-first study library -------------------------------------------------
+   This layer keeps the existing library/data behavior while giving staff one
+   obvious path: see readiness, practice, open a page, and pass its check. */
+.service-readiness-banner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.42fr);
+  gap: clamp(20px, 4vw, 46px);
+  align-items: center;
+  margin-bottom: 22px;
+  padding: clamp(22px, 4vw, 38px);
+  color: #fff;
+  background: var(--color-primary);
+  border-radius: 8px;
+  box-shadow: 0 18px 42px rgba(31, 61, 46, 0.2);
+}
+
+.service-readiness-banner .eyebrow {
+  color: var(--color-secondary);
+}
+
+.service-readiness-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.service-readiness-heading h2,
+.service-readiness-heading span {
+  margin: 0;
+}
+
+.service-readiness-heading h2 {
+  color: #fff;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 1;
+}
+
+.service-readiness-heading span {
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 750;
+}
+
+.service-readiness-track,
+.practice-progress-track {
+  overflow: hidden;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+}
+
+.service-readiness-track {
+  margin-top: 18px;
+}
+
+.service-readiness-track span,
+.practice-progress-track span {
+  display: block;
+  height: 100%;
+  background: var(--color-accent);
+  border-radius: inherit;
+  transition: width 220ms ease;
+}
+
+.service-readiness-actions {
+  display: grid;
+  gap: 12px;
+}
+
+.practice-launch-button {
+  min-height: 52px;
+  padding: 0 20px;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 900;
+  background: var(--color-accent);
+  border: 0;
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(18, 25, 21, 0.18);
+}
+
+.practice-launch-button:hover {
+  background: #b95f40;
+  transform: translateY(-1px);
+}
+
+.readiness-search {
+  display: grid;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.readiness-search input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  color: var(--color-text);
+  font: inherit;
+  background: #fff;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  outline: none;
+}
+
+.readiness-search input:focus {
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 3px rgba(164, 182, 154, 0.2);
+}
+
+.staff-library-context-bar {
+  grid-template-columns: 1fr;
+}
+
+.staff-library-context-bar .quick-filter-row {
+  grid-column: 1;
+}
+
+.staff-card-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-muted);
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.study-state-pill {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  min-height: 30px;
+  padding: 7px 10px;
+  color: var(--color-primary);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  background: rgba(255, 253, 248, 0.94);
+  border: 1px solid rgba(31, 61, 46, 0.14);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+}
+
+.study-state-pill.is-mastered {
+  color: #fff;
+  background: rgba(31, 61, 46, 0.94);
+}
+
+.study-state-pill.is-studying {
+  color: #503d13;
+  background: rgba(242, 211, 121, 0.95);
+}
+
+.study-state-pill.is-assigned,
+.study-state-pill.is-new {
+  color: #fff;
+  background: rgba(200, 107, 74, 0.94);
+}
+
+.allergen-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.allergen-chip-row span {
+  padding: 5px 7px;
+  color: #6e3c20;
+  font-size: 0.7rem;
+  font-weight: 850;
+  background: #fff1df;
+  border: 1px solid #e8c8a4;
+  border-radius: 6px;
+}
+
+.staff-visual-copy {
+  min-height: 196px;
+}
+
+.staff-visual-actions,
+.staff-visual-actions.is-manager {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.staff-visual-actions.is-manager {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.staff-visual-actions .primary-button,
+.staff-visual-actions .secondary-button,
+.staff-visual-actions.is-manager .primary-button,
+.staff-visual-actions.is-manager .secondary-button {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+}
+
+/* Full-screen Anki-style practice */
+.practice-deck-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  overflow-y: auto;
+  padding: clamp(12px, 3vw, 34px);
+  background: rgba(18, 25, 21, 0.76);
+  backdrop-filter: blur(10px);
+  place-items: center;
+}
+
+.practice-deck {
+  display: grid;
+  gap: 18px;
+  width: min(760px, 100%);
+  min-height: min(720px, calc(100vh - 40px));
+  padding: clamp(18px, 4vw, 34px);
+  background: var(--color-background);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 8px;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.32);
+}
+
+.practice-deck-header,
+.practice-card-context {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.practice-deck-header p,
+.practice-deck-header strong,
+.practice-card-context span,
+.practice-card-context strong {
+  margin: 0;
+}
+
+.practice-close-button {
+  min-width: 72px;
+  min-height: 44px;
+  color: var(--color-primary);
+  font-weight: 850;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.practice-progress-track {
+  height: 8px;
+  background: rgba(31, 61, 46, 0.12);
+}
+
+.practice-card {
+  display: grid;
+  gap: 16px;
+  min-height: 560px;
+}
+
+.practice-card-context {
+  color: var(--color-muted);
+  font-size: 0.84rem;
+}
+
+.practice-card-context strong {
+  color: var(--color-primary);
+}
+
+.practice-card-face {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 24px;
+  min-height: 360px;
+  padding: clamp(26px, 6vw, 60px);
+  text-align: center;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 16px 38px rgba(31, 42, 36, 0.08);
+}
+
+.practice-card-label {
+  margin: 0;
+  color: var(--color-accent);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.practice-card-face h2 {
+  max-width: 620px;
+  margin: 0;
+  color: var(--color-primary);
+  font-size: clamp(1.55rem, 4vw, 2.5rem);
+  line-height: 1.18;
+}
+
+.practice-reveal-button {
+  min-width: min(280px, 100%);
+  min-height: 52px;
+}
+
+.practice-answer {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border);
+}
+
+.practice-answer strong {
+  color: var(--color-text);
+  font-size: clamp(1.08rem, 2vw, 1.35rem);
+  line-height: 1.45;
+}
+
+.practice-answer p:last-child {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.practice-rating-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.practice-rating {
+  display: grid;
+  gap: 2px;
+  min-height: 64px;
+  padding: 10px;
+  color: var(--color-text);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.practice-rating span {
+  color: var(--color-muted);
+  font-size: 0.74rem;
+}
+
+.practice-rating.again {
+  border-color: rgba(200, 107, 74, 0.5);
+}
+
+.practice-rating.hard {
+  border-color: #d8bb6c;
+}
+
+.practice-rating.got-it {
+  border-color: var(--color-secondary);
+  background: rgba(164, 182, 154, 0.16);
+}
+
+.practice-deck-note {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.practice-complete-panel {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 12px;
+  min-height: 520px;
+  max-width: 580px;
+  margin: auto;
+  text-align: center;
+}
+
+.practice-complete-panel h2,
+.practice-complete-panel p {
+  margin: 0;
+}
+
+.practice-complete-mark {
+  display: grid;
+  width: 68px;
+  height: 68px;
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 900;
+  background: var(--color-primary);
+  border-radius: 50%;
+  place-items: center;
+}
+
+@media (max-width: 900px) {
+  .service-readiness-banner {
+    grid-template-columns: 1fr;
+  }
+
+  .service-readiness-actions {
+    grid-template-columns: minmax(180px, 0.7fr) minmax(240px, 1.3fr);
+    align-items: end;
+  }
+}
+
+@media (max-width: 640px) {
+  .service-readiness-banner {
+    margin-inline: -14px;
+    border-radius: 0;
+  }
+
+  .service-readiness-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .service-readiness-actions,
+  .practice-rating-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-visual-copy {
+    min-height: 184px;
+  }
+
+  .staff-visual-actions.is-manager {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .staff-visual-actions.is-manager a:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .practice-deck-backdrop {
+    padding: 0;
+    place-items: stretch;
+  }
+
+  .practice-deck {
+    min-height: 100dvh;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .practice-card {
+    min-height: calc(100dvh - 170px);
+  }
+
+  .practice-card-face {
+    min-height: 330px;
+    padding: 24px 18px;
+  }
+
+  .practice-rating-actions {
+    gap: 8px;
+  }
+
+  .practice-rating {
+    min-height: 56px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .service-readiness-track span,
+  .practice-progress-track span,
+  .practice-launch-button {
+    transition: none;
+  }
+}
