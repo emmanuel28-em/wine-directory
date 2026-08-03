@@ -1,6 +1,7 @@
 import { getDataClient } from "./dataClient.js";
 import { assertSameRestaurant, requireRestaurantId } from "./permissions.js";
 import { getWorkspaceGroups } from "./workspaceGroups.js";
+import { listAllRecords } from "./paginatedList.js";
 
 function assertNoErrors(result, fallbackMessage) {
   if (result.errors?.length) {
@@ -13,25 +14,19 @@ function assertNoErrors(result, fallbackMessage) {
 
 export async function listTrainingAcknowledgementsForRestaurant(restaurantId) {
   requireRestaurantId(restaurantId);
-  const result = await getDataClient().models.TrainingDocAcknowledgement.list({
+  return listAllRecords(getDataClient().models.TrainingDocAcknowledgement, {
     filter: { restaurantId: { eq: restaurantId } }
   });
-
-  if (result.errors?.length) throw new Error(result.errors.map((error) => error.message).join(" "));
-  return result.data || [];
 }
 
 export async function listMyTrainingAcknowledgements({ restaurantId, userProfileId }) {
   requireRestaurantId(restaurantId);
-  const result = await getDataClient().models.TrainingDocAcknowledgement.list({
+  return listAllRecords(getDataClient().models.TrainingDocAcknowledgement, {
     filter: {
       restaurantId: { eq: restaurantId },
       userProfileId: { eq: userProfileId }
     }
   });
-
-  if (result.errors?.length) throw new Error(result.errors.map((error) => error.message).join(" "));
-  return result.data || [];
 }
 
 export async function markTrainingDocReviewed({ restaurantId, trainingDoc, userProfileId, cognitoUserId, existingId }) {

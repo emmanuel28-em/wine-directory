@@ -2,6 +2,7 @@ import { getUrl, remove, uploadData } from "aws-amplify/storage";
 import { getDataClient } from "./dataClient.js";
 import { assertSameRestaurant, requireRestaurantId } from "./permissions.js";
 import { getWorkspaceGroups } from "./workspaceGroups.js";
+import { listAllRecords } from "./paginatedList.js";
 
 const allowedTypes = [
   "application/pdf",
@@ -160,7 +161,7 @@ export async function uploadFileAsset({ restaurantId, trainingDocId = null, mana
 export async function listFileAssetsForRestaurant(restaurantId) {
   requireRestaurantId(restaurantId);
   const dataClient = getDataClient();
-  const result = await dataClient.models.FileAsset.list({
+  const records = await listAllRecords(dataClient.models.FileAsset, {
     filter: {
       restaurantId: {
         eq: restaurantId
@@ -168,11 +169,7 @@ export async function listFileAssetsForRestaurant(restaurantId) {
     }
   });
 
-  if (result.errors?.length) {
-    throw new Error(result.errors.map((error) => error.message).join(" "));
-  }
-
-  return [...(result.data || [])].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  return records.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 }
 
 export async function listFileAssetsForTrainingDoc({ restaurantId, trainingDocId }) {

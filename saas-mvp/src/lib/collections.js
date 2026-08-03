@@ -1,6 +1,7 @@
 import { getDataClient } from "./dataClient.js";
 import { assertSameRestaurant, requireRestaurantId } from "./permissions.js";
 import { getWorkspaceGroups } from "./workspaceGroups.js";
+import { listAllRecords } from "./paginatedList.js";
 
 function assertNoErrors(result, fallbackMessage) {
   if (result.errors?.length) {
@@ -17,19 +18,13 @@ function assertNoErrors(result, fallbackMessage) {
 export async function listCollectionsForRestaurant(restaurantId, options = {}) {
   requireRestaurantId(restaurantId);
   const dataClient = getDataClient();
-  const result = await dataClient.models.ContentCollection.list({
+  const collections = await listAllRecords(dataClient.models.ContentCollection, {
     filter: {
       restaurantId: {
         eq: restaurantId
       }
     }
   });
-
-  if (result.errors?.length) {
-    throw new Error(result.errors.map((error) => error.message).join(" "));
-  }
-
-  const collections = result.data || [];
   const visibleCollections = options.includeArchived
     ? collections
     : collections.filter((collection) => collection.status !== "archived");

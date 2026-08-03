@@ -1,6 +1,7 @@
 import { getDataClient } from "./dataClient.js";
 import { assertSameRestaurant, requireRestaurantId } from "./permissions.js";
 import { getWorkspaceGroups } from "./workspaceGroups.js";
+import { listAllRecords } from "./paginatedList.js";
 
 export const emptyTrainingDocForm = {
   collectionId: "",
@@ -217,7 +218,7 @@ export function docToForm(doc) {
 export async function listTrainingDocsForRestaurant(restaurantId) {
   requireRestaurantId(restaurantId);
   const dataClient = getDataClient();
-  const result = await dataClient.models.TrainingDoc.list({
+  const records = await listAllRecords(dataClient.models.TrainingDoc, {
     filter: {
       restaurantId: {
         eq: restaurantId
@@ -225,11 +226,7 @@ export async function listTrainingDocsForRestaurant(restaurantId) {
     }
   });
 
-  if (result.errors?.length) {
-    throw new Error(result.errors.map((error) => error.message).join(" "));
-  }
-
-  return [...(result.data || [])].sort((a, b) => {
+  return records.sort((a, b) => {
     const titleCompare = (a.title || "").localeCompare(b.title || "");
     return (a.type || "").localeCompare(b.type || "") || titleCompare;
   });
