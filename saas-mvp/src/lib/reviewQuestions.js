@@ -378,6 +378,14 @@ export function buildReviewQuestionsForDoc(doc, allDocs, { preferSaved = true } 
     .forEach((fact) => {
       const label = cleanText(fact.label) || "detail";
       const lowerLabel = normalizeValue(label);
+
+      // Structured imports often store the same allergen and ingredient data
+      // both in the page fields and in quiz facts. The core questions above
+      // already cover those fields, so do not ask the same thing twice.
+      if (lowerLabel.includes("allergen") && content.allergens) return;
+      if (lowerLabel.includes("ingredient") && ingredients.length) return;
+      if ((lowerLabel.includes("one liner") || lowerLabel.includes("summary")) && content.summary) return;
+
       const poolKey = lowerLabel.includes("allergen")
         ? "allergens"
         : lowerLabel.includes("ingredient")

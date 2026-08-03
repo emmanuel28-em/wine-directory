@@ -33,6 +33,20 @@ Alcohol, Stone fruit, Citrus, Vinegar, Eggs
 
 Staff talking point:
 A floral summer sour with peach-ring flavors and a velvety texture.`,
+      testableStaffKnowledge: [
+        {
+          label: "Allergens",
+          value: "Alcohol, Stone fruit, Citrus, Vinegar, Eggs",
+          questionHint: "What allergens should staff know?",
+          quizEligible: true
+        },
+        {
+          label: "Ingredients",
+          value: "Nectarine-infused Fred Jerbis Gin, White Peach Shrub",
+          questionHint: "What ingredients should staff know?",
+          quizEligible: true
+        }
+      ],
       reviewQuestions: []
     }),
     ...overrides
@@ -71,8 +85,8 @@ test("prioritizes one-liner, allergens, and ingredients for food and cocktail re
 
   assert.equal(questions.length, 5);
   assert.ok(questions.some((question) => /one-liner/i.test(question.prompt)));
-  assert.ok(questions.some((question) => /allergens/i.test(question.prompt)));
-  assert.ok(questions.filter((question) => /ingredient/i.test(question.prompt)).length >= 2);
+  assert.equal(questions.filter((question) => /allergen/i.test(question.prompt)).length, 1);
+  assert.equal(questions.filter((question) => /ingredient/i.test(question.prompt)).length, 2);
   assert.ok(questions.every((question) => !question.choices.some((choice) => /review the training notes option/i.test(choice))));
 
   const firstIngredientQuestion = questions.find((question) => /ingredient/i.test(question.prompt));
