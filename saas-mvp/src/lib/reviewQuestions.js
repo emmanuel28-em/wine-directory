@@ -12,6 +12,28 @@ const typeLabels = {
   custom: "Custom"
 };
 
+const freeformHeadings = {
+  oneliner: "summary",
+  oneLiner: "summary",
+  stafftalkingpoint: "summary",
+  summary: "summary",
+  allergies: "allergens",
+  allergens: "allergens",
+  ingredient: "ingredients",
+  ingredients: "ingredients",
+  description: "description",
+  details: "description",
+  trainingnotes: "description",
+  talkingpoints: "talkingPoints",
+  servicenotes: "serviceNotes",
+  method: "method",
+  glass: "glassware",
+  glassware: "glassware",
+  garnish: "garnish",
+  mise: "mise",
+  ice: "ice"
+};
+
 function normalizeValue(value) {
   return String(value || "").trim().toLowerCase();
 }
@@ -20,15 +42,34 @@ function cleanText(value) {
   return String(value || "").trim();
 }
 
+function cleanListItem(value) {
+  return cleanText(value)
+    .replace(/^[-*•]+\s*/, "")
+    .replace(/^_+|_+$/g, "")
+    .trim();
+}
+
+function isMeaningful(value) {
+  const text = cleanText(value);
+  return Boolean(text) && !/^(?:n\/?a|tbd|unknown|not provided|not available|[-_*\s]+)$/i.test(text);
+}
+
 function splitList(value) {
   return cleanText(value)
     .split(/\n|,|;|\|/)
-    .map((item) => item.trim())
-    .filter(Boolean);
+    .map(cleanListItem)
+    .filter(isMeaningful);
 }
 
 function unique(values) {
-  return [...new Set(values.map(cleanText).filter(Boolean))];
+  const seen = new Set();
+
+  return values.map(cleanText).filter((value) => {
+    const normalized = normalizeValue(value);
+    if (!isMeaningful(value) || seen.has(normalized)) return false;
+    seen.add(normalized);
+    return true;
+  });
 }
 
 function firstSentence(value) {
@@ -36,12 +77,94 @@ function firstSentence(value) {
   return text.split(/(?<=[.!?])\s+/)[0] || text;
 }
 
+function normalizeHeading(value) {
+  return cleanText(value).toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function appendSection(sections, key, value) {
+  const nextValue = cleanListItem(value);
+  if (!isMeaningful(nextValue)) return;
+  sections[key] = sections[key] ? `${sections[key]}\n${nextValue}` : nextValue;
+}
+
+// Managers can paste a complete tech sheet into the free-writing editor. This
+// parser recovers the quiz-worthy sections without forcing them to fill out a
+// second rigid form.
+function extractFreeformSections(value) {
+  const sections = {};
+  let activeKey = "";
+
+  cleanText(value).split(/\r?\n/).forEach((rawLine) => {
+    const line = rawLine.trim();
+    if (!line || /^\*?asterisk means/i.test(line)) return;
+
+    const headingMatch = line.match(/^([^:]{2,40}):\s*(.*)$/);
+    const standaloneKey = freeformHeadings[normalizeHeading(line)];
+
+    if (headingMatch) {
+      const key = freeformHeadings[normalizeHeading(headingMatch[1])];
+      activeKey = key || "";
+      if (key) appendSection(sections, key, headingMatch[2]);
+      return;
+    }
+
+    if (standaloneKey) {
+      activeKey = standaloneKey;
+      return;
+    }
+
+    if (activeKey) appendSection(sections, activeKey, line);
+  });
+
+  return sections;
+}
+
+function factValue(content, labelName) {
+  const facts = content.testableStaffKnowledge || content.quizFacts || [];
+  const match = facts.find((fact) => normalizeValue(fact.label).includes(labelName));
+  return cleanText(match?.value);
+}
+
+function hasUsefulSummary(value) {
+  return isMeaningful(value) && !/^(?:price|method|glass(?:ware)?|garnish|ice|mise|allerg(?:y|ies|ens?)|ingredients?)\s*:/i.test(cleanText(value));
+}
+
+export function deriveReviewContent(doc) {
+  const content = parseContentJson(doc.contentJson);
+  const freeform = extractFreeformSections([content.body, content.details].filter(Boolean).join("\n"));
+  const summaryCandidates = [
+    freeform.summary,
+    content.summary,
+    content.oneLiner,
+    factValue(content, "one liner"),
+    firstSentence(content.talkingPoints),
+    firstSentence(freeform.talkingPoints),
+    firstSentence(freeform.description),
+    firstSentence(content.details)
+  ];
+
+  return {
+    ...content,
+    summary: summaryCandidates.find(hasUsefulSummary) || "",
+    allergens: [content.allergens, freeform.allergens, factValue(content, "allergen")].find(isMeaningful) || "",
+    ingredients: [content.ingredients, freeform.ingredients, factValue(content, "ingredient")].find(isMeaningful) || "",
+    talkingPoints: [content.talkingPoints, freeform.talkingPoints].find(isMeaningful) || "",
+    serviceNotes: [content.serviceNotes, freeform.serviceNotes].find(isMeaningful) || "",
+    description: [freeform.description, content.details, content.body].find(isMeaningful) || "",
+    method: [content.method, freeform.method].find(isMeaningful) || "",
+    glassware: [content.glassware, freeform.glassware, factValue(content, "glass")].find(isMeaningful) || "",
+    garnish: [content.garnish, freeform.garnish, factValue(content, "garnish")].find(isMeaningful) || "",
+    mise: [content.mise, freeform.mise].find(isMeaningful) || "",
+    ice: [content.ice, freeform.ice].find(isMeaningful) || ""
+  };
+}
+
 function studyStatements(value) {
   return unique(
     cleanText(value)
       .split(/\n+|(?<=[.!?])\s+/)
-      .map((item) => item.replace(/^[-*•]\s*/, "").trim())
-      .filter((item) => item.length >= 18)
+      .map(cleanListItem)
+      .filter((item) => item.length >= 18 && !freeformHeadings[normalizeHeading(item)])
   );
 }
 
@@ -52,45 +175,76 @@ function shuffle(values) {
 function collectReviewAnswerPool(docs, fieldName) {
   return unique(
     docs.flatMap((doc) => {
-      const content = parseContentJson(doc.contentJson);
+      const content = deriveReviewContent(doc);
 
       if (fieldName === "ingredients") return splitList(content.ingredients);
-      if (fieldName === "allergens") return splitList(content.allergens);
+      if (fieldName === "allergens") return [content.allergens];
       if (fieldName === "summary") return [content.summary];
-      if (fieldName === "serviceNotes") return [firstSentence(content.serviceNotes)];
-      if (fieldName === "body") return studyStatements(content.body || content.details);
+      if (fieldName === "serviceNotes") return [firstSentence(content.serviceNotes || content.talkingPoints)];
+      if (fieldName === "body") return studyStatements(content.description);
       if (fieldName === "category") return [doc.category, doc.type];
-
-      const facts = content.testableStaffKnowledge || content.quizFacts || [];
-      return facts
-        .filter((fact) => normalizeValue(fact.label).includes(fieldName))
-        .map((fact) => fact.value);
+      if (fieldName === "producer") return [content.producer];
+      if (fieldName === "region") return [content.region];
+      if (fieldName === "grape") return [content.grape, content.grapes, content.varietal];
+      if (fieldName === "vintage") return [content.vintage];
+      if (fieldName === "farming") return [content.farming, content.farmingPractices];
+      if (fieldName === "glassware") return [content.glassware];
+      if (fieldName === "garnish") return [content.garnish];
+      return [];
     })
   );
 }
 
-function makeReviewChoices({ correctAnswer, pool, fallback = [] }) {
-  const wrongAnswers = unique([...pool, ...fallback]).filter((choice) => choice !== correctAnswer).slice(0, 3);
-  const choices = unique([correctAnswer, ...wrongAnswers]);
-
-  while (choices.length < 4) {
-    choices.push(`Review the training notes option ${choices.length + 1}`);
-  }
-
-  return shuffle(choices).slice(0, 4);
+function makeReviewChoices({ correctAnswer, pool, fallback = [], exclude = [] }) {
+  const excluded = new Set([correctAnswer, ...exclude].map(normalizeValue));
+  const wrongAnswers = unique([...pool, ...fallback])
+    .filter((choice) => !excluded.has(normalizeValue(choice)))
+    .slice(0, 3);
+  return shuffle(unique([correctAnswer, ...wrongAnswers])).slice(0, 4);
 }
 
 function addReviewQuestion(questions, question) {
-  if (!question.correctAnswer || questions.some((item) => item.prompt === question.prompt)) {
+  const choices = unique(question.choices || []);
+  const correctAnswer = cleanText(question.correctAnswer);
+
+  if (
+    !isMeaningful(question.prompt)
+    || !isMeaningful(correctAnswer)
+    || choices.length < 2
+    || !choices.some((choice) => normalizeValue(choice) === normalizeValue(correctAnswer))
+    || questions.some((item) => item.prompt === cleanText(question.prompt))
+  ) {
     return;
   }
 
   questions.push({
     prompt: cleanText(question.prompt),
-    choices: unique(question.choices || []),
-    correctAnswer: cleanText(question.correctAnswer),
+    choices,
+    correctAnswer,
     explanation: cleanText(question.explanation)
   });
+}
+
+function hasPlaceholderChoice(question) {
+  return question.choices.some((choice) => /review the training notes option|add more training|not provided|\btbd\b/i.test(choice));
+}
+
+function savedQuestionsMatchCurrentContent(questions, doc, content) {
+  if (questions.length < reviewQuestionCount || questions.some(hasPlaceholderChoice)) return false;
+
+  const requirements = [];
+  const ingredients = splitList(content.ingredients);
+
+  if (content.summary) requirements.push({ term: /one[- ]?liner|description|talking point/i, answers: [content.summary] });
+  if (content.allergens) requirements.push({ term: /allergen/i, answers: [content.allergens] });
+  if (ingredients.length) requirements.push({ term: /ingredient/i, answers: ingredients });
+
+  return requirements.every(({ term, answers }) =>
+    questions.some((question) =>
+      term.test(question.prompt)
+      && answers.some((answer) => normalizeValue(answer) === normalizeValue(question.correctAnswer))
+    )
+  );
 }
 
 export function normalizeReviewQuestions(questions) {
@@ -101,12 +255,14 @@ export function normalizeReviewQuestions(questions) {
 
       return {
         prompt: cleanText(question.prompt),
-        choices: choices.includes(correctAnswer) ? choices : unique([correctAnswer, ...choices]),
+        choices: choices.some((choice) => normalizeValue(choice) === normalizeValue(correctAnswer))
+          ? choices
+          : unique([correctAnswer, ...choices]),
         correctAnswer,
         explanation: cleanText(question.explanation)
       };
     })
-    .filter((question) => question.prompt && question.correctAnswer && question.choices.length >= 2);
+    .filter((question) => isMeaningful(question.prompt) && isMeaningful(question.correctAnswer) && question.choices.length >= 2);
 }
 
 export function parseReviewQuestionsJson(value) {
@@ -120,30 +276,115 @@ export function parseReviewQuestionsJson(value) {
 }
 
 export function buildReviewQuestionsForDoc(doc, allDocs, { preferSaved = true } = {}) {
-  const content = parseContentJson(doc.contentJson);
+  const content = deriveReviewContent(doc);
   const savedQuestions = normalizeReviewQuestions(content.reviewQuestions);
 
-  if (preferSaved && savedQuestions.length >= reviewQuestionCount) {
+  if (preferSaved && savedQuestionsMatchCurrentContent(savedQuestions, doc, content)) {
     return savedQuestions.slice(0, reviewQuestionCount);
   }
 
   const title = doc.title || "this item";
   const questions = [];
-  const facts = content.testableStaffKnowledge || content.quizFacts || [];
+  const ingredients = splitList(content.ingredients);
+  const isFoodOrDrink = ["food", "cocktail", "pastaTasting"].includes(doc.type);
 
+  // Food and beverage staff should encounter these core facts first. They are
+  // regenerated from the latest page content whenever old saved questions are
+  // incomplete or no longer match the current tech sheet.
+  addReviewQuestion(questions, {
+    prompt: `What is the correct one-liner for ${title}?`,
+    correctAnswer: content.summary,
+    choices: makeReviewChoices({
+      correctAnswer: content.summary,
+      pool: collectReviewAnswerPool(allDocs, "summary"),
+      fallback: [
+        "A seasonal preparation with a bright, savory finish.",
+        "A classic house preparation designed for sharing.",
+        "A rich preparation balanced by fresh acidity."
+      ]
+    }),
+    explanation: content.summary
+  });
+
+  if (isFoodOrDrink) {
+    addReviewQuestion(questions, {
+      prompt: `What allergens should staff know for ${title}?`,
+      correctAnswer: content.allergens,
+      choices: makeReviewChoices({
+        correctAnswer: content.allergens,
+        pool: collectReviewAnswerPool(allDocs, "allergens"),
+        fallback: ["Dairy and gluten", "Citrus and allium", "Tree nuts and egg"]
+      }),
+      explanation: content.allergens ? `${title} allergens: ${content.allergens}` : ""
+    });
+
+    ingredients.slice(0, 2).forEach((ingredient, ingredientIndex) => {
+      addReviewQuestion(questions, {
+        prompt: ingredientIndex === 0
+          ? `Which ingredient is used in ${title}?`
+          : `Which additional ingredient is used in ${title}?`,
+        correctAnswer: ingredient,
+        choices: makeReviewChoices({
+          correctAnswer: ingredient,
+          pool: collectReviewAnswerPool(allDocs, "ingredients"),
+          exclude: ingredients,
+          fallback: ["Parmigiano", "Lemon", "Garlic", "Extra virgin olive oil"]
+        }),
+        explanation: `${ingredient} is listed as an ingredient for ${title}.`
+      });
+    });
+  }
+
+  if (doc.type === "wine") {
+    [
+      ["Who produces", "producer", content.producer, "Producer"],
+      ["What region is", "region", content.region, "Region"],
+      ["What grape or varietal is used for", "grape", content.grape || content.grapes || content.varietal, "Grape or varietal"],
+      ["What vintage is", "vintage", content.vintage, "Vintage"],
+      ["What farming practice is used for", "farming", content.farming || content.farmingPractices, "Farming"]
+    ].forEach(([promptStart, poolName, answer, label]) => {
+      addReviewQuestion(questions, {
+        prompt: `${promptStart} ${title}?`,
+        correctAnswer: answer,
+        choices: makeReviewChoices({
+          correctAnswer: answer,
+          pool: collectReviewAnswerPool(allDocs, poolName),
+          fallback: poolName === "vintage"
+            ? ["2024", "2023", "2022", "2021"]
+            : ["Piemonte", "Toscana", "Emilia-Romagna", "Veneto"]
+        }),
+        explanation: answer ? `${label}: ${answer}` : ""
+      });
+    });
+  }
+
+  if (doc.type === "cocktail") {
+    [
+      ["What glassware is used for", "glassware", content.glassware, ["Coupe", "Collins", "Nick & Nora", "Rocks"]],
+      ["What is the garnish for", "garnish", content.garnish, ["Lemon twist", "Orange peel", "Fresh flowers", "No garnish"]]
+    ].forEach(([promptStart, poolName, answer, fallback]) => {
+      addReviewQuestion(questions, {
+        prompt: `${promptStart} ${title}?`,
+        correctAnswer: answer,
+        choices: makeReviewChoices({ correctAnswer: answer, pool: collectReviewAnswerPool(allDocs, poolName), fallback }),
+        explanation: answer
+      });
+    });
+  }
+
+  const facts = content.testableStaffKnowledge || content.quizFacts || [];
   facts
-    .filter((fact) => fact.quizEligible !== false && cleanText(fact.value))
+    .filter((fact) => fact.quizEligible !== false && isMeaningful(fact.value))
     .forEach((fact) => {
       const label = cleanText(fact.label) || "detail";
       const lowerLabel = normalizeValue(label);
-      const poolKey =
-        lowerLabel.includes("allergen")
-          ? "allergens"
-          : lowerLabel.includes("ingredient")
-            ? "ingredients"
-            : lowerLabel.includes("service")
-              ? "serviceNotes"
-              : "category";
+      const poolKey = lowerLabel.includes("allergen")
+        ? "allergens"
+        : lowerLabel.includes("ingredient")
+          ? "ingredients"
+          : lowerLabel.includes("service")
+            ? "serviceNotes"
+            : "category";
 
       addReviewQuestion(questions, {
         prompt: fact.questionHint || `What should staff know about ${label} for ${title}?`,
@@ -151,79 +392,43 @@ export function buildReviewQuestionsForDoc(doc, allDocs, { preferSaved = true } 
         choices: makeReviewChoices({
           correctAnswer: cleanText(fact.value),
           pool: collectReviewAnswerPool(allDocs, poolKey),
-          fallback: ["Ask a manager before service", "Check the most recent training page", "Review the dish notes"]
+          fallback: ["Ask a manager before service", "Review the current menu", "Check the service notes"]
         }),
         explanation: `${label}: ${cleanText(fact.value)}`
       });
     });
 
   addReviewQuestion(questions, {
-    prompt: `What is the correct one-liner for ${title}?`,
-    correctAnswer: content.summary,
-    choices: makeReviewChoices({
-      correctAnswer: content.summary,
-      pool: collectReviewAnswerPool(allDocs, "summary"),
-      fallback: ["A classic house favorite with seasonal garnish.", "A rich preparation with bright acidity.", "A staff-only note for pre-shift."]
-    }),
-    explanation: content.summary
-  });
-
-  addReviewQuestion(questions, {
-    prompt: `What allergens should staff know for ${title}?`,
-    correctAnswer: content.allergens,
-    choices: makeReviewChoices({
-      correctAnswer: content.allergens,
-      pool: collectReviewAnswerPool(allDocs, "allergens"),
-      fallback: ["Dairy, gluten", "Citrus, allium", "Nuts, egg"]
-    }),
-    explanation: content.allergens ? `${title} allergens: ${content.allergens}` : ""
-  });
-
-  splitList(content.ingredients).slice(0, 2).forEach((ingredient) => {
-    addReviewQuestion(questions, {
-      prompt: `Which ingredient is used in ${title}?`,
-      correctAnswer: ingredient,
-      choices: makeReviewChoices({
-        correctAnswer: ingredient,
-        pool: collectReviewAnswerPool(allDocs, "ingredients"),
-        fallback: ["Parmigiano", "Lemon", "Garlic"]
-      }),
-      explanation: `${ingredient} is listed for ${title}.`
-    });
-  });
-
-  addReviewQuestion(questions, {
     prompt: `What service note should staff remember for ${title}?`,
-    correctAnswer: firstSentence(content.serviceNotes || content.talkingPoints || content.body),
+    correctAnswer: firstSentence(content.serviceNotes || content.talkingPoints),
     choices: makeReviewChoices({
-      correctAnswer: firstSentence(content.serviceNotes || content.talkingPoints || content.body),
+      correctAnswer: firstSentence(content.serviceNotes || content.talkingPoints),
       pool: collectReviewAnswerPool(allDocs, "serviceNotes"),
-      fallback: ["Confirm with a manager before promising changes.", "Serve only after the table is cleared.", "This is used during opening sidework."]
+      fallback: [
+        "Confirm modifications before promising them.",
+        "Present this only after the table is cleared.",
+        "This is used during opening sidework."
+      ]
     }),
-    explanation: firstSentence(content.serviceNotes || content.talkingPoints || content.body)
+    explanation: firstSentence(content.serviceNotes || content.talkingPoints)
   });
 
-  // A manager can write naturally instead of filling out a rigid form. Pull
-  // useful statements from those notes so every page still receives five
-  // study questions before it reaches staff.
-  studyStatements([content.body, content.details, content.talkingPoints, content.serviceNotes].filter(Boolean).join("\n"))
-    .slice(0, reviewQuestionCount)
-    .forEach((statement, index) => {
-      addReviewQuestion(questions, {
-        prompt: `Which training detail is correct for ${title}? (${index + 1})`,
+  studyStatements(content.description).slice(0, reviewQuestionCount).forEach((statement) => {
+    addReviewQuestion(questions, {
+      prompt: `Which description correctly matches ${title}?`,
+      correctAnswer: statement,
+      choices: makeReviewChoices({
         correctAnswer: statement,
-        choices: makeReviewChoices({
-          correctAnswer: statement,
-          pool: collectReviewAnswerPool(allDocs, "body"),
-          fallback: [
-            "This detail is not part of the current training page.",
-            "Confirm this with a manager before sharing it with a guest.",
-            "This information belongs to a different training item."
-          ]
-        }),
-        explanation: statement
-      });
+        pool: collectReviewAnswerPool(allDocs, "body"),
+        fallback: [
+          "This item is served without additional preparation.",
+          "This description belongs to a different training item.",
+          "Staff should confirm this detail before service."
+        ]
+      }),
+      explanation: statement
     });
+  });
 
   addReviewQuestion(questions, {
     prompt: `Where is ${title} organized in the training library?`,
@@ -258,5 +463,5 @@ export function buildReviewQuestionsForDoc(doc, allDocs, { preferSaved = true } 
     explanation: `${title} is saved as ${typeLabels[doc.type] || doc.type}.`
   });
 
-  return shuffle(questions).slice(0, reviewQuestionCount);
+  return questions.slice(0, reviewQuestionCount);
 }
