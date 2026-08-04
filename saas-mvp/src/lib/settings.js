@@ -50,7 +50,8 @@ function canDisableMember({ currentRole, currentMembershipId, targetMembership }
     return true;
   }
 
-  return currentRole === "admin" && ["manager", "staff"].includes(targetMembership.role);
+  if (currentRole === "admin") return ["manager", "staff"].includes(targetMembership.role);
+  return currentRole === "manager" && targetMembership.role === "staff";
 }
 
 async function getMembershipForRestaurant({ dataClient, membershipId, restaurantId }) {

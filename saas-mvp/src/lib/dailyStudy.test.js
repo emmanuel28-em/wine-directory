@@ -45,7 +45,10 @@ test("daily queue prioritizes assigned and recent unreviewed pages", () => {
     now
   });
 
-  assert.deepEqual(queue.map((item) => item.trainingDocId), ["assigned", "recent", "ordinary"]);
+  assert.deepEqual(queue.slice(0, 5).map((item) => item.trainingDocId), Array(5).fill("assigned"));
+  assert.deepEqual(queue.slice(5, 10).map((item) => item.trainingDocId), Array(5).fill("recent"));
+  assert.equal(queue[10].trainingDocId, "ordinary");
+  assert.equal(new Set(queue.slice(0, 5).map((item) => item.prompt)).size, 5);
 });
 
 test("daily responses are unique and scoped to restaurant, user, and day", () => {

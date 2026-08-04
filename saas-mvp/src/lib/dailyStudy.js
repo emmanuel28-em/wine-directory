@@ -1,6 +1,7 @@
 import { buildReviewQuestionsForDoc, deriveReviewContent } from "./reviewQuestions.js";
 import { hasPracticedPrompt } from "./practiceProgress.js";
 import { isTrainingReviewCurrent } from "./studyProgress.js";
+import { getTrainingFactKey, readTrainingProgress } from "./trainingProgress.js";
 
 export const dailyStudyGoal = 12;
 
@@ -82,7 +83,8 @@ export function buildDailyStudyQueue({
   acknowledgements,
   assignedTrainingDocIds,
   assignedCollectionIds,
-  practiceProgress,
+  practiceProgress = {},
+  progressRecords = [],
   fileUrlByTrainingDocId = {},
   now = new Date(),
   limit = dailyStudyGoal
@@ -90,6 +92,7 @@ export function buildDailyStudyQueue({
   const publishedDocs = docs.filter((doc) => doc.status === "published");
   const collectionById = new Map(collections.map((collection) => [collection.id, collection]));
   const acknowledgementByDocId = new Map(acknowledgements.map((item) => [item.trainingDocId, item]));
+  const progressByDocId = new Map(progressRecords.map((item) => [item.trainingDocId, item]));
 
   return publishedDocs
     .map((doc) => {
@@ -97,34 +100,45 @@ export function buildDailyStudyQueue({
       const assigned = assignedTrainingDocIds.has(doc.id) || assignedCollectionIds.has(doc.collectionId);
       const reviewed = isTrainingReviewCurrent(doc, acknowledgementByDocId.get(doc.id));
       const questions = buildReviewQuestionsForDoc(doc, publishedDocs);
-      const question = questions.find((item) => !hasPracticedPrompt(practiceProgress, doc.id, item.prompt)) || questions[0];
+      const serverProgress = readTrainingProgress(progressByDocId.get(doc.id), doc);
       const content = deriveReviewContent(doc);
 
-      if (!question) return null;
+      return questions.map((question, questionIndex) => {
+        const factKey = getTrainingFactKey(question);
+        const mastered = serverProgress.masteredFactKeys.includes(factKey)
+          || hasPracticedPrompt(practiceProgress, doc.id, question.prompt);
+        const reviewAgain = serverProgress.reviewAgainFactKeys.includes(factKey);
 
-      return {
-        id: `${doc.id}:${question.prompt}`,
-        trainingDocId: doc.id,
-        title: doc.title,
-        category: doc.category || collection?.name || doc.type || "Training",
-        section: collection?.name || doc.category || doc.type || "Training",
-        assigned,
-        reviewed,
-        recent: isRecent(doc, now),
-        updatedAt: doc.updatedAt || doc.createdAt,
-        imageUrl: fileUrlByTrainingDocId[doc.id] || "",
-        allergens: content.allergens,
-        ingredients: content.ingredients,
-        summary: content.summary,
-        serviceNotes: content.serviceNotes || content.talkingPoints,
-        prompt: question.prompt,
-        answer: question.correctAnswer,
-        explanation: question.explanation,
-        priority: priorityFor({ assigned, reviewed, recent: isRecent(doc, now) })
-      };
+        return {
+          id: `${doc.id}:${factKey}`,
+          trainingDocId: doc.id,
+          trainingDoc: doc,
+          title: doc.title,
+          category: doc.category || collection?.name || doc.type || "Training",
+          section: collection?.name || doc.category || doc.type || "Training",
+          assigned,
+          reviewed,
+          mastered,
+          recent: isRecent(doc, now),
+          updatedAt: doc.updatedAt || doc.createdAt,
+          imageUrl: fileUrlByTrainingDocId[doc.id] || "",
+          allergens: content.allergens,
+          ingredients: content.ingredients,
+          summary: content.summary,
+          serviceNotes: content.serviceNotes || content.talkingPoints,
+          prompt: question.prompt,
+          answer: question.correctAnswer,
+          explanation: question.explanation,
+          question,
+          questionIndex,
+          factKey,
+          priority: priorityFor({ assigned, reviewed, recent: isRecent(doc, now) }) * 10
+            + (reviewAgain ? 0 : mastered ? 2 : 1)
+        };
+      });
     })
+    .flat()
     .filter(Boolean)
     .sort((left, right) => left.priority - right.priority || toTime(right.updatedAt) - toTime(left.updatedAt) || left.title.localeCompare(right.title))
     .slice(0, limit);
 }
-

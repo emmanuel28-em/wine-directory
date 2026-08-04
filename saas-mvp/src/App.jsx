@@ -5,7 +5,6 @@ import PlatformRoute from "./components/PlatformRoute.jsx";
 import AcceptInvitePage from "./pages/AcceptInvitePage.jsx";
 import InviteTeamPage from "./pages/InviteTeamPage.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
-import LeaderboardPage from "./pages/LeaderboardPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import ManagedSetupPage from "./pages/ManagedSetupPage.jsx";
 import ManagerBillingPage from "./pages/ManagerBillingPage.jsx";
@@ -13,19 +12,16 @@ import ManagerAssignmentsPage from "./pages/ManagerAssignmentsPage.jsx";
 import ManagerCertificationsPage from "./pages/ManagerCertificationsPage.jsx";
 import ManagerContentPage from "./pages/ManagerContentPage.jsx";
 import ManagerCreateTrainingPage from "./pages/ManagerCreateTrainingPage.jsx";
-import ManagerDashboard from "./pages/ManagerDashboard.jsx";
 import ManagerImportPage from "./pages/ManagerImportPage.jsx";
+import ManagerManageLayout from "./pages/ManagerManageLayout.jsx";
 import ManagerOnboardingPage from "./pages/ManagerOnboardingPage.jsx";
 import ManagerQuizzesPage from "./pages/ManagerQuizzesPage.jsx";
 import ManagerReadinessPage from "./pages/ManagerReadinessPage.jsx";
-import MyProgressPage from "./pages/MyProgressPage.jsx";
 import PlatformControlPage from "./pages/PlatformControlPage.jsx";
 import PlatformRestaurantHealthPage from "./pages/PlatformRestaurantHealthPage.jsx";
 import PlatformSupportPage from "./pages/PlatformSupportPage.jsx";
 import ReportIssuePage from "./pages/ReportIssuePage.jsx";
-import StaffCertificationsPage from "./pages/StaffCertificationsPage.jsx";
 import StaffLibrary from "./pages/StaffLibrary.jsx";
-import StaffQuizzesPage from "./pages/StaffQuizzesPage.jsx";
 import StudyHomePage from "./pages/StudyHomePage.jsx";
 import TrialPage from "./pages/TrialPage.jsx";
 import WorkspaceSettingsPage from "./pages/WorkspaceSettingsPage.jsx";
@@ -68,10 +64,23 @@ export default function App() {
           path="/manager"
           element={
             <ProtectedRoute allowedRoles={managerRoles}>
-              <ManagerDashboard />
+              <Navigate to="/home" replace />
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/manage"
+          element={
+            <ProtectedRoute allowedRoles={managerRoles}>
+              <ManagerManageLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="team" replace />} />
+          <Route path="team" element={<ManagerAssignmentsPage />} />
+          <Route path="invites" element={<InviteTeamPage />} />
+          <Route path="readiness" element={<ManagerReadinessPage />} />
+        </Route>
         <Route
           path="/manager/billing"
           element={
@@ -132,7 +141,7 @@ export default function App() {
           path="/manager/readiness"
           element={
             <ProtectedRoute allowedRoles={managerRoles}>
-              <ManagerReadinessPage />
+              <Navigate to="/manage/readiness" replace />
             </ProtectedRoute>
           }
         />
@@ -140,7 +149,7 @@ export default function App() {
           path="/manager/staff-progress"
           element={
             <ProtectedRoute allowedRoles={managerRoles}>
-              <Navigate to="/manager/readiness" replace />
+              <Navigate to="/manage/readiness" replace />
             </ProtectedRoute>
           }
         />
@@ -156,7 +165,7 @@ export default function App() {
           path="/manager/assignments"
           element={
             <ProtectedRoute allowedRoles={managerRoles}>
-              <ManagerAssignmentsPage />
+              <Navigate to="/manage/team" replace />
             </ProtectedRoute>
           }
         />
@@ -164,7 +173,7 @@ export default function App() {
           path="/manager/invite-team"
           element={
             <ProtectedRoute allowedRoles={managerRoles}>
-              <InviteTeamPage />
+              <Navigate to="/manage/invites" replace />
             </ProtectedRoute>
           }
         />
@@ -189,7 +198,7 @@ export default function App() {
           path="/training-library"
           element={
             <ProtectedRoute allowedRoles={activeMemberRoles}>
-              <StaffLibrary />
+              <Navigate to="/library" replace />
             </ProtectedRoute>
           }
         />
@@ -197,7 +206,7 @@ export default function App() {
           path="/quizzes"
           element={
             <ProtectedRoute allowedRoles={activeMemberRoles}>
-              <StaffQuizzesPage />
+              <Navigate to="/home" replace />
             </ProtectedRoute>
           }
         />
@@ -205,7 +214,7 @@ export default function App() {
           path="/leaderboard"
           element={
             <ProtectedRoute allowedRoles={activeMemberRoles}>
-              <LeaderboardPage />
+              <Navigate to="/home#leaderboard" replace />
             </ProtectedRoute>
           }
         />
@@ -213,7 +222,7 @@ export default function App() {
           path="/my-progress"
           element={
             <ProtectedRoute allowedRoles={activeMemberRoles}>
-              <MyProgressPage />
+              <Navigate to="/home" replace />
             </ProtectedRoute>
           }
         />
@@ -221,7 +230,7 @@ export default function App() {
           path="/certifications"
           element={
             <ProtectedRoute allowedRoles={activeMemberRoles}>
-              <StaffCertificationsPage />
+              <Navigate to="/home" replace />
             </ProtectedRoute>
           }
         />

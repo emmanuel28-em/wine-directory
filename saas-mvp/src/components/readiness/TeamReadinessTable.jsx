@@ -47,8 +47,8 @@ export default function TeamReadinessTable({ rows }) {
               <dd>{row.recentMissingCount ? `${row.recentMissingCount} to review` : "Caught up"}</dd>
             </div>
             <div>
-              <dt>Quiz checks</dt>
-              <dd>{row.attempts.length} completed</dd>
+              <dt>In progress</dt>
+              <dd>{row.inProgressCards || 0} pages</dd>
             </div>
           </dl>
         </article>

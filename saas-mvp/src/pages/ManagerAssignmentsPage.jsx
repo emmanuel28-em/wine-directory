@@ -16,6 +16,7 @@ import { listCollectionsForRestaurant } from "../lib/collections.js";
 import { listQuizzesForRestaurant } from "../lib/quizzes.js";
 import { listTeamMembersForRestaurant } from "../lib/settings.js";
 import { listTrainingDocsForRestaurant } from "../lib/trainingDocs.js";
+import { canDisableMember, disableMember } from "../lib/settings.js";
 
 const emptyGroupForm = {
   name: "",
@@ -275,6 +276,27 @@ export default function ManagerAssignmentsPage() {
     }
   }
 
+  async function disableTeamMember(member) {
+    if (!window.confirm(`Remove access for ${memberLabel(member)}?`)) return;
+    setIsWorking(true);
+    setMessage("");
+
+    try {
+      await disableMember({
+        restaurantId: workspace.restaurant.id,
+        currentRole: workspace.role,
+        currentMembershipId: workspace.membership.id,
+        membershipId: member.membership.id
+      });
+      await loadAssignmentsPage();
+      setMessage(`${memberLabel(member)} no longer has access.`);
+    } catch (error) {
+      setMessage(error.message || "Could not remove access.");
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
   return (
     <section className="page-section">
       <div className="dashboard-header">
@@ -284,8 +306,8 @@ export default function ManagerAssignmentsPage() {
           <p>See everyone in this restaurant, organize staff groups, and assign what each person needs to study.</p>
         </div>
         <div className="header-actions">
-          <Link className="primary-button" to="/manager/invite-team">Invite team</Link>
-          <Link className="secondary-button" to="/manager/readiness">View readiness</Link>
+          <Link className="primary-button" to="/manage/invites">Invite team</Link>
+          <Link className="secondary-button" to="/manage/readiness">View readiness</Link>
         </div>
       </div>
 
@@ -309,7 +331,7 @@ export default function ManagerAssignmentsPage() {
                 <h2>Everyone with access</h2>
                 <p>Invite someone first, then add staff to groups such as Servers, Captains, Bar Team, or New Hires.</p>
               </div>
-              <Link to="/manager/invite-team">Invite or review invitations</Link>
+              <Link to="/manage/invites">Invite or review invitations</Link>
             </div>
 
             {activeMembers.length === 0 ? (
@@ -333,6 +355,9 @@ export default function ManagerAssignmentsPage() {
                       <div className="team-member-groups">
                         {memberGroups.length ? memberGroups.map((groupName) => <span key={groupName}>{groupName}</span>) : <span>Not in a group</span>}
                       </div>
+                      {canDisableMember({ currentRole: workspace.role, currentMembershipId: workspace.membership.id, targetMembership: member.membership }) ? (
+                        <button className="quiet-danger-button" type="button" onClick={() => disableTeamMember(member)} disabled={isWorking}>Remove access</button>
+                      ) : null}
                     </article>
                   );
                 })}

@@ -142,7 +142,9 @@ async function manageMember(event: InviteAccessEvent, identity: Awaited<ReturnTy
     if (!ownerCanChange && !adminCanChange) throw new Error("You do not have permission to change this team role.");
     nextRole = requestedRole;
   } else {
-    const canDisable = callerRole === "owner" || (callerRole === "admin" && ["manager", "staff"].includes(target.role?.S || ""));
+    const canDisable = callerRole === "owner"
+      || (callerRole === "admin" && ["manager", "staff"].includes(target.role?.S || ""))
+      || (callerRole === "manager" && target.role?.S === "staff");
     if (!canDisable) throw new Error("You do not have permission to disable this team member.");
     nextStatus = "disabled";
   }

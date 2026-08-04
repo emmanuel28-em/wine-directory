@@ -381,6 +381,28 @@ const schema = a.schema({
       allow.groupDefinedIn("managerGroup").to(["read"])
     ]),
 
+  // TrainingDocProgress stores the learner's in-progress Anki facts. Unlike a
+  // final acknowledgement, this lets someone stop on one device and continue
+  // later while managers can see that the page is actively being studied.
+  TrainingDocProgress: a
+    .model({
+      restaurantId: a.id().required(),
+      trainingDocId: a.id().required(),
+      userProfileId: a.id().required(),
+      cognitoUserId: a.string(),
+      masteredFactKeysJson: a.string(),
+      reviewAgainFactKeysJson: a.string(),
+      trainingDocUpdatedAt: a.datetime(),
+      lastStudiedAt: a.datetime(),
+      completedAt: a.datetime(),
+      tenantGroup: a.string(),
+      managerGroup: a.string()
+    })
+    .authorization((allow) => [
+      allow.ownerDefinedIn("cognitoUserId").identityClaim("sub").to(["create", "read", "update"]),
+      allow.groupDefinedIn("managerGroup").to(["read"])
+    ]),
+
   // A LeaderboardEntry contains only restaurant-safe learning totals. Staff
   // can compare progress without receiving another employee's email address,
   // membership record, individual answers, or detailed quiz attempts.

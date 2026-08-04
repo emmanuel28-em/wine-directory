@@ -13,6 +13,7 @@ import { listTeamMembersForRestaurant } from "../lib/settings.js";
 import { getLatestStudyDate, isRecentlyUpdated, isTrainingReviewCurrent } from "../lib/studyProgress.js";
 import { listTrainingAcknowledgementsForRestaurant } from "../lib/trainingAcknowledgements.js";
 import { listTrainingDocsForRestaurant } from "../lib/trainingDocs.js";
+import { listTrainingProgressForRestaurant, readTrainingProgress } from "../lib/trainingProgress.js";
 
 const allTeamsFilter = "all";
 
@@ -41,6 +42,7 @@ export default function ManagerReadinessPage() {
   const [collections, setCollections] = useState([]);
   const [staffGroups, setStaffGroups] = useState([]);
   const [groupMembers, setGroupMembers] = useState([]);
+  const [trainingProgress, setTrainingProgress] = useState([]);
   const [teamFilter, setTeamFilter] = useState(allTeamsFilter);
   const [message, setMessage] = useState("");
 
@@ -58,7 +60,8 @@ export default function ManagerReadinessPage() {
         restaurantDocs,
         restaurantCollections,
         restaurantGroups,
-        restaurantGroupMembers
+        restaurantGroupMembers,
+        restaurantProgress
       ] = await Promise.all([
         listQuizAttemptsForRestaurant(restaurantId),
         listQuizzesForRestaurant(restaurantId),
@@ -67,7 +70,8 @@ export default function ManagerReadinessPage() {
         listTrainingDocsForRestaurant(restaurantId),
         listCollectionsForRestaurant(restaurantId),
         listStaffGroupsForRestaurant(restaurantId),
-        listStaffGroupMembersForRestaurant(restaurantId)
+        listStaffGroupMembersForRestaurant(restaurantId),
+        listTrainingProgressForRestaurant(restaurantId)
       ]);
 
       setAttempts(restaurantAttempts);
@@ -78,6 +82,7 @@ export default function ManagerReadinessPage() {
       setCollections(restaurantCollections);
       setStaffGroups(restaurantGroups.filter((group) => group.status === "active"));
       setGroupMembers(restaurantGroupMembers.filter((member) => member.status === "active"));
+      setTrainingProgress(restaurantProgress);
     } catch (error) {
       setMessage(error.message || "Could not load team readiness.");
     }
@@ -115,6 +120,12 @@ export default function ManagerReadinessPage() {
         .map((item) => item.staffGroupId);
       const groupNames = memberGroupIds.map((groupId) => groupById.get(groupId)?.name).filter(Boolean);
       const reviewedCards = publishedDocs.filter((doc) => currentReviewIds.has(doc.id)).length;
+      const memberProgress = trainingProgress.filter((item) => item.userProfileId === profileId);
+      const inProgressCards = publishedDocs.filter((doc) => {
+        if (currentReviewIds.has(doc.id)) return false;
+        const progress = readTrainingProgress(memberProgress.find((item) => item.trainingDocId === doc.id), doc);
+        return progress.masteredFactKeys.length > 0;
+      }).length;
       const completionPercent = publishedDocs.length ? Math.round((reviewedCards / publishedDocs.length) * 100) : 0;
       const recentMissingCount = recentDocs.filter((doc) => !currentReviewIds.has(doc.id)).length;
       const sections = buildSectionReadiness({
@@ -132,13 +143,17 @@ export default function ManagerReadinessPage() {
         completionPercent,
         recentMissingCount,
         isUpToDate: recentDocs.length ? recentMissingCount === 0 : publishedDocs.length > 0 && reviewedCards === publishedDocs.length,
-        lastActiveAt: getLatestStudyDate(memberAcknowledgements, memberAttempts),
+        lastActiveAt: [
+          getLatestStudyDate(memberAcknowledgements, memberAttempts),
+          ...memberProgress.map((item) => item.lastStudiedAt)
+        ].filter(Boolean).sort((left, right) => new Date(right) - new Date(left))[0] || "",
+        inProgressCards,
         earnedSections: sections.filter((section) => section.earned),
         missingSections: sections.filter((section) => !section.earned),
         attempts: memberAttempts
       };
     }),
-    [activeStaffMembers, acknowledgements, attempts, publishedDocs, recentDocs, collections, groupMembers, groupById, trainingDocById]
+    [activeStaffMembers, acknowledgements, attempts, publishedDocs, recentDocs, collections, groupMembers, groupById, trainingDocById, trainingProgress]
   );
 
   const filteredRows = useMemo(
@@ -166,7 +181,7 @@ export default function ManagerReadinessPage() {
           <p>See who is current on published training, who needs review, and when each person last studied.</p>
         </div>
         <div className="header-action-row">
-          <Link className="secondary-button" to="/manager/assignments">Assign Training</Link>
+          <Link className="secondary-button" to="/manage/team">Assign Training</Link>
           <button className="primary-button" type="button" onClick={loadReadiness}>Refresh</button>
         </div>
       </div>

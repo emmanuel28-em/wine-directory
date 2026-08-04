@@ -30,13 +30,7 @@ function AccountMenu({ authSession, currentWorkspace, hasPlatformAccess, isSigni
 
         {currentWorkspace.isActiveMember && currentWorkspace.role !== "staff" ? (
           <>
-            <NavLink to="/home">Daily study</NavLink>
-            <NavLink to="/library">View training library</NavLink>
-            <NavLink to="/leaderboard">Team leaderboard</NavLink>
-            <NavLink to="/manager/readiness">Team readiness</NavLink>
-            <NavLink to="/manager">Manager dashboard</NavLink>
-            <NavLink to="/manager/content">Library tools</NavLink>
-            <NavLink to="/manager/onboarding">Getting started</NavLink>
+            <NavLink to="/manage">Manage restaurant</NavLink>
             {isOwnerOrAdmin(currentWorkspace.role) ? <NavLink to="/manager/settings">Restaurant settings</NavLink> : null}
             {isOwnerOrAdmin(currentWorkspace.role) ? <NavLink to="/manager/billing">Plan & billing</NavLink> : null}
           </>
@@ -70,24 +64,12 @@ function NavigationLinks({ authSession, currentWorkspace, hasPlatformAccess, loc
 
   if (currentWorkspace.isLoading) return null;
 
-  if (currentWorkspace.role === "staff") {
-    return (
-      <>
-        <NavLink end to="/home">Home</NavLink>
-        <NavLink to="/library">Library</NavLink>
-        <NavLink to="/leaderboard">Leaderboard</NavLink>
-        <NavLink to="/my-progress">My progress</NavLink>
-      </>
-    );
-  }
-
   if (currentWorkspace.isActiveMember) {
     return (
       <>
         <NavLink end to="/home">Home</NavLink>
         <NavLink to="/library">Library</NavLink>
-        <NavLink to="/leaderboard">Leaderboard</NavLink>
-        <NavLink to="/manager/readiness">Readiness</NavLink>
+        {currentWorkspace.role !== "staff" ? <NavLink to="/manage">Manage</NavLink> : null}
       </>
     );
   }
@@ -100,23 +82,11 @@ function MobileBottomNav({ authSession, currentWorkspace, location }) {
     return null;
   }
 
-  if (currentWorkspace.role === "staff") {
-    return (
-      <nav className="bottom-nav" aria-label="Staff quick navigation">
-        <NavLink end to="/home">Home</NavLink>
-        <NavLink to="/library">Library</NavLink>
-        <NavLink to="/leaderboard">Leaders</NavLink>
-        <NavLink to="/my-progress">Progress</NavLink>
-      </nav>
-    );
-  }
-
   return (
-    <nav className="bottom-nav" aria-label="Manager quick navigation">
+    <nav className="bottom-nav" aria-label="Quick navigation">
       <NavLink end to="/home">Home</NavLink>
       <NavLink to="/library">Library</NavLink>
-      <NavLink to="/leaderboard">Leaders</NavLink>
-      <NavLink to="/manager/readiness">Readiness</NavLink>
+      {currentWorkspace.role !== "staff" ? <NavLink to="/manage">Manage</NavLink> : null}
     </nav>
   );
 }
