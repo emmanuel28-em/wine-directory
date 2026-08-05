@@ -1,4 +1,4 @@
-import { confirmSignUp, getCurrentUser, signIn, signUp } from "aws-amplify/auth";
+import { confirmSignUp, getCurrentUser, resendSignUpCode, signIn, signUp } from "aws-amplify/auth";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
@@ -117,6 +117,13 @@ export default function AcceptInvitePage() {
 
       await signInAndRefresh();
     } catch (error) {
+      if (error?.name === "UsernameExistsException") {
+        setAuthMode("signin");
+        setPhase("entry");
+        setMessage("An account already exists for this email. Sign in below, or reset your password if you do not remember it.");
+        return;
+      }
+
       setMessage(error.message || "Could not create account.");
     } finally {
       setIsWorking(false);
@@ -150,6 +157,13 @@ export default function AcceptInvitePage() {
     try {
       await signInAndRefresh();
     } catch (error) {
+      if (error?.name === "UserNotConfirmedException") {
+        await resendSignUpCode({ username: form.email.trim().toLowerCase() });
+        setPhase("confirm");
+        setMessage("Your account already exists but still needs confirmation. We sent you a new confirmation code.");
+        return;
+      }
+
       setMessage(error.message || "Could not sign in.");
     } finally {
       setIsWorking(false);
@@ -263,6 +277,11 @@ export default function AcceptInvitePage() {
               <button className="primary-button full-width" type="submit" disabled={isWorking}>
                 {isWorking ? "Working..." : authMode === "signup" ? "Create Account" : "Sign In"}
               </button>
+              {authMode === "signin" ? (
+                <p className="helper-text">
+                  Forgot your password? <Link to="/login" state={{ from: `/accept-invite?token=${token}` }}>Reset it here</Link>, then return to this invite.
+                </p>
+              ) : null}
             </>
           )}
         </form>
