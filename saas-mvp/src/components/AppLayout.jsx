@@ -55,7 +55,7 @@ function NavigationLinks({ authSession, currentWorkspace, hasPlatformAccess, loc
       <>
         <NavLink to="/">Home</NavLink>
         <Link to="/#how-it-works">How it works</Link>
-        <NavLink to="/managed-setup">Setup help</NavLink>
+        <NavLink to="/founding-restaurants">Founding offer</NavLink>
         <NavLink to="/login" state={{ from: location.pathname }}>Sign in</NavLink>
         <NavLink className="nav-primary-link" to="/trial">Start free trial</NavLink>
       </>

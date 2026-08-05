@@ -8,6 +8,7 @@ The app currently includes:
 
 - public Line Up landing page
 - public managed-setup inquiry saving
+- public Founding Restaurants offer with secure 15-minute demo-request capture
 - free-trial restaurant workspace signup
 - guided restaurant onboarding
 - reusable starter Training Categories
@@ -464,6 +465,7 @@ To test tenant separation:
 - `/` public landing page
 - `/trial` start free trial page
 - `/managed-setup` done-for-you setup inquiry page
+- `/founding-restaurants` first-three-customer offer and demo-request page
 - `/login` Line Up sign in page
 - `/manager` protected Workspace Dashboard for Account Owners, Admins, and Managers
 - `/manager/onboarding` protected guided workspace setup

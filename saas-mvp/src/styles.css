@@ -892,6 +892,503 @@ textarea {
   text-align: center;
 }
 
+/* Founding Restaurants is a focused acquisition page for the first three
+   done-for-you customers. It deliberately uses the same product palette as
+   the application so the sales promise and delivered workspace feel related. */
+.founding-page {
+  overflow: hidden;
+}
+
+.founding-page h1,
+.founding-page h2,
+.founding-page h3,
+.founding-page p {
+  margin-top: 0;
+}
+
+.founding-hero,
+.founding-process,
+.founding-case-study,
+.founding-offer,
+.founding-demo-section {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+}
+
+.founding-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(520px, 1.08fr);
+  gap: clamp(44px, 7vw, 92px);
+  align-items: center;
+  min-height: calc(100vh - 76px);
+  padding: clamp(72px, 10vw, 128px) 0;
+}
+
+.founding-hero-copy h1 {
+  max-width: 720px;
+  margin-bottom: 24px;
+  color: var(--color-primary);
+  font-size: clamp(3rem, 6.6vw, 6.6rem);
+  line-height: 0.98;
+  letter-spacing: 0;
+}
+
+.founding-lede {
+  max-width: 680px;
+  color: var(--color-muted);
+  font-size: clamp(1.08rem, 1.6vw, 1.3rem);
+  line-height: 1.65;
+}
+
+.founding-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 30px 0 22px;
+}
+
+.founding-proof-line {
+  max-width: 580px;
+  color: var(--color-primary);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.founding-product-visual {
+  overflow: hidden;
+  background: var(--color-card);
+  border: 1px solid rgba(31, 61, 46, 0.16);
+  border-radius: 8px;
+  box-shadow: 0 36px 90px rgba(31, 61, 46, 0.18);
+  transform: rotate(1.2deg);
+}
+
+.founding-browser-bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 42px;
+  padding: 0 15px;
+  background: #fff;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.founding-browser-bar > span {
+  width: 8px;
+  height: 8px;
+  background: var(--color-border);
+  border-radius: 50%;
+}
+
+.founding-browser-bar > span:nth-child(1) { background: var(--color-accent); }
+.founding-browser-bar > span:nth-child(2) { background: #d7b65c; }
+.founding-browser-bar > span:nth-child(3) { background: var(--color-secondary); }
+
+.founding-browser-bar small {
+  margin-left: auto;
+  color: var(--color-muted);
+}
+
+.founding-product-shell {
+  display: grid;
+  grid-template-columns: 156px minmax(0, 1fr);
+  min-height: 500px;
+  background: #f8f5ee;
+}
+
+.founding-product-shell aside {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 26px 18px;
+  color: rgba(255, 255, 255, 0.76);
+  background: var(--color-primary);
+}
+
+.founding-product-shell aside strong {
+  margin-bottom: 24px;
+  color: #fff;
+}
+
+.founding-product-shell aside span {
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.founding-product-shell aside .is-active {
+  color: var(--color-primary);
+  background: var(--color-secondary);
+}
+
+.founding-product-main {
+  display: grid;
+  align-content: center;
+  gap: 16px;
+  padding: 30px;
+}
+
+.founding-progress-preview,
+.founding-training-preview {
+  padding: 22px;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.founding-progress-preview {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}
+
+.founding-progress-preview span,
+.founding-training-preview span {
+  color: var(--color-accent);
+  font-size: 0.74rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.founding-progress-preview strong {
+  color: var(--color-primary);
+  font-size: 1.5rem;
+}
+
+.founding-progress-preview div {
+  grid-column: 1 / -1;
+  height: 8px;
+  overflow: hidden;
+  background: #e8e5dc;
+  border-radius: 999px;
+}
+
+.founding-progress-preview i {
+  display: block;
+  width: 82%;
+  height: 100%;
+  background: var(--color-secondary);
+}
+
+.founding-training-preview {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
+  gap: 20px;
+  align-items: center;
+}
+
+.founding-preview-photo {
+  display: grid;
+  aspect-ratio: 4 / 5;
+  color: #fff;
+  font-family: Georgia, serif;
+  font-size: 1.3rem;
+  font-style: italic;
+  background:
+    linear-gradient(rgba(31, 61, 46, 0.12), rgba(31, 61, 46, 0.5)),
+    linear-gradient(145deg, #d6a964, #4d715a 56%, #213d2f);
+  place-items: center;
+}
+
+.founding-training-preview strong,
+.founding-training-preview p,
+.founding-training-preview b {
+  display: block;
+}
+
+.founding-training-preview strong {
+  margin-top: 8px;
+  color: var(--color-primary);
+  font-size: 1.25rem;
+}
+
+.founding-training-preview p {
+  margin: 7px 0 15px;
+  color: var(--color-muted);
+}
+
+.founding-training-preview b {
+  width: fit-content;
+  padding: 8px 12px;
+  color: #fff;
+  font-size: 0.78rem;
+  background: var(--color-primary);
+  border-radius: 6px;
+}
+
+.founding-problem-band {
+  padding: clamp(72px, 9vw, 120px) max(20px, calc((100vw - 1180px) / 2));
+  color: #fff;
+  background: var(--color-primary);
+}
+
+.founding-problem-band > h2 {
+  max-width: 920px;
+  margin-bottom: 48px;
+  font-size: clamp(2.2rem, 5vw, 4.8rem);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.founding-problem-band .eyebrow {
+  color: var(--color-secondary);
+}
+
+.founding-problem-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+}
+
+.founding-problem-grid article {
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.founding-problem-grid strong {
+  font-size: 1.2rem;
+}
+
+.founding-problem-grid p {
+  margin: 10px 0 0;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.founding-process,
+.founding-case-study,
+.founding-offer,
+.founding-demo-section {
+  padding: clamp(72px, 9vw, 120px) 0;
+}
+
+.founding-section-heading {
+  max-width: 780px;
+  margin-bottom: 46px;
+}
+
+.founding-section-heading h2,
+.founding-case-study h2,
+.founding-fit-card h2,
+.founding-demo-copy h2 {
+  color: var(--color-primary);
+  font-size: clamp(2.2rem, 4.6vw, 4.2rem);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.founding-section-heading > p:last-child,
+.founding-case-study > div > p:last-child,
+.founding-demo-copy > p {
+  color: var(--color-muted);
+  font-size: 1.08rem;
+}
+
+.founding-process-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  padding: 0;
+  list-style: none;
+}
+
+.founding-process-list li {
+  min-height: 230px;
+  padding: 22px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.founding-process-list li > span {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  margin-bottom: 34px;
+  color: #fff;
+  font-weight: 900;
+  background: var(--color-accent);
+  border-radius: 50%;
+  place-items: center;
+}
+
+.founding-process-list strong {
+  color: var(--color-primary);
+  font-size: 1.05rem;
+}
+
+.founding-process-list p {
+  margin: 9px 0 0;
+  color: var(--color-muted);
+}
+
+.founding-case-study {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+  gap: clamp(40px, 7vw, 92px);
+  align-items: center;
+  border-top: 1px solid var(--color-border);
+}
+
+.founding-case-study dl {
+  margin: 0;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-card);
+}
+
+.founding-case-study dl > div {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr);
+  gap: 20px;
+  padding: 22px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.founding-case-study dl > div:last-child { border-bottom: 0; }
+.founding-case-study dt { color: var(--color-accent); font-weight: 900; }
+.founding-case-study dd { margin: 0; color: var(--color-primary); font-weight: 800; }
+
+.founding-offer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+  gap: 22px;
+}
+
+.founding-offer-card,
+.founding-fit-card {
+  padding: clamp(28px, 4vw, 46px);
+  border-radius: 8px;
+}
+
+.founding-offer-card {
+  color: #fff;
+  background: var(--color-primary);
+}
+
+.founding-offer-card .eyebrow { color: var(--color-secondary); }
+
+.founding-price-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  padding: 22px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.founding-price-row strong,
+.founding-price-row span {
+  display: block;
+}
+
+.founding-price-row strong { font-size: clamp(2.4rem, 5vw, 4.4rem); line-height: 1; }
+.founding-price-row span { color: rgba(255, 255, 255, 0.7); }
+
+.founding-offer-card > p { margin: 22px 0; color: rgba(255, 255, 255, 0.76); }
+.founding-offer-card ul,
+.founding-fit-card ul { display: grid; gap: 14px; padding-left: 22px; }
+.founding-offer-card .primary-button { margin-top: 26px; color: var(--color-primary); background: var(--color-card); }
+.founding-download-link { display: block; margin-top: 16px; color: var(--color-secondary); font-weight: 900; text-align: center; text-decoration: underline; text-underline-offset: 4px; }
+.founding-offer-card small { display: block; margin-top: 16px; color: rgba(255, 255, 255, 0.62); }
+
+.founding-fit-card {
+  background: rgba(164, 182, 154, 0.18);
+  border: 1px solid var(--color-border);
+}
+
+.founding-fit-card h2 { font-size: clamp(1.8rem, 3.4vw, 3rem); }
+.founding-fit-card a { display: inline-block; margin-top: 24px; color: var(--color-primary); font-weight: 900; text-decoration: underline; text-underline-offset: 4px; }
+
+.founding-demo-section {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(420px, 1.15fr);
+  gap: clamp(42px, 7vw, 96px);
+  align-items: start;
+}
+
+.founding-demo-copy {
+  position: sticky;
+  top: 108px;
+}
+
+.founding-demo-agenda {
+  display: grid;
+  gap: 0;
+  margin-top: 30px;
+  border-top: 1px solid var(--color-border);
+}
+
+.founding-demo-agenda span {
+  padding: 16px 0;
+  color: var(--color-primary);
+  font-weight: 800;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.founding-demo-form {
+  display: grid;
+  gap: 16px;
+  padding: clamp(24px, 4vw, 40px);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-card);
+}
+
+.founding-demo-form label {
+  display: grid;
+  gap: 7px;
+  color: var(--color-primary);
+  font-weight: 800;
+}
+
+.founding-demo-form input,
+.founding-demo-form select,
+.founding-demo-form textarea {
+  width: 100%;
+}
+
+.founding-demo-form textarea { min-height: 116px; }
+.founding-demo-form > small { color: var(--color-muted); text-align: center; }
+
+@media (max-width: 920px) {
+  .founding-hero,
+  .founding-case-study,
+  .founding-offer,
+  .founding-demo-section {
+    grid-template-columns: 1fr;
+  }
+
+  .founding-hero { min-height: auto; }
+  .founding-product-visual { width: min(680px, 100%); transform: none; }
+  .founding-process-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .founding-demo-copy { position: static; }
+}
+
+@media (max-width: 640px) {
+  .founding-hero,
+  .founding-process,
+  .founding-case-study,
+  .founding-offer,
+  .founding-demo-section {
+    width: min(100% - 28px, 1180px);
+  }
+
+  .founding-hero { padding: 54px 0 72px; }
+  .founding-hero-copy h1 { font-size: clamp(2.7rem, 13vw, 4.2rem); }
+  .founding-hero-actions a { width: 100%; }
+  .founding-product-shell { grid-template-columns: 1fr; min-height: auto; }
+  .founding-product-shell aside { display: none; }
+  .founding-product-main { padding: 16px; }
+  .founding-training-preview { grid-template-columns: 92px minmax(0, 1fr); gap: 14px; padding: 14px; }
+  .founding-problem-grid,
+  .founding-process-list { grid-template-columns: 1fr; }
+  .founding-process-list li { min-height: 0; }
+  .founding-case-study dl > div { grid-template-columns: 1fr; gap: 5px; }
+  .founding-price-row { grid-template-columns: 1fr; }
+  .founding-demo-section { padding-bottom: 94px; }
+}
+
 .billing-plan-option {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);

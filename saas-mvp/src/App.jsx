@@ -3,6 +3,7 @@ import AppLayout from "./components/AppLayout.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import PlatformRoute from "./components/PlatformRoute.jsx";
 import AcceptInvitePage from "./pages/AcceptInvitePage.jsx";
+import FoundingRestaurantsPage from "./pages/FoundingRestaurantsPage.jsx";
 import InviteTeamPage from "./pages/InviteTeamPage.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
@@ -32,6 +33,7 @@ export default function App() {
     <Routes>
       <Route element={<AppLayout />}>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/founding-restaurants" element={<FoundingRestaurantsPage />} />
         <Route path="/trial" element={<TrialPage />} />
         <Route path="/managed-setup" element={<ManagedSetupPage />} />
         <Route path="/accept-invite" element={<AcceptInvitePage />} />
