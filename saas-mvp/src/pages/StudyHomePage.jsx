@@ -9,7 +9,13 @@ import {
   listTrainingAssignmentsForRestaurant
 } from "../lib/assignments.js";
 import { listCollectionsForRestaurant } from "../lib/collections.js";
-import { buildDailyStudyQueue, dailyStudyGoal } from "../lib/dailyStudy.js";
+import {
+  buildDailyStudyQueue,
+  dailyStudyGoal,
+  getDailyStudyStorageKey,
+  parseDailyStudyProgress,
+  recordDailyStudyResponse
+} from "../lib/dailyStudy.js";
 import { getFileAssetUrl, isPreviewableImageFileAsset, listFileAssetsForRestaurant } from "../lib/fileAssets.js";
 import { listLeaderboardForRestaurant, syncMyLeaderboardEntry } from "../lib/leaderboard.js";
 import { isAdminOrManager } from "../lib/permissions.js";
@@ -41,13 +47,18 @@ export default function StudyHomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [sessionNumber, setSessionNumber] = useState(0);
+  const [selectedDeckKey, setSelectedDeckKey] = useState("priority");
+  const [dailyProgress, setDailyProgress] = useState({ masteredKeys: [], reviewAgainKeys: [], ratingByKey: {} });
 
-  const makeQueue = useCallback((data, nextProgress = progressRecords) => buildDailyStudyQueue({
+  const makeQueue = useCallback((data, nextProgress = progressRecords, deckKey = selectedDeckKey, nextDailyProgress = dailyProgress) => buildDailyStudyQueue({
     ...data,
     acknowledgements,
     progressRecords: nextProgress,
+    dailyProgress: nextDailyProgress,
+    priorityOnly: deckKey === "priority",
+    sectionFilter: deckKey.startsWith("section:") ? deckKey.replace(/^section:/, "") : "",
     limit: dailyStudyGoal
-  }), [acknowledgements, progressRecords]);
+  }), [acknowledgements, dailyProgress, progressRecords, selectedDeckKey]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -60,6 +71,9 @@ export default function StudyHomePage() {
       try {
         const restaurantId = workspace.restaurant.id;
         const userProfileId = workspace.userProfile.id;
+        const storedDailyProgress = parseDailyStudyProgress(
+          window.localStorage.getItem(getDailyStudyStorageKey(restaurantId, userProfileId))
+        );
         const [collections, allDocs, nextAcknowledgements, assignments, groupMembers, fileAssets, nextProgress, nextLeaderboard] = await Promise.all([
           listCollectionsForRestaurant(restaurantId),
           listTrainingDocsForRestaurant(restaurantId),
@@ -90,17 +104,11 @@ export default function StudyHomePage() {
           assignedCollectionIds,
           fileUrlByTrainingDocId: {}
         };
-        const preliminaryQueue = buildDailyStudyQueue({
-          ...baseData,
-          acknowledgements: nextAcknowledgements,
-          progressRecords: nextProgress,
-          limit: dailyStudyGoal
-        });
-        const queueDocIds = new Set(preliminaryQueue.map((card) => card.trainingDocId));
+        const publishedDocIds = new Set(docs.map((doc) => doc.id));
         const firstImageByDocId = new Map();
 
         fileAssets
-          .filter((fileAsset) => queueDocIds.has(fileAsset.trainingDocId) && isPreviewableImageFileAsset(fileAsset))
+          .filter((fileAsset) => publishedDocIds.has(fileAsset.trainingDocId) && isPreviewableImageFileAsset(fileAsset))
           .forEach((fileAsset) => {
             if (!firstImageByDocId.has(fileAsset.trainingDocId)) firstImageByDocId.set(fileAsset.trainingDocId, fileAsset);
           });
@@ -124,10 +132,14 @@ export default function StudyHomePage() {
           setProgressRecords(nextProgress);
           setAcknowledgements(nextAcknowledgements);
           setLeaderboard(nextLeaderboard);
+          setDailyProgress(storedDailyProgress);
           setSessionCards(buildDailyStudyQueue({
             ...data,
             acknowledgements: nextAcknowledgements,
             progressRecords: nextProgress,
+            dailyProgress: storedDailyProgress,
+            priorityOnly: selectedDeckKey === "priority",
+            sectionFilter: selectedDeckKey.startsWith("section:") ? selectedDeckKey.replace(/^section:/, "") : "",
             limit: dailyStudyGoal
           }));
         }
@@ -142,7 +154,7 @@ export default function StudyHomePage() {
     return () => {
       isCurrent = false;
     };
-  }, [workspace.status, workspace.restaurant?.id, workspace.userProfile?.id]);
+  }, [selectedDeckKey, workspace.status, workspace.restaurant?.id, workspace.userProfile?.id]);
 
   async function refreshLeaderboard() {
     try {
@@ -158,6 +170,13 @@ export default function StudyHomePage() {
   }
 
   async function handleResponse(card, response) {
+    const nextDailyProgress = recordDailyStudyResponse(dailyProgress, card, response);
+    window.localStorage.setItem(
+      getDailyStudyStorageKey(workspace.restaurant.id, workspace.userProfile.id),
+      JSON.stringify(nextDailyProgress)
+    );
+    setDailyProgress(nextDailyProgress);
+
     const existingProgress = progressRecords.find((record) => record.trainingDocId === card.trainingDocId);
     const result = await recordTrainingFactResponse({
       restaurantId: workspace.restaurant.id,
@@ -166,7 +185,7 @@ export default function StudyHomePage() {
       cognitoUserId: workspace.userProfile.cognitoUserId,
       existingProgress,
       question: card.question,
-      response,
+      response: response === "hard" ? "review-again" : "got-it",
       requiredFactCount: reviewQuestionCount
     });
     const nextProgress = replaceRecord(progressRecords, result.record);
@@ -193,6 +212,13 @@ export default function StudyHomePage() {
     setSessionNumber((number) => number + 1);
   }
 
+  function changeDeck(deckKey) {
+    setSelectedDeckKey(deckKey);
+    if (!studyData) return;
+    setSessionCards(makeQueue(studyData, progressRecords, deckKey, dailyProgress));
+    setSessionNumber((number) => number + 1);
+  }
+
   const publishedDocs = studyData?.docs || [];
   const reviewedDocIds = useMemo(() => new Set(
     acknowledgements
@@ -214,6 +240,25 @@ export default function StudyHomePage() {
       .slice(0, 5);
   }, [publishedDocs, reviewedDocIds, studyData]);
   const firstName = workspace.userProfile?.name?.split(" ")?.[0] || "there";
+  const deckOptions = useMemo(() => {
+    if (!studyData) return [];
+    const collectionById = new Map(studyData.collections.map((collection) => [collection.id, collection]));
+    const sectionCounts = new Map();
+
+    studyData.docs.forEach((doc) => {
+      const collection = collectionById.get(doc.collectionId);
+      const section = collection?.name || doc.category || doc.type || "Training";
+      sectionCounts.set(section, (sectionCounts.get(section) || 0) + 1);
+    });
+
+    return [
+      ["priority", `Priority deck (${dailyStudyGoal})`],
+      ...[...sectionCounts.entries()]
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([section, count]) => [`section:${section}`, `${section} (${count})`])
+    ];
+  }, [studyData]);
+  const selectedDeckLabel = deckOptions.find(([key]) => key === selectedDeckKey)?.[1]?.replace(/\s+\(\d+\)$/, "") || "Priority deck";
 
   return (
     <section className="page-section study-home-page">
@@ -284,9 +329,22 @@ export default function StudyHomePage() {
                 </div>
                 <span>{sessionCards.length} facts ready</span>
               </div>
+              <div className="study-deck-picker" aria-label="Choose a study deck">
+                {deckOptions.map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className={selectedDeckKey === key ? "is-active" : ""}
+                    onClick={() => changeDeck(key)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
               <DailyStudyDeck
                 key={sessionNumber}
                 cards={sessionCards}
+                deckLabel={selectedDeckLabel}
                 onResponse={handleResponse}
                 onRestart={restartSession}
                 isExpanded={isExpanded}

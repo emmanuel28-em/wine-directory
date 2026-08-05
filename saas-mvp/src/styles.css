@@ -6778,7 +6778,7 @@ summary,
 
 .daily-response-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-top: 12px;
 }
@@ -6807,12 +6807,23 @@ summary,
   font-size: 0.78rem;
 }
 
+.daily-response.hard,
 .daily-response.review-again {
   background: #8e4939;
 }
 
+.daily-response.good,
 .daily-response.got-it {
   background: var(--color-primary);
+}
+
+.daily-response.easy {
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-secondary) 48%, white);
+}
+
+.daily-response.easy span {
+  opacity: 0.72;
 }
 
 .daily-response:disabled {
@@ -6914,6 +6925,7 @@ summary,
   }
 
   .daily-response-actions {
+    grid-template-columns: 1fr;
     gap: 8px;
   }
 
@@ -7147,6 +7159,33 @@ summary,
 
 .study-deck-panel-heading {
   margin-bottom: 12px;
+}
+
+.study-deck-picker {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding-bottom: 2px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.study-deck-picker button {
+  min-height: 42px;
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-primary);
+  background: #fff;
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.study-deck-picker button.is-active {
+  border-color: var(--color-primary);
+  color: #fff;
+  background: var(--color-primary);
 }
 
 .study-deck-panel .daily-deck-shell {

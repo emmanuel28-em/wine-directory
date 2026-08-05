@@ -24,16 +24,17 @@ export function getDailyStudyStorageKey(restaurantId, userProfileId, now = new D
 }
 
 export function parseDailyStudyProgress(value) {
-  if (!value) return { masteredKeys: [], reviewAgainKeys: [] };
+  if (!value) return { masteredKeys: [], reviewAgainKeys: [], ratingByKey: {} };
 
   try {
     const parsed = JSON.parse(value);
     return {
       masteredKeys: Array.isArray(parsed?.masteredKeys) ? parsed.masteredKeys : [],
-      reviewAgainKeys: Array.isArray(parsed?.reviewAgainKeys) ? parsed.reviewAgainKeys : []
+      reviewAgainKeys: Array.isArray(parsed?.reviewAgainKeys) ? parsed.reviewAgainKeys : [],
+      ratingByKey: parsed?.ratingByKey && typeof parsed.ratingByKey === "object" ? parsed.ratingByKey : {}
     };
   } catch {
-    return { masteredKeys: [], reviewAgainKeys: [] };
+    return { masteredKeys: [], reviewAgainKeys: [], ratingByKey: {} };
   }
 }
 
@@ -44,17 +45,20 @@ function cardKey(card) {
 export function recordDailyStudyResponse(progress, card, response) {
   const key = cardKey(card);
   const current = parseDailyStudyProgress(JSON.stringify(progress || {}));
+  const rating = response === "easy" ? "easy" : response === "hard" || response === "review-again" ? "hard" : "good";
 
-  if (response === "got-it") {
+  if (rating === "good" || rating === "easy") {
     return {
       masteredKeys: [...new Set([...current.masteredKeys, key])],
-      reviewAgainKeys: current.reviewAgainKeys.filter((item) => item !== key)
+      reviewAgainKeys: current.reviewAgainKeys.filter((item) => item !== key),
+      ratingByKey: { ...current.ratingByKey, [key]: rating }
     };
   }
 
   return {
     masteredKeys: current.masteredKeys.filter((item) => item !== key),
-    reviewAgainKeys: [...new Set([...current.reviewAgainKeys, key])]
+    reviewAgainKeys: [...new Set([...current.reviewAgainKeys, key])],
+    ratingByKey: { ...current.ratingByKey, [key]: rating }
   };
 }
 
@@ -75,6 +79,14 @@ function priorityFor({ assigned, reviewed, recent }) {
   return 4;
 }
 
+function ratingPriority(rating, mastered, reviewAgain) {
+  if (reviewAgain || rating === "hard") return 0;
+  if (!mastered) return 1;
+  if (rating === "good") return 3;
+  if (rating === "easy") return 5;
+  return 2;
+}
+
 // Home intentionally builds a small queue instead of displaying the full
 // restaurant catalog. Assignments and recent menu changes come first.
 export function buildDailyStudyQueue({
@@ -86,6 +98,9 @@ export function buildDailyStudyQueue({
   practiceProgress = {},
   progressRecords = [],
   fileUrlByTrainingDocId = {},
+  dailyProgress = {},
+  sectionFilter = "",
+  priorityOnly = false,
   now = new Date(),
   limit = dailyStudyGoal
 }) {
@@ -93,20 +108,31 @@ export function buildDailyStudyQueue({
   const collectionById = new Map(collections.map((collection) => [collection.id, collection]));
   const acknowledgementByDocId = new Map(acknowledgements.map((item) => [item.trainingDocId, item]));
   const progressByDocId = new Map(progressRecords.map((item) => [item.trainingDocId, item]));
+  const daily = parseDailyStudyProgress(JSON.stringify(dailyProgress || {}));
+  const normalizedSectionFilter = String(sectionFilter || "").trim().toLowerCase();
 
   return publishedDocs
     .map((doc) => {
       const collection = collectionById.get(doc.collectionId);
+      const section = collection?.name || doc.category || doc.type || "Training";
+      if (normalizedSectionFilter && section.toLowerCase() !== normalizedSectionFilter) return [];
+
       const assigned = assignedTrainingDocIds.has(doc.id) || assignedCollectionIds.has(doc.collectionId);
       const reviewed = isTrainingReviewCurrent(doc, acknowledgementByDocId.get(doc.id));
+      const recent = isRecent(doc, now);
+      if (priorityOnly && reviewed && !assigned && !recent) return [];
+
       const questions = buildReviewQuestionsForDoc(doc, publishedDocs);
       const serverProgress = readTrainingProgress(progressByDocId.get(doc.id), doc);
       const content = deriveReviewContent(doc);
 
       return questions.map((question, questionIndex) => {
         const factKey = getTrainingFactKey(question);
+        const dailyKey = `${doc.id}:${question.prompt}`;
+        const rating = daily.ratingByKey[dailyKey] || "";
         const mastered = serverProgress.masteredFactKeys.includes(factKey)
-          || hasPracticedPrompt(practiceProgress, doc.id, question.prompt);
+          || hasPracticedPrompt(practiceProgress, doc.id, question.prompt)
+          || daily.masteredKeys.includes(dailyKey);
         const reviewAgain = serverProgress.reviewAgainFactKeys.includes(factKey);
 
         return {
@@ -115,11 +141,12 @@ export function buildDailyStudyQueue({
           trainingDoc: doc,
           title: doc.title,
           category: doc.category || collection?.name || doc.type || "Training",
-          section: collection?.name || doc.category || doc.type || "Training",
+          section,
           assigned,
           reviewed,
           mastered,
-          recent: isRecent(doc, now),
+          recent,
+          rating,
           updatedAt: doc.updatedAt || doc.createdAt,
           imageUrl: fileUrlByTrainingDocId[doc.id] || "",
           allergens: content.allergens,
@@ -132,8 +159,8 @@ export function buildDailyStudyQueue({
           question,
           questionIndex,
           factKey,
-          priority: priorityFor({ assigned, reviewed, recent: isRecent(doc, now) }) * 10
-            + (reviewAgain ? 0 : mastered ? 2 : 1)
+          priority: priorityFor({ assigned, reviewed, recent }) * 10
+            + ratingPriority(rating, mastered, reviewAgain)
         };
       });
     })

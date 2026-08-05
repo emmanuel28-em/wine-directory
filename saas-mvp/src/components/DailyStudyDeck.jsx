@@ -10,6 +10,7 @@ function splitList(value) {
 
 export default function DailyStudyDeck({
   cards,
+  deckLabel = "Priority deck",
   onResponse,
   onRestart,
   isExpanded = false,
@@ -48,10 +49,10 @@ export default function DailyStudyDeck({
     try {
       await onResponse(currentCard, response);
 
-      if (response === "review-again" && !currentCard.hasRepeated) {
+      if ((response === "hard" || response === "review-again") && !currentCard.hasRepeated) {
         setDeck((currentDeck) => {
           const nextDeck = [...currentDeck];
-          const insertAt = Math.min(currentIndex + 3, nextDeck.length);
+          const insertAt = Math.min(currentIndex + 2, nextDeck.length);
           nextDeck.splice(insertAt, 0, { ...currentCard, hasRepeated: true });
           return nextDeck;
         });
@@ -75,10 +76,13 @@ export default function DailyStudyDeck({
         setIsFlipped((value) => !value);
       } else if (event.key === "ArrowLeft" && currentCard && isFlipped) {
         event.preventDefault();
-        respond("review-again");
+        respond("hard");
       } else if (event.key === "ArrowRight" && currentCard && isFlipped) {
         event.preventDefault();
-        respond("got-it");
+        respond("easy");
+      } else if (event.key === "ArrowDown" && currentCard && isFlipped) {
+        event.preventDefault();
+        respond("good");
       }
     }
 
@@ -93,7 +97,7 @@ export default function DailyStudyDeck({
       <section className="daily-deck-empty">
         <p className="eyebrow">Daily practice</p>
         <h2>No study cards are ready yet.</h2>
-        <p>Published training pages with useful facts will appear here automatically.</p>
+        <p>This deck is clear. Choose a section deck to keep practicing.</p>
         <Link className="primary-button" to="/library">Open the library</Link>
       </section>
     );
@@ -103,7 +107,7 @@ export default function DailyStudyDeck({
         <span className="daily-deck-complete-mark" aria-hidden="true">✓</span>
         <p className="eyebrow">Practice complete</p>
         <h2>You cleared this study set.</h2>
-        <p>Facts marked Review Again will return in your next set.</p>
+        <p>Hard facts will come back sooner. Easy facts will wait longer.</p>
         <div className="daily-deck-complete-actions">
           <button className="primary-button" type="button" onClick={onRestart}>Practice another set</button>
           <Link className="secondary-button" to="/library">Search the library</Link>
@@ -116,7 +120,7 @@ export default function DailyStudyDeck({
         <div className="daily-deck-toolbar">
           <div className="daily-deck-status">
             <span>Fact {currentIndex + 1} of {deck.length}</span>
-            <strong>{currentCard.assigned ? "Assigned" : currentCard.recent ? "Recently updated" : currentCard.reviewed ? "Refresh" : "To study"}</strong>
+            <strong>{currentCard.assigned ? "Assigned" : currentCard.recent ? "Recently updated" : currentCard.rating === "hard" ? "Needs repetition" : deckLabel}</strong>
           </div>
           {onToggleExpanded ? (
             <button className="deck-expand-button" type="button" onClick={onToggleExpanded}>
@@ -208,19 +212,23 @@ export default function DailyStudyDeck({
         </button>
 
         <div className="daily-response-actions" aria-label="Rate this study fact">
-          <button type="button" className="daily-response review-again" onClick={() => respond("review-again")} disabled={!isFlipped || isSaving}>
-            <strong>Review Again</strong>
-            <span>Bring this fact back</span>
+          <button type="button" className="daily-response hard" onClick={() => respond("hard")} disabled={!isFlipped || isSaving}>
+            <strong>Hard</strong>
+            <span>Bring this back soon</span>
           </button>
-          <button type="button" className="daily-response got-it" onClick={() => respond("got-it")} disabled={!isFlipped || isSaving}>
-            <strong>{isSaving ? "Saving..." : "Got It"}</strong>
-            <span>Count this fact toward completion</span>
+          <button type="button" className="daily-response good" onClick={() => respond("good")} disabled={!isFlipped || isSaving}>
+            <strong>{isSaving ? "Saving..." : "Good"}</strong>
+            <span>Count it and move on</span>
+          </button>
+          <button type="button" className="daily-response easy" onClick={() => respond("easy")} disabled={!isFlipped || isSaving}>
+            <strong>Easy</strong>
+            <span>Show less often</span>
           </button>
         </div>
 
         <div className="daily-deck-footer">
           <span>Space flips</span>
-          <span>Arrow keys rate</span>
+          <span>Left hard · Down good · Right easy</span>
           <Link to={`/library?open=${currentCard.trainingDocId}`}>Open full training page</Link>
         </div>
       </section>
