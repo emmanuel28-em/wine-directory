@@ -87,6 +87,29 @@ function ratingPriority(rating, mastered, reviewAgain) {
   return 2;
 }
 
+function interleaveCardsByTrainingDoc(cards) {
+  const groupedCards = new Map();
+
+  cards.forEach((card) => {
+    const group = groupedCards.get(card.trainingDocId) || [];
+    group.push(card);
+    groupedCards.set(card.trainingDocId, group);
+  });
+
+  const groups = [...groupedCards.values()];
+  const interleaved = [];
+  let index = 0;
+
+  while (groups.some((group) => group[index])) {
+    groups.forEach((group) => {
+      if (group[index]) interleaved.push(group[index]);
+    });
+    index += 1;
+  }
+
+  return interleaved;
+}
+
 // Home intentionally builds a small queue instead of displaying the full
 // restaurant catalog. Assignments and recent menu changes come first.
 export function buildDailyStudyQueue({
@@ -111,7 +134,7 @@ export function buildDailyStudyQueue({
   const daily = parseDailyStudyProgress(JSON.stringify(dailyProgress || {}));
   const normalizedSectionFilter = String(sectionFilter || "").trim().toLowerCase();
 
-  return publishedDocs
+  const sortedCards = publishedDocs
     .map((doc) => {
       const collection = collectionById.get(doc.collectionId);
       const section = collection?.name || doc.category || doc.type || "Training";
@@ -166,6 +189,7 @@ export function buildDailyStudyQueue({
     })
     .flat()
     .filter(Boolean)
-    .sort((left, right) => left.priority - right.priority || toTime(right.updatedAt) - toTime(left.updatedAt) || left.title.localeCompare(right.title))
-    .slice(0, limit);
+    .sort((left, right) => left.priority - right.priority || toTime(right.updatedAt) - toTime(left.updatedAt) || left.title.localeCompare(right.title));
+
+  return interleaveCardsByTrainingDoc(sortedCards).slice(0, limit);
 }

@@ -25,7 +25,7 @@ function makeDoc({ id, title, collectionId, updatedAt, status = "published" }) {
   };
 }
 
-test("daily queue prioritizes assigned and recent unreviewed pages", () => {
+test("daily queue prioritizes assigned and recent pages while rotating visible cards", () => {
   const now = new Date("2026-08-03T12:00:00Z");
   const oldDate = "2026-01-01T12:00:00Z";
   const recentDate = "2026-08-02T12:00:00Z";
@@ -45,10 +45,10 @@ test("daily queue prioritizes assigned and recent unreviewed pages", () => {
     now
   });
 
-  assert.deepEqual(queue.slice(0, 5).map((item) => item.trainingDocId), Array(5).fill("assigned"));
-  assert.deepEqual(queue.slice(5, 10).map((item) => item.trainingDocId), Array(5).fill("recent"));
-  assert.equal(queue[10].trainingDocId, "ordinary");
-  assert.equal(new Set(queue.slice(0, 5).map((item) => item.prompt)).size, 5);
+  assert.deepEqual(queue.slice(0, 3).map((item) => item.trainingDocId), ["assigned", "recent", "ordinary"]);
+  assert.notEqual(queue[0].trainingDocId, queue[1].trainingDocId);
+  assert.equal(queue.filter((item) => item.trainingDocId === "assigned").length, 4);
+  assert.equal(new Set(queue.filter((item) => item.trainingDocId === "assigned").map((item) => item.prompt)).size, 4);
 });
 
 test("daily responses are unique and scoped to restaurant, user, and day", () => {

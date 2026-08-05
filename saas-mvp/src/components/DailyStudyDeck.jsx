@@ -46,20 +46,20 @@ export default function DailyStudyDeck({
     if (!currentCard || isSaving) return;
     setIsSaving(true);
 
+    if ((response === "hard" || response === "review-again") && !currentCard.hasRepeated) {
+      setDeck((currentDeck) => {
+        const nextDeck = [...currentDeck];
+        const insertAt = Math.min(currentIndex + 2, nextDeck.length);
+        nextDeck.splice(insertAt, 0, { ...currentCard, hasRepeated: true });
+        return nextDeck;
+      });
+    }
+
+    setCurrentIndex((index) => index + 1);
+    setIsFlipped(false);
+
     try {
       await onResponse(currentCard, response);
-
-      if ((response === "hard" || response === "review-again") && !currentCard.hasRepeated) {
-        setDeck((currentDeck) => {
-          const nextDeck = [...currentDeck];
-          const insertAt = Math.min(currentIndex + 2, nextDeck.length);
-          nextDeck.splice(insertAt, 0, { ...currentCard, hasRepeated: true });
-          return nextDeck;
-        });
-      }
-
-      setCurrentIndex((index) => index + 1);
-      setIsFlipped(false);
     } finally {
       setIsSaving(false);
     }
