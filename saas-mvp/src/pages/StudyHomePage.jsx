@@ -241,7 +241,10 @@ export default function StudyHomePage() {
       .sort((left, right) => Number(right.assigned) - Number(left.assigned) || new Date(right.doc.updatedAt || 0) - new Date(left.doc.updatedAt || 0))
       .slice(0, 5);
   }, [publishedDocs, reviewedDocIds, studyData]);
-  const firstName = getFriendlyFirstName(workspace.userProfile);
+  const firstName = getFriendlyFirstName({
+    ...workspace.userProfile,
+    email: workspace.userProfile?.email || workspace.user?.signInDetails?.loginId || workspace.user?.username || ""
+  });
   const deckOptions = useMemo(() => {
     if (!studyData) return [];
     const collectionById = new Map(studyData.collections.map((collection) => [collection.id, collection]));
