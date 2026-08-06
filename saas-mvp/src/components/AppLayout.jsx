@@ -3,7 +3,6 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-do
 import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
 import { formatRole, useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 import { formatBillingStatus } from "../lib/billing.js";
-import { isOwnerOrAdmin } from "../lib/permissions.js";
 import AmplifySetupNotice from "./AmplifySetupNotice.jsx";
 
 function AccountMenu({ authSession, currentWorkspace, hasPlatformAccess, isSigningOut, onLogout }) {
@@ -27,14 +26,6 @@ function AccountMenu({ authSession, currentWorkspace, hasPlatformAccess, isSigni
           <strong>{userName}</strong>
           <span>{formatRole(currentWorkspace.role)}</span>
         </div>
-
-        {currentWorkspace.isActiveMember && currentWorkspace.role !== "staff" ? (
-          <>
-            <NavLink to="/manage">Manage restaurant</NavLink>
-            {isOwnerOrAdmin(currentWorkspace.role) ? <NavLink to="/manager/settings">Restaurant settings</NavLink> : null}
-            {isOwnerOrAdmin(currentWorkspace.role) ? <NavLink to="/manager/billing">Plan & billing</NavLink> : null}
-          </>
-        ) : null}
 
         <NavLink to="/report-issue">Help & support</NavLink>
 
@@ -69,7 +60,6 @@ function NavigationLinks({ authSession, currentWorkspace, hasPlatformAccess, loc
       <>
         <NavLink end to="/home">Home</NavLink>
         <NavLink to="/library">Library</NavLink>
-        {currentWorkspace.role !== "staff" ? <NavLink to="/manage">Manage</NavLink> : null}
       </>
     );
   }
@@ -86,7 +76,6 @@ function MobileBottomNav({ authSession, currentWorkspace, location }) {
     <nav className="bottom-nav" aria-label="Quick navigation">
       <NavLink end to="/home">Home</NavLink>
       <NavLink to="/library">Library</NavLink>
-      {currentWorkspace.role !== "staff" ? <NavLink to="/manage">Manage</NavLink> : null}
     </nav>
   );
 }
@@ -164,7 +153,6 @@ export default function AppLayout() {
       {authSession.status === "authenticated" && currentWorkspace.isBillingPaused ? (
         <div className="warning-banner app-warning-banner">
           <span>{formatBillingStatus(currentWorkspace.restaurant)}. Update billing to keep your restaurant active.</span>
-          {isOwnerOrAdmin(currentWorkspace.role) ? <Link to="/manager/billing">Review billing</Link> : null}
         </div>
       ) : null}
 

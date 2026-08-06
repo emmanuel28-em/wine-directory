@@ -4,20 +4,16 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import PlatformRoute from "./components/PlatformRoute.jsx";
 import AcceptInvitePage from "./pages/AcceptInvitePage.jsx";
 import FoundingRestaurantsPage from "./pages/FoundingRestaurantsPage.jsx";
-import InviteTeamPage from "./pages/InviteTeamPage.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import ManagedSetupPage from "./pages/ManagedSetupPage.jsx";
 import ManagerBillingPage from "./pages/ManagerBillingPage.jsx";
-import ManagerAssignmentsPage from "./pages/ManagerAssignmentsPage.jsx";
 import ManagerCertificationsPage from "./pages/ManagerCertificationsPage.jsx";
 import ManagerContentPage from "./pages/ManagerContentPage.jsx";
 import ManagerCreateTrainingPage from "./pages/ManagerCreateTrainingPage.jsx";
 import ManagerImportPage from "./pages/ManagerImportPage.jsx";
-import ManagerManageLayout from "./pages/ManagerManageLayout.jsx";
 import ManagerOnboardingPage from "./pages/ManagerOnboardingPage.jsx";
 import ManagerQuizzesPage from "./pages/ManagerQuizzesPage.jsx";
-import ManagerReadinessPage from "./pages/ManagerReadinessPage.jsx";
 import PlatformControlPage from "./pages/PlatformControlPage.jsx";
 import PlatformRestaurantHealthPage from "./pages/PlatformRestaurantHealthPage.jsx";
 import PlatformSupportPage from "./pages/PlatformSupportPage.jsx";
@@ -25,7 +21,6 @@ import ReportIssuePage from "./pages/ReportIssuePage.jsx";
 import StaffLibrary from "./pages/StaffLibrary.jsx";
 import StudyHomePage from "./pages/StudyHomePage.jsx";
 import TrialPage from "./pages/TrialPage.jsx";
-import WorkspaceSettingsPage from "./pages/WorkspaceSettingsPage.jsx";
 import { activeMemberRoles, adminManagerRoles as managerRoles, ownerAdminRoles } from "./lib/permissions.js";
 
 export default function App() {
@@ -74,15 +69,11 @@ export default function App() {
           path="/manage"
           element={
             <ProtectedRoute allowedRoles={managerRoles}>
-              <ManagerManageLayout />
+              <Navigate to="/library" replace />
             </ProtectedRoute>
           }
-        >
-          <Route index element={<Navigate to="team" replace />} />
-          <Route path="team" element={<ManagerAssignmentsPage />} />
-          <Route path="invites" element={<InviteTeamPage />} />
-          <Route path="readiness" element={<ManagerReadinessPage />} />
-        </Route>
+        />
+        <Route path="/manage/*" element={<Navigate to="/library" replace />} />
         <Route
           path="/manager/billing"
           element={
@@ -127,7 +118,7 @@ export default function App() {
           path="/manager/settings"
           element={
             <ProtectedRoute allowedRoles={ownerAdminRoles}>
-              <WorkspaceSettingsPage />
+              <Navigate to="/library" replace />
             </ProtectedRoute>
           }
         />
@@ -143,7 +134,7 @@ export default function App() {
           path="/manager/readiness"
           element={
             <ProtectedRoute allowedRoles={managerRoles}>
-              <Navigate to="/manage/readiness" replace />
+              <Navigate to="/home" replace />
             </ProtectedRoute>
           }
         />
@@ -151,7 +142,7 @@ export default function App() {
           path="/manager/staff-progress"
           element={
             <ProtectedRoute allowedRoles={managerRoles}>
-              <Navigate to="/manage/readiness" replace />
+              <Navigate to="/home" replace />
             </ProtectedRoute>
           }
         />
@@ -167,7 +158,7 @@ export default function App() {
           path="/manager/assignments"
           element={
             <ProtectedRoute allowedRoles={managerRoles}>
-              <Navigate to="/manage/team" replace />
+              <Navigate to="/home" replace />
             </ProtectedRoute>
           }
         />
@@ -175,7 +166,7 @@ export default function App() {
           path="/manager/invite-team"
           element={
             <ProtectedRoute allowedRoles={managerRoles}>
-              <Navigate to="/manage/invites" replace />
+              <Navigate to="/home" replace />
             </ProtectedRoute>
           }
         />

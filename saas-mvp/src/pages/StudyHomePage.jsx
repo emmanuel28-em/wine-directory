@@ -19,7 +19,6 @@ import {
 import { getFileAssetUrl, listFileAssetsForRestaurant } from "../lib/fileAssets.js";
 import { buildTrainingDocImageAssetMap } from "../lib/trainingImages.js";
 import { listLeaderboardForRestaurant, syncMyLeaderboardEntry } from "../lib/leaderboard.js";
-import { isAdminOrManager } from "../lib/permissions.js";
 import { reviewQuestionCount } from "../lib/reviewQuestions.js";
 import { isRecentlyUpdated, isTrainingReviewCurrent } from "../lib/studyProgress.js";
 import {
@@ -272,7 +271,6 @@ export default function StudyHomePage() {
         </div>
         <div className="study-home-links">
           <Link className="secondary-button" to="/library">Search the library</Link>
-          {isAdminOrManager(workspace.role) ? <Link className="secondary-button" to="/manage">Manage team</Link> : null}
         </div>
       </header>
 

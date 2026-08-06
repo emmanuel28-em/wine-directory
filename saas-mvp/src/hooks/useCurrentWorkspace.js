@@ -13,15 +13,7 @@ export function isManagerRole(role) {
 }
 
 export function formatRole(role) {
-  if (role === "owner") {
-    return "Account Owner";
-  }
-
-  if (role === "admin") {
-    return "Admin";
-  }
-
-  if (role === "manager") {
+  if (["owner", "admin", "manager"].includes(role)) {
     return "Manager";
   }
 

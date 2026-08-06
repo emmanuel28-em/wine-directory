@@ -1,5 +1,5 @@
 import { confirmSignUp, getCurrentUser, resendSignUpCode, signIn, signUp } from "aws-amplify/auth";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
 import { acceptInviteForUser, getPendingInviteByToken } from "../lib/invites.js";
@@ -14,7 +14,7 @@ const emptyForm = {
 };
 
 const roleLabels = {
-  admin: "Admin",
+  admin: "Manager",
   manager: "Manager",
   staff: "Staff"
 };
@@ -39,6 +39,7 @@ export default function AcceptInvitePage() {
   });
   const [isWorking, setIsWorking] = useState(false);
   const [message, setMessage] = useState("");
+  const hasStartedAutoAccept = useRef(false);
 
   function updateForm(event) {
     const { name, value } = event.target;
@@ -73,6 +74,10 @@ export default function AcceptInvitePage() {
   useEffect(() => {
     loadInvite();
   }, [token, authSession.status, authSession.user?.userId]);
+
+  useEffect(() => {
+    hasStartedAutoAccept.current = false;
+  }, [token, authSession.user?.userId]);
 
   async function signInAndRefresh() {
     const result = await signIn({
@@ -193,6 +198,24 @@ export default function AcceptInvitePage() {
     }
   }
 
+  // Joining should feel like one flow. Once a signed-in user has a valid
+  // invite, connect the workspace automatically instead of asking them to
+  // click a second "accept" button.
+  useEffect(() => {
+    if (authSession.status !== "authenticated" || inviteState.status !== "ready" || hasStartedAutoAccept.current) {
+      return;
+    }
+
+    const currentEmail = getSignedInEmail(authSession.user).toLowerCase();
+    const requiredEmail = String(inviteState.invite?.email || "").toLowerCase();
+    const hasEmailMismatch = !inviteState.invite?.isOpenInvite && requiredEmail && currentEmail !== requiredEmail;
+
+    if (hasEmailMismatch) return;
+
+    hasStartedAutoAccept.current = true;
+    acceptInvite();
+  }, [authSession.status, authSession.user, inviteState.status, inviteState.invite]);
+
   if (!token) {
     return (
       <section className="page-section narrow-page">
@@ -307,9 +330,7 @@ export default function AcceptInvitePage() {
                   You are signed in as {signedInEmail}. Sign out and use {inviteState.invite.email} to accept this invite.
                 </p>
               ) : (
-                <button className="primary-button full-width" type="button" onClick={acceptInvite} disabled={isWorking}>
-                  {isWorking ? "Accepting invite..." : "Accept Invite"}
-                </button>
+                <p className="form-message">Connecting you to the training library...</p>
               )}
             </>
           ) : null}

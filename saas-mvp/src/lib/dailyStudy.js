@@ -110,6 +110,27 @@ function interleaveCardsByTrainingDoc(cards) {
   return interleaved;
 }
 
+// Ratings can add cards back into the deck. Before advancing, move the next
+// available card from a different training page into the next position.
+export function moveDifferentTrainingDocNext(cards, currentIndex) {
+  const nextCards = [...cards];
+  const currentCard = nextCards[currentIndex];
+  const nextIndex = currentIndex + 1;
+
+  if (!currentCard || nextIndex >= nextCards.length) return nextCards;
+  if (nextCards[nextIndex]?.trainingDocId !== currentCard.trainingDocId) return nextCards;
+
+  const differentCardIndex = nextCards.findIndex(
+    (card, index) => index > nextIndex && card.trainingDocId !== currentCard.trainingDocId
+  );
+
+  if (differentCardIndex === -1) return nextCards;
+
+  const [differentCard] = nextCards.splice(differentCardIndex, 1);
+  nextCards.splice(nextIndex, 0, differentCard);
+  return nextCards;
+}
+
 // Home intentionally builds a small queue instead of displaying the full
 // restaurant catalog. Assignments and recent menu changes come first.
 export function buildDailyStudyQueue({

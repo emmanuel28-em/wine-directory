@@ -4,8 +4,32 @@ import {
   buildDailyStudyQueue,
   countDailyMastered,
   getDailyStudyStorageKey,
+  moveDifferentTrainingDocNext,
   recordDailyStudyResponse
 } from "./dailyStudy.js";
+
+test("moves a different training item into the next position", () => {
+  const cards = [
+    { id: "a-1", trainingDocId: "dish-a" },
+    { id: "a-2", trainingDocId: "dish-a" },
+    { id: "b-1", trainingDocId: "dish-b" }
+  ];
+
+  const reordered = moveDifferentTrainingDocNext(cards, 0);
+
+  assert.equal(reordered[1].trainingDocId, "dish-b");
+  assert.equal(reordered[2].trainingDocId, "dish-a");
+  assert.deepEqual(cards.map((card) => card.id), ["a-1", "a-2", "b-1"]);
+});
+
+test("keeps the deck stable when only one training item remains", () => {
+  const cards = [
+    { id: "a-1", trainingDocId: "dish-a" },
+    { id: "a-2", trainingDocId: "dish-a" }
+  ];
+
+  assert.deepEqual(moveDifferentTrainingDocNext(cards, 0), cards);
+});
 
 function makeDoc({ id, title, collectionId, updatedAt, status = "published" }) {
   return {

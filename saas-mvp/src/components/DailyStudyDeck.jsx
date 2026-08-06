@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { moveDifferentTrainingDocNext } from "../lib/dailyStudy.js";
 
 function splitList(value) {
   return String(value || "")
@@ -46,14 +47,17 @@ export default function DailyStudyDeck({
     if (!currentCard || isSaving) return;
     setIsSaving(true);
 
-    if ((response === "hard" || response === "review-again") && !currentCard.hasRepeated) {
-      setDeck((currentDeck) => {
-        const nextDeck = [...currentDeck];
+    setDeck((currentDeck) => {
+      let nextDeck = [...currentDeck];
+
+      if ((response === "hard" || response === "review-again") && !currentCard.hasRepeated) {
         const insertAt = Math.min(currentIndex + 2, nextDeck.length);
         nextDeck.splice(insertAt, 0, { ...currentCard, hasRepeated: true });
-        return nextDeck;
-      });
-    }
+      }
+
+      nextDeck = moveDifferentTrainingDocNext(nextDeck, currentIndex);
+      return nextDeck;
+    });
 
     setCurrentIndex((index) => index + 1);
     setIsFlipped(false);
