@@ -23,6 +23,7 @@ import {
   recordTrainingFactResponse
 } from "../lib/trainingProgress.js";
 import { listTrainingDocsForRestaurant, parseContentJson } from "../lib/trainingDocs.js";
+import { buildTrainingDocImageAssetMap } from "../lib/trainingImages.js";
 
 const typeLabels = {
   wine: "Wine",
@@ -186,6 +187,10 @@ export default function StaffLibrary() {
   }, [workspace.status, workspace.restaurant?.id, workspace.userProfile?.id]);
 
   const collectionById = useMemo(() => new Map(collections.map((collection) => [collection.id, collection])), [collections]);
+  const imageAssetByDocId = useMemo(
+    () => buildTrainingDocImageAssetMap({ trainingDocs: docs, fileAssets }),
+    [docs, fileAssets]
+  );
   const reviewedDocIds = useMemo(() => new Set(
     acknowledgements
       .filter((item) => isTrainingReviewCurrent(docs.find((doc) => doc.id === item.trainingDocId), item))
@@ -225,7 +230,7 @@ export default function StaffLibrary() {
   const activeDoc = docs.find((doc) => doc.id === activeDocId) || null;
   const activeContent = activeDoc ? deriveReviewContent(activeDoc) : null;
   const activeFiles = activeDoc ? fileAssets.filter((fileAsset) => fileAsset.trainingDocId === activeDoc.id) : [];
-  const activeImageAsset = activeFiles.find((fileAsset) => assetUrls[fileAsset.id]);
+  const activeImageAsset = activeDoc ? imageAssetByDocId.get(activeDoc.id) : null;
   const activeProgressRecord = activeDoc ? progressRecords.find((record) => record.trainingDocId === activeDoc.id) : null;
   const activeProgress = activeDoc ? readTrainingProgress(activeProgressRecord, activeDoc) : null;
   const activeQuestions = activeDoc ? buildReviewQuestionsForDoc(activeDoc, docs) : [];
@@ -242,7 +247,7 @@ export default function StaffLibrary() {
   function buildStudyCards(doc) {
     const content = deriveReviewContent(doc);
     const collection = collectionById.get(doc.collectionId);
-    const imageAsset = fileAssets.find((fileAsset) => fileAsset.trainingDocId === doc.id && assetUrls[fileAsset.id]);
+    const imageAsset = imageAssetByDocId.get(doc.id);
 
     const progress = readTrainingProgress(progressRecords.find((record) => record.trainingDocId === doc.id), doc);
     return buildReviewQuestionsForDoc(doc, docs).map((question, questionIndex) => ({

@@ -16,7 +16,8 @@ import {
   parseDailyStudyProgress,
   recordDailyStudyResponse
 } from "../lib/dailyStudy.js";
-import { getFileAssetUrl, isPreviewableImageFileAsset, listFileAssetsForRestaurant } from "../lib/fileAssets.js";
+import { getFileAssetUrl, listFileAssetsForRestaurant } from "../lib/fileAssets.js";
+import { buildTrainingDocImageAssetMap } from "../lib/trainingImages.js";
 import { listLeaderboardForRestaurant, syncMyLeaderboardEntry } from "../lib/leaderboard.js";
 import { isAdminOrManager } from "../lib/permissions.js";
 import { reviewQuestionCount } from "../lib/reviewQuestions.js";
@@ -104,27 +105,28 @@ export default function StudyHomePage() {
           assignedCollectionIds,
           fileUrlByTrainingDocId: {}
         };
-        const publishedDocIds = new Set(docs.map((doc) => doc.id));
-        const firstImageByDocId = new Map();
-
-        fileAssets
-          .filter((fileAsset) => publishedDocIds.has(fileAsset.trainingDocId) && isPreviewableImageFileAsset(fileAsset))
-          .forEach((fileAsset) => {
-            if (!firstImageByDocId.has(fileAsset.trainingDocId)) firstImageByDocId.set(fileAsset.trainingDocId, fileAsset);
-          });
+        const firstImageByDocId = buildTrainingDocImageAssetMap({ trainingDocs: docs, fileAssets });
+        const uniqueImageAssets = [...new Map(
+          [...firstImageByDocId.values()].map((fileAsset) => [fileAsset.id, fileAsset])
+        ).values()];
 
         const imageEntries = await Promise.all(
-          [...firstImageByDocId.entries()].map(async ([trainingDocId, fileAsset]) => {
+          uniqueImageAssets.map(async (fileAsset) => {
             try {
-              return [trainingDocId, await getFileAssetUrl({ fileAsset, restaurantId })];
+              return [fileAsset.id, await getFileAssetUrl({ fileAsset, restaurantId })];
             } catch {
               return null;
             }
           })
         );
+        const imageUrlByAssetId = Object.fromEntries(imageEntries.filter(Boolean));
         const data = {
           ...baseData,
-          fileUrlByTrainingDocId: Object.fromEntries(imageEntries.filter(Boolean))
+          fileUrlByTrainingDocId: Object.fromEntries(
+            [...firstImageByDocId.entries()]
+              .map(([trainingDocId, fileAsset]) => [trainingDocId, imageUrlByAssetId[fileAsset.id]])
+              .filter(([, imageUrl]) => Boolean(imageUrl))
+          )
         };
 
         if (isCurrent) {
