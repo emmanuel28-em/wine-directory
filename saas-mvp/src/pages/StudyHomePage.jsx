@@ -30,6 +30,7 @@ import {
   recordTrainingFactResponse
 } from "../lib/trainingProgress.js";
 import { listTrainingDocsForRestaurant } from "../lib/trainingDocs.js";
+import { getFriendlyFirstName } from "../lib/userNames.js";
 
 function replaceRecord(records, nextRecord) {
   const exists = records.some((record) => record.id === nextRecord.id);
@@ -240,7 +241,7 @@ export default function StudyHomePage() {
       .sort((left, right) => Number(right.assigned) - Number(left.assigned) || new Date(right.doc.updatedAt || 0) - new Date(left.doc.updatedAt || 0))
       .slice(0, 5);
   }, [publishedDocs, reviewedDocIds, studyData]);
-  const firstName = workspace.userProfile?.name?.split(" ")?.[0] || "there";
+  const firstName = getFriendlyFirstName(workspace.userProfile);
   const deckOptions = useMemo(() => {
     if (!studyData) return [];
     const collectionById = new Map(studyData.collections.map((collection) => [collection.id, collection]));

@@ -196,8 +196,9 @@ export async function acceptInviteForUser({ invite, user, firstName, lastName })
   const dataClient = getDataClient();
   const result = await dataClient.mutations.acceptInvite({
     token: invite.inviteToken,
-    firstName: firstName || invite.firstName || "",
-    lastName: lastName || invite.lastName || ""
+    // Open links contain role placeholders, not a person's actual name.
+    firstName: firstName || (invite.isOpenInvite ? "" : invite.firstName) || "",
+    lastName: lastName || (invite.isOpenInvite ? "" : invite.lastName) || ""
   });
 
   if (result.errors?.length) throw new Error(result.errors.map((error) => error.message).join(" "));

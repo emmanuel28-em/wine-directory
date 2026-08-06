@@ -245,8 +245,8 @@ export const handler = async (event: InviteAccessEvent) => {
       restaurantId,
       restaurantName: restaurant.Item.name?.S || "Restaurant",
       email: isOpenInvite ? identity.email : invite.email?.S || "",
-      firstName: invite.firstName?.S || "",
-      lastName: invite.lastName?.S || "",
+      firstName: isOpenInvite ? "" : invite.firstName?.S || "",
+      lastName: isOpenInvite ? "" : invite.lastName?.S || "",
       role: invitedRole,
       expiresAt: invite.expiresAt?.S || "",
       isOpenInvite
@@ -264,7 +264,13 @@ export const handler = async (event: InviteAccessEvent) => {
       ":user": { S: identity.cognitoUserId }
     });
     const membershipId = existingMembership?.id?.S || randomUUID();
-    const displayName = `${event.arguments.firstName || invite.firstName?.S || ""} ${event.arguments.lastName || invite.lastName?.S || ""}`.trim() || identity.email;
+    const suppliedName = `${event.arguments.firstName || ""} ${event.arguments.lastName || ""}`.trim();
+    const inviteName = isOpenInvite
+      ? ""
+      : `${invite.firstName?.S || ""} ${invite.lastName?.S || ""}`.trim();
+    const existingName = profile?.name?.S || "";
+    const isPlaceholderName = ["staff", "staff join link", "team", "team member"].includes(existingName.toLowerCase());
+    const displayName = suppliedName || (!isPlaceholderName ? existingName : "") || inviteName || identity.email.split("@")[0];
 
     await dynamo.send(new PutItemCommand({
       TableName: env("USER_PROFILE_TABLE_NAME"),
