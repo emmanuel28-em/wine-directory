@@ -1,14 +1,25 @@
-import { confirmSignUp, getCurrentUser, signIn, signUp } from "aws-amplify/auth";
+import {
+  confirmResetPassword,
+  confirmSignUp,
+  getCurrentUser,
+  resendSignUpCode,
+  resetPassword,
+  signIn,
+  signUp
+} from "aws-amplify/auth";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
 import { acceptInviteForUser, getPendingInviteByToken } from "../lib/invites.js";
+import { getPasswordPolicyError, passwordRuleText } from "../lib/passwordPolicy.js";
 
 const emptyForm = {
   firstName: "",
   lastName: "",
   email: "",
   password: "",
+  newPassword: "",
+  resetCode: "",
   confirmationCode: ""
 };
 
@@ -20,6 +31,44 @@ const roleLabels = {
 
 function getSignedInEmail(user) {
   return user?.signInDetails?.loginId || user?.username || "";
+}
+
+function normalizeEmail(value) {
+  return value.trim().toLowerCase();
+}
+
+function getFriendlyAuthError(error, fallback) {
+  const name = error?.name || "";
+
+  if (name === "UsernameExistsException") {
+    return "An account already exists for this email. Sign in with that email, or reset the password if they do not remember it.";
+  }
+
+  if (name === "NotAuthorizedException") {
+    return "That email and password did not match. Try again or reset the password below.";
+  }
+
+  if (name === "UserNotFoundException") {
+    return "No Line Up account was found for that email. Create the account using the invited email address.";
+  }
+
+  if (name === "UserNotConfirmedException") {
+    return "This account exists, but the email still needs to be confirmed.";
+  }
+
+  if (name === "CodeMismatchException") {
+    return "That code is not correct. Check the latest email and try again.";
+  }
+
+  if (name === "ExpiredCodeException") {
+    return "That code has expired. Request a new code and try again.";
+  }
+
+  if (name === "InvalidPasswordException") {
+    return passwordRuleText;
+  }
+
+  return error?.message || fallback;
 }
 
 export default function AcceptInvitePage() {
@@ -75,7 +124,7 @@ export default function AcceptInvitePage() {
 
   async function signInAndRefresh() {
     const result = await signIn({
-      username: form.email,
+      username: normalizeEmail(form.email),
       password: form.password
     });
 
@@ -92,12 +141,18 @@ export default function AcceptInvitePage() {
     setMessage("");
 
     try {
+      const passwordError = getPasswordPolicyError(form.password);
+      if (passwordError) {
+        setMessage(passwordError);
+        return;
+      }
+
       const result = await signUp({
-        username: form.email,
+        username: normalizeEmail(form.email),
         password: form.password,
         options: {
           userAttributes: {
-            email: form.email
+            email: normalizeEmail(form.email)
           }
         }
       });
@@ -110,7 +165,20 @@ export default function AcceptInvitePage() {
 
       await signInAndRefresh();
     } catch (error) {
-      setMessage(error.message || "Could not create account.");
+      if (error?.name === "UsernameExistsException") {
+        setAuthMode("signin");
+        setPhase("entry");
+        setMessage("An account already exists for this email. Sign in below, or use Forgot password if they do not remember the password.");
+        return;
+      }
+
+      if (error?.name === "UserNotConfirmedException") {
+        setPhase("confirm");
+        setMessage("This account exists but still needs email confirmation. Enter the confirmation code, or resend it below.");
+        return;
+      }
+
+      setMessage(getFriendlyAuthError(error, "Could not create account."));
     } finally {
       setIsWorking(false);
     }
@@ -123,13 +191,30 @@ export default function AcceptInvitePage() {
 
     try {
       await confirmSignUp({
-        username: form.email,
+        username: normalizeEmail(form.email),
         confirmationCode: form.confirmationCode
       });
 
       await signInAndRefresh();
     } catch (error) {
-      setMessage(error.message || "Could not confirm account.");
+      setMessage(getFriendlyAuthError(error, "Could not confirm account."));
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
+  async function resendConfirmationCode() {
+    setIsWorking(true);
+    setMessage("");
+
+    try {
+      await resendSignUpCode({
+        username: normalizeEmail(form.email)
+      });
+
+      setMessage("A new confirmation code was sent. Check the latest email from Line Up.");
+    } catch (error) {
+      setMessage(getFriendlyAuthError(error, "Could not resend the confirmation code."));
     } finally {
       setIsWorking(false);
     }
@@ -143,7 +228,66 @@ export default function AcceptInvitePage() {
     try {
       await signInAndRefresh();
     } catch (error) {
-      setMessage(error.message || "Could not sign in.");
+      if (error?.name === "UserNotConfirmedException") {
+        setPhase("confirm");
+        setMessage("This account exists, but the email still needs to be confirmed. Enter the code or resend it below.");
+        return;
+      }
+
+      setMessage(getFriendlyAuthError(error, "Could not sign in."));
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
+  async function requestPasswordReset(event) {
+    event.preventDefault();
+    setIsWorking(true);
+    setMessage("");
+
+    try {
+      await resetPassword({
+        username: normalizeEmail(form.email)
+      });
+
+      setPhase("confirmReset");
+      setMessage("Check your email for the password reset code, then create a new password.");
+    } catch (error) {
+      setMessage(getFriendlyAuthError(error, "Could not send a password reset email."));
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
+  async function confirmPasswordReset(event) {
+    event.preventDefault();
+    setIsWorking(true);
+    setMessage("");
+
+    try {
+      const passwordError = getPasswordPolicyError(form.newPassword);
+      if (passwordError) {
+        setMessage(passwordError);
+        return;
+      }
+
+      await confirmResetPassword({
+        username: normalizeEmail(form.email),
+        confirmationCode: form.resetCode.trim(),
+        newPassword: form.newPassword
+      });
+
+      setPhase("entry");
+      setAuthMode("signin");
+      setForm((currentForm) => ({
+        ...currentForm,
+        password: "",
+        newPassword: "",
+        resetCode: ""
+      }));
+      setMessage("Password updated. Sign in with the new password to finish accepting the invite.");
+    } catch (error) {
+      setMessage(getFriendlyAuthError(error, "Could not update the password."));
     } finally {
       setIsWorking(false);
     }
@@ -244,6 +388,32 @@ export default function AcceptInvitePage() {
               <button className="primary-button full-width" type="button" onClick={confirmAccount} disabled={isWorking}>
                 {isWorking ? "Confirming..." : "Confirm Account"}
               </button>
+              <button className="secondary-button full-width" type="button" onClick={resendConfirmationCode} disabled={isWorking}>
+                Resend Confirmation Code
+              </button>
+              <button className="secondary-button full-width" type="button" onClick={() => setPhase("entry")} disabled={isWorking}>
+                Back to Sign In
+              </button>
+            </>
+          ) : phase === "confirmReset" ? (
+            <>
+              <h2>Reset Password</h2>
+              <p>Enter the reset code sent to {form.email}, then choose a new password.</p>
+              <label>
+                Reset code
+                <input name="resetCode" value={form.resetCode} onChange={updateForm} required />
+              </label>
+              <label>
+                New password
+                <input name="newPassword" type="password" value={form.newPassword} onChange={updateForm} required />
+                <span className="helper-text">{passwordRuleText}</span>
+              </label>
+              <button className="primary-button full-width" type="button" onClick={confirmPasswordReset} disabled={isWorking}>
+                {isWorking ? "Updating..." : "Update Password"}
+              </button>
+              <button className="secondary-button full-width" type="button" onClick={() => setPhase("entry")} disabled={isWorking}>
+                Back to Sign In
+              </button>
             </>
           ) : (
             <>
@@ -254,10 +424,21 @@ export default function AcceptInvitePage() {
               <label>
                 Password
                 <input name="password" type="password" value={form.password} onChange={updateForm} required />
+                {authMode === "signup" ? <span className="helper-text">{passwordRuleText}</span> : null}
               </label>
               <button className="primary-button full-width" type="submit" disabled={isWorking}>
                 {isWorking ? "Working..." : authMode === "signup" ? "Create Account" : "Sign In"}
               </button>
+              {authMode === "signin" ? (
+                <button className="secondary-button full-width" type="button" onClick={requestPasswordReset} disabled={isWorking || !form.email}>
+                  Forgot password?
+                </button>
+              ) : null}
+              {authMode === "signup" ? (
+                <p className="helper-text">
+                  Already created an account? Choose Sign In above with the same email from the invite.
+                </p>
+              ) : null}
             </>
           )}
         </form>
@@ -278,9 +459,14 @@ export default function AcceptInvitePage() {
               </p>
 
               {emailMismatch ? (
-                <p className="form-message">
-                  You are signed in as {signedInEmail}. Sign out and use {inviteState.invite.email} to accept this invite.
-                </p>
+                <>
+                  <p className="form-message">
+                    You are signed in as {signedInEmail}. Sign out and use {inviteState.invite.email} to accept this invite.
+                  </p>
+                  <button className="secondary-button full-width" type="button" onClick={authSession.signOut} disabled={isWorking}>
+                    Sign Out
+                  </button>
+                </>
               ) : (
                 <button className="primary-button full-width" type="button" onClick={acceptInvite} disabled={isWorking}>
                   {isWorking ? "Accepting invite..." : "Accept Invite"}
