@@ -7,7 +7,6 @@ import FoundingRestaurantsPage from "./pages/FoundingRestaurantsPage.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import ManagedSetupPage from "./pages/ManagedSetupPage.jsx";
-import ManagerBillingPage from "./pages/ManagerBillingPage.jsx";
 import ManagerCertificationsPage from "./pages/ManagerCertificationsPage.jsx";
 import ManagerContentPage from "./pages/ManagerContentPage.jsx";
 import ManagerCreateTrainingPage from "./pages/ManagerCreateTrainingPage.jsx";
@@ -27,7 +26,7 @@ export default function App() {
   return (
     <Routes>
       <Route element={<AppLayout />}>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<Navigate to="/library" replace />} />
         <Route path="/founding-restaurants" element={<FoundingRestaurantsPage />} />
         <Route path="/trial" element={<TrialPage />} />
         <Route path="/managed-setup" element={<ManagedSetupPage />} />
@@ -74,14 +73,6 @@ export default function App() {
           }
         />
         <Route path="/manage/*" element={<Navigate to="/library" replace />} />
-        <Route
-          path="/manager/billing"
-          element={
-            <ProtectedRoute allowedRoles={ownerAdminRoles}>
-              <ManagerBillingPage />
-            </ProtectedRoute>
-          }
-        />
         <Route
           path="/manager/create-training"
           element={

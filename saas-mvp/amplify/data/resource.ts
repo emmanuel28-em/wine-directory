@@ -190,6 +190,7 @@ const schema = a.schema({
       managerGroup: a.string()
     })
     .authorization((allow) => [
+      allow.guest().to(["read"]),
       // Everyone in this restaurant can read its profile. Only its manager
       // group can make profile changes; workspace creation happens in Lambda.
       allow.groupDefinedIn("tenantGroup").to(["read"]),
@@ -338,6 +339,7 @@ const schema = a.schema({
       managerGroup: a.string()
     })
     .authorization((allow) => [
+      allow.guest().to(["read"]),
       allow.groupDefinedIn("tenantGroup").to(["read"]),
       allow.groupDefinedIn("managerGroup").to(["create", "update", "delete"])
     ]),
@@ -360,6 +362,7 @@ const schema = a.schema({
       managerGroup: a.string()
     })
     .authorization((allow) => [
+      allow.guest().to(["read"]),
       allow.groupDefinedIn("tenantGroup").to(["read"]),
       allow.groupDefinedIn("managerGroup").to(["create", "update", "delete"])
     ]),
@@ -373,12 +376,19 @@ const schema = a.schema({
       userProfileId: a.id().required(),
       cognitoUserId: a.string(),
       reviewedAt: a.datetime().required(),
+      correctAnswers: a.integer(),
+      totalQuestions: a.integer(),
+      knowledgeStatus: a.enum(["studied", "mastered"]),
+      readinessStatus: a.enum(["inTraining", "managerApprovalPending", "serviceReady", "needsReview"]),
+      managerApprovedBy: a.id(),
+      managerApprovedAt: a.datetime(),
       tenantGroup: a.string(),
       managerGroup: a.string()
     })
     .authorization((allow) => [
+      allow.guest().to(["create", "read", "update"]),
       allow.ownerDefinedIn("cognitoUserId").identityClaim("sub").to(["create", "read", "update"]),
-      allow.groupDefinedIn("managerGroup").to(["read"])
+      allow.groupDefinedIn("managerGroup").to(["read", "update"])
     ]),
 
   // TrainingDocProgress stores the learner's in-progress Anki facts. Unlike a
@@ -443,12 +453,13 @@ const schema = a.schema({
       managerGroup: a.string()
     })
     .authorization((allow) => [
+      allow.guest().to(["read"]),
       allow.groupDefinedIn("tenantGroup").to(["read"]),
       allow.groupDefinedIn("managerGroup").to(["create", "update", "delete"])
     ]),
 
   // A ManagedSetupRequest is a done-for-you setup request.
-  // Public file uploads are not enabled yet, so saved requests currently require authentication.
+  // Public visitors may submit a request, but cannot read or modify existing requests.
   ManagedSetupRequest: a
     .model({
       restaurantId: a.id(),
@@ -465,8 +476,6 @@ const schema = a.schema({
       managerGroup: a.string()
     })
     .authorization((allow) => [
-      // A prospective restaurant can submit a setup inquiry before creating an account.
-      // Guest access is create-only: public visitors cannot list, read, update, or delete inquiries.
       allow.guest().to(["create"])
     ]),
 
@@ -524,6 +533,7 @@ const schema = a.schema({
       managerGroup: a.string()
     })
     .authorization((allow) => [
+      allow.guest().to(["read"]),
       allow.groupDefinedIn("tenantGroup").to(["read"]),
       allow.groupDefinedIn("managerGroup").to(["create", "update", "delete"])
     ]),
@@ -542,6 +552,7 @@ const schema = a.schema({
       managerGroup: a.string()
     })
     .authorization((allow) => [
+      allow.guest().to(["read"]),
       allow.groupDefinedIn("tenantGroup").to(["read"]),
       allow.groupDefinedIn("managerGroup").to(["create", "update", "delete"])
     ]),
@@ -562,6 +573,7 @@ const schema = a.schema({
       managerGroup: a.string()
     })
     .authorization((allow) => [
+      allow.guest().to(["read"]),
       // A staff member owns their attempts; managers can read attempts for
       // their own restaurant's readiness dashboard.
       allow.ownerDefinedIn("cognitoUserId").identityClaim("sub").to(["create", "read"]),
@@ -582,6 +594,7 @@ const schema = a.schema({
       managerGroup: a.string()
     })
     .authorization((allow) => [
+      allow.guest().to(["read"]),
       allow.groupDefinedIn("tenantGroup").to(["read"]),
       allow.groupDefinedIn("managerGroup").to(["create", "update", "delete"])
     ]),
@@ -597,6 +610,7 @@ const schema = a.schema({
       managerGroup: a.string()
     })
     .authorization((allow) => [
+      allow.guest().to(["read"]),
       allow.groupDefinedIn("tenantGroup").to(["read"]),
       allow.groupDefinedIn("managerGroup").to(["create", "update", "delete"])
     ]),
@@ -616,6 +630,7 @@ const schema = a.schema({
       managerGroup: a.string()
     })
     .authorization((allow) => [
+      allow.guest().to(["read"]),
       allow.groupDefinedIn("tenantGroup").to(["read"]),
       allow.groupDefinedIn("managerGroup").to(["create", "update", "delete"])
     ]),
@@ -634,6 +649,7 @@ const schema = a.schema({
       managerGroup: a.string()
     })
     .authorization((allow) => [
+      allow.guest().to(["read"]),
       allow.groupDefinedIn("tenantGroup").to(["read"]),
       allow.groupDefinedIn("managerGroup").to(["create", "update", "delete"])
     ]),
@@ -678,6 +694,6 @@ export type Schema = ClientSchema<typeof schema>;
 export const data = defineData({
   schema,
   authorizationModes: {
-    defaultAuthorizationMode: "userPool"
+    defaultAuthorizationMode: "identityPool"
   }
 });

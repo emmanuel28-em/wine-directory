@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAmplifySetup } from "../amplify/AmplifySetupProvider.jsx";
 import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
-import { isWorkspaceBillingPaused } from "../lib/billing.js";
 import { activeMemberRoles, adminManagerRoles, isAdminOrManager } from "../lib/permissions.js";
-import { loadUserWorkspace } from "../lib/workspace.js";
+import { loadPublicWorkspace } from "../lib/workspace.js";
 
 export { activeMemberRoles };
 export const managerRoles = adminManagerRoles;
@@ -47,7 +46,7 @@ export function useCurrentWorkspace() {
     }));
 
     try {
-      const nextWorkspace = await loadUserWorkspace(authSession.user);
+      const nextWorkspace = await loadPublicWorkspace();
       setWorkspace(nextWorkspace);
       return nextWorkspace;
     } catch (error) {
@@ -70,7 +69,7 @@ export function useCurrentWorkspace() {
       if (amplifySetup.status !== "ready" || authSession.status !== "authenticated") {
         if (isMounted) {
           setWorkspace({
-            status: authSession.status === "authenticated" ? "loading" : "signedOut",
+            status: authSession.status === "authenticated" ? "loading" : "offline",
             restaurant: null,
             userProfile: null,
             membership: null,
@@ -91,7 +90,7 @@ export function useCurrentWorkspace() {
     return () => {
       isMounted = false;
     };
-  }, [amplifySetup.status, authSession.status, authSession.user?.userId, reloadWorkspace]);
+  }, [amplifySetup.status, authSession.status, reloadWorkspace]);
 
   return useMemo(
     () => ({
@@ -104,7 +103,6 @@ export function useCurrentWorkspace() {
       isLoading: amplifySetup.status === "loading" || authSession.status === "checking" || workspace.status === "loading",
       isAuthenticated: authSession.status === "authenticated",
       isActiveMember: workspace.status === "ready" && workspace.membership?.status === "active",
-      isBillingPaused: workspace.status === "ready" && isWorkspaceBillingPaused(workspace.restaurant),
       isManager: isManagerRole(workspace.membership?.role),
       message: workspace.message,
       reloadWorkspace
