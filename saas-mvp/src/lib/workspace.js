@@ -1,24 +1,4 @@
 import { getDataClient } from "./dataClient.js";
-import { getWorkspaceGroups } from "./workspaceGroups.js";
-
-const publicUserProfile = {
-  id: "public-user",
-  cognitoUserId: "public-visitor",
-  name: "Public Visitor",
-  email: "public@lineup.local"
-};
-
-function buildPublicMembership(restaurantId) {
-  return {
-    id: "public-membership",
-    restaurantId,
-    userProfileId: publicUserProfile.id,
-    cognitoUserId: publicUserProfile.cognitoUserId,
-    role: "staff",
-    status: "active",
-    ...getWorkspaceGroups(restaurantId)
-  };
-}
 
 export async function listFirst(model, filter) {
   const result = await model.list({ filter });
@@ -94,40 +74,6 @@ export async function loadUserWorkspace(user) {
     restaurant: restaurantResult.data,
     userProfile,
     membership,
-    message: ""
-  };
-}
-
-export async function loadPublicWorkspace() {
-  const dataClient = getDataClient();
-  const restaurantResult = await dataClient.models.Restaurant.list({ limit: 100 });
-
-  if (restaurantResult.errors?.length) {
-    throw new Error(restaurantResult.errors.map((error) => error.message).join(" "));
-  }
-
-  const restaurants = restaurantResult.data || [];
-  const restaurant =
-    restaurants.find((item) => ["active", "trialing"].includes(item.status || item.subscriptionStatus)) ||
-    restaurants.find((item) => item.status !== "archived") ||
-    restaurants[0] ||
-    null;
-
-  if (!restaurant?.id) {
-    return {
-      status: "empty",
-      restaurant: null,
-      userProfile: publicUserProfile,
-      membership: null,
-      message: "No public restaurant workspace is available yet."
-    };
-  }
-
-  return {
-    status: "ready",
-    restaurant,
-    userProfile: publicUserProfile,
-    membership: buildPublicMembership(restaurant.id),
     message: ""
   };
 }

@@ -1,7 +1,9 @@
-import { Navigate, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { useAmplifySetup } from "../amplify/AmplifySetupProvider.jsx";
 import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
 import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
+
+const billingAllowedPaths = new Set(["/manager", "/manager/billing", "/manager/settings"]);
 
 export default function ProtectedRoute({ children, allowedRoles = [] }) {
   const location = useLocation();
@@ -52,6 +54,24 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
           <p>
             This area is only available to account owners, admins, or managers for this restaurant workspace.
           </p>
+        </div>
+      </section>
+    );
+  }
+
+  if (currentWorkspace.isBillingPaused && !billingAllowedPaths.has(location.pathname)) {
+    return (
+      <section className="page-section narrow-page">
+        <div className="form-card">
+          <h1>This workspace needs an active subscription.</h1>
+          <p>
+            Please contact your manager or Account Owner to update billing before adding training material, taking quizzes, uploading files, or inviting new team members.
+          </p>
+          {currentWorkspace.role === "owner" || currentWorkspace.role === "admin" ? (
+            <Link className="primary-button" to="/manager/billing">
+              Restore Workspace Access
+            </Link>
+          ) : null}
         </div>
       </section>
     );
