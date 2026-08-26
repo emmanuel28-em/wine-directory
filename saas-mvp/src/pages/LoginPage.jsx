@@ -1,7 +1,9 @@
 import {
+  confirmSignUp,
   confirmResetPassword,
   confirmSignIn,
   fetchAuthSession,
+  resendSignUpCode,
   resetPassword,
   signIn
 } from "aws-amplify/auth";
@@ -15,7 +17,8 @@ const emptyForm = {
   email: "",
   password: "",
   newPassword: "",
-  resetCode: ""
+  resetCode: "",
+  confirmationCode: ""
 };
 
 function normalizeEmail(value) {
@@ -122,7 +125,69 @@ export default function LoginPage() {
 
       setMessage("This sign-in needs another step. Try resetting your password or contact Line Up support.");
     } catch (error) {
+      if (error?.name === "UserNotConfirmedException") {
+        try {
+          await resendSignUpCode({ username: normalizeEmail(form.email) });
+          setPhase("confirmAccount");
+          setMessage("Your account still needs email verification. We sent you a new confirmation code.");
+          return;
+        } catch (resendError) {
+          setMessage(getFriendlyAuthError(resendError, "Could not resend the account confirmation code."));
+          return;
+        }
+      }
+
       setMessage(getFriendlyAuthError(error, "Could not sign in."));
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
+  async function submitAccountConfirmation(event) {
+    event.preventDefault();
+    setIsWorking(true);
+    setMessage("");
+
+    try {
+      await confirmSignUp({
+        username: normalizeEmail(form.email),
+        confirmationCode: form.confirmationCode.trim()
+      });
+
+      const result = await signIn({
+        username: normalizeEmail(form.email),
+        password: form.password
+      });
+
+      if (result.isSignedIn) {
+        await finishSuccessfulSignIn();
+        return;
+      }
+
+      if (result.nextStep?.signInStep === "CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED") {
+        setPhase("newPassword");
+        setMessage("Email confirmed. Create a permanent password to finish setting up your account.");
+        return;
+      }
+
+      setPhase("signIn");
+      setMessage("Email confirmed. Sign in to continue.");
+    } catch (error) {
+      setMessage(getFriendlyAuthError(error, "Could not confirm this account."));
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
+  async function resendAccountConfirmation() {
+    setIsWorking(true);
+    setMessage("");
+
+    try {
+      await resendSignUpCode({ username: normalizeEmail(form.email) });
+      setMessage("A new confirmation code was sent. Check your inbox and spam folder.");
+    } catch (error) {
+      setMessage(getFriendlyAuthError(error, "Could not resend the account confirmation code."));
     } finally {
       setIsWorking(false);
     }
@@ -286,6 +351,35 @@ export default function LoginPage() {
           </label>
           <button className="primary-button full-width" type="submit" disabled={isWorking}>
             {isWorking ? "Saving..." : "Save Password and Continue"}
+          </button>
+          <button className="secondary-button full-width" type="button" onClick={backToSignIn}>
+            Back to sign in
+          </button>
+        </form>
+      ) : null}
+
+      {phase === "confirmAccount" ? (
+        <form className="form-card" onSubmit={submitAccountConfirmation}>
+          <h2>Confirm your email</h2>
+          <p className="helper-text">
+            Enter the confirmation code sent to {form.email}. Check your spam folder if it is not in your inbox.
+          </p>
+          <label>
+            Confirmation code
+            <input
+              name="confirmationCode"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              value={form.confirmationCode}
+              onChange={updateForm}
+              required
+            />
+          </label>
+          <button className="primary-button full-width" type="submit" disabled={isWorking}>
+            {isWorking ? "Confirming..." : "Confirm Email and Continue"}
+          </button>
+          <button className="secondary-button full-width" type="button" onClick={resendAccountConfirmation} disabled={isWorking}>
+            Resend Confirmation Code
           </button>
           <button className="secondary-button full-width" type="button" onClick={backToSignIn}>
             Back to sign in
