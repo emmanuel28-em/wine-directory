@@ -43,13 +43,7 @@ function AccountMenu({ authSession, currentWorkspace, hasPlatformAccess, isSigni
 function NavigationLinks({ authSession, currentWorkspace, hasPlatformAccess, location }) {
   if (authSession.status !== "authenticated") {
     return (
-      <>
-        <NavLink to="/">Home</NavLink>
-        <Link to="/#how-it-works">How it works</Link>
-        <NavLink to="/founding-restaurants">Founding offer</NavLink>
-        <NavLink to="/login" state={{ from: location.pathname }}>Sign in</NavLink>
-        <NavLink className="nav-primary-link" to="/trial">Start free trial</NavLink>
-      </>
+      <NavLink to="/library">Training Library</NavLink>
     );
   }
 
@@ -104,7 +98,7 @@ export default function AppLayout() {
   return (
     <div className="app-shell">
       <header className={isAuthenticated ? "site-header is-authenticated" : "site-header"}>
-        <NavLink className="brand" to={isAuthenticated ? authenticatedHome : "/"}>
+        <NavLink className="brand" to={isAuthenticated ? authenticatedHome : "/library"}>
           <span className="brand-mark" aria-hidden="true">
             <span className="brand-l">L</span>
             <span className="brand-u">U</span>
@@ -123,20 +117,6 @@ export default function AppLayout() {
             location={location}
           />
         </nav>
-
-        {!isAuthenticated ? (
-          <details className="mobile-nav-menu" key={location.pathname}>
-            <summary>Menu</summary>
-            <nav className="mobile-nav-links" aria-label="Mobile navigation">
-              <NavigationLinks
-                authSession={authSession}
-                currentWorkspace={currentWorkspace}
-                hasPlatformAccess={hasPlatformAccess}
-                location={location}
-              />
-            </nav>
-          </details>
-        ) : null}
 
         {isAuthenticated && !currentWorkspace.isLoading ? (
           <AccountMenu

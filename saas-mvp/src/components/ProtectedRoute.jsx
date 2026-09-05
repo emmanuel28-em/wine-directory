@@ -5,7 +5,7 @@ import { useCurrentWorkspace } from "../hooks/useCurrentWorkspace.js";
 
 const billingAllowedPaths = new Set(["/manager", "/manager/billing", "/manager/settings"]);
 
-export default function ProtectedRoute({ children, allowedRoles = [] }) {
+export default function ProtectedRoute({ children, allowedRoles = [], allowPublic = false }) {
   const location = useLocation();
   const amplifySetup = useAmplifySetup();
   const authSession = useAuthSession();
@@ -22,6 +22,9 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
   // If the user is not logged in, remember where they were trying to go.
   // After login, the Login page sends them back to this route.
   if (authSession.status !== "authenticated") {
+    if (allowPublic && currentWorkspace.status === "ready") {
+      return children;
+    }
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 

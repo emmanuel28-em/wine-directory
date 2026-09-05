@@ -215,9 +215,9 @@ export function docToForm(doc) {
   };
 }
 
-export async function listTrainingDocsForRestaurant(restaurantId) {
+export async function listTrainingDocsForRestaurant(restaurantId, options = {}) {
   requireRestaurantId(restaurantId);
-  const dataClient = getDataClient();
+  const dataClient = getDataClient(options.authMode ? { authMode: options.authMode } : {});
   const records = await listAllRecords(dataClient.models.TrainingDoc, {
     filter: {
       restaurantId: {

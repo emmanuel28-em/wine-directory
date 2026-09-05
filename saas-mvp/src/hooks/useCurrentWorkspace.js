@@ -3,7 +3,7 @@ import { useAmplifySetup } from "../amplify/AmplifySetupProvider.jsx";
 import { useAuthSession } from "../auth/AuthSessionProvider.jsx";
 import { isWorkspaceBillingPaused } from "../lib/billing.js";
 import { activeMemberRoles, adminManagerRoles, isAdminOrManager } from "../lib/permissions.js";
-import { loadUserWorkspace } from "../lib/workspace.js";
+import { loadPublicWorkspace, loadUserWorkspace } from "../lib/workspace.js";
 
 export { activeMemberRoles };
 export const managerRoles = adminManagerRoles;
@@ -36,7 +36,7 @@ export function useCurrentWorkspace() {
   });
 
   const reloadWorkspace = useCallback(async () => {
-    if (amplifySetup.status !== "ready" || authSession.status !== "authenticated") {
+    if (amplifySetup.status !== "ready" || authSession.status === "checking") {
       return null;
     }
 
@@ -47,7 +47,9 @@ export function useCurrentWorkspace() {
     }));
 
     try {
-      const nextWorkspace = await loadUserWorkspace(authSession.user);
+      const nextWorkspace = authSession.status === "authenticated"
+        ? await loadUserWorkspace(authSession.user)
+        : await loadPublicWorkspace();
       setWorkspace(nextWorkspace);
       return nextWorkspace;
     } catch (error) {
@@ -67,10 +69,10 @@ export function useCurrentWorkspace() {
     let isMounted = true;
 
     async function loadWorkspace() {
-      if (amplifySetup.status !== "ready" || authSession.status !== "authenticated") {
+      if (amplifySetup.status !== "ready" || authSession.status === "checking") {
         if (isMounted) {
           setWorkspace({
-            status: authSession.status === "authenticated" ? "loading" : "signedOut",
+            status: "loading",
             restaurant: null,
             userProfile: null,
             membership: null,
@@ -103,8 +105,9 @@ export function useCurrentWorkspace() {
       status: workspace.status,
       isLoading: amplifySetup.status === "loading" || authSession.status === "checking" || workspace.status === "loading",
       isAuthenticated: authSession.status === "authenticated",
+      isPublic: authSession.status !== "authenticated",
       isActiveMember: workspace.status === "ready" && workspace.membership?.status === "active",
-      isBillingPaused: workspace.status === "ready" && isWorkspaceBillingPaused(workspace.restaurant),
+      isBillingPaused: authSession.status === "authenticated" && workspace.status === "ready" && isWorkspaceBillingPaused(workspace.restaurant),
       isManager: isManagerRole(workspace.membership?.role),
       message: workspace.message,
       reloadWorkspace

@@ -17,7 +17,7 @@ function assertNoErrors(result, fallbackMessage) {
 
 export async function listCollectionsForRestaurant(restaurantId, options = {}) {
   requireRestaurantId(restaurantId);
-  const dataClient = getDataClient();
+  const dataClient = getDataClient(options.authMode ? { authMode: options.authMode } : {});
   const collections = await listAllRecords(dataClient.models.ContentCollection, {
     filter: {
       restaurantId: {

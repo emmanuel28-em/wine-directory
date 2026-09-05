@@ -190,6 +190,9 @@ const schema = a.schema({
       managerGroup: a.string()
     })
     .authorization((allow) => [
+      // Rezdora's current training library is intentionally public. Guest
+      // access is read-only; signed-in restaurant groups still control edits.
+      allow.guest().to(["read"]),
       // Everyone in this restaurant can read its profile. Only its manager
       // group can make profile changes; workspace creation happens in Lambda.
       allow.groupDefinedIn("tenantGroup").to(["read"]),
@@ -338,6 +341,7 @@ const schema = a.schema({
       managerGroup: a.string()
     })
     .authorization((allow) => [
+      allow.guest().to(["read"]),
       allow.groupDefinedIn("tenantGroup").to(["read"]),
       allow.groupDefinedIn("managerGroup").to(["create", "update", "delete"])
     ]),
@@ -360,6 +364,7 @@ const schema = a.schema({
       managerGroup: a.string()
     })
     .authorization((allow) => [
+      allow.guest().to(["read"]),
       allow.groupDefinedIn("tenantGroup").to(["read"]),
       allow.groupDefinedIn("managerGroup").to(["create", "update", "delete"])
     ]),
@@ -443,6 +448,7 @@ const schema = a.schema({
       managerGroup: a.string()
     })
     .authorization((allow) => [
+      allow.guest().to(["read"]),
       allow.groupDefinedIn("tenantGroup").to(["read"]),
       allow.groupDefinedIn("managerGroup").to(["create", "update", "delete"])
     ]),

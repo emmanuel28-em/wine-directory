@@ -27,7 +27,7 @@ export default function App() {
   return (
     <Routes>
       <Route element={<AppLayout />}>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<Navigate to="/library" replace />} />
         <Route path="/founding-restaurants" element={<FoundingRestaurantsPage />} />
         <Route path="/trial" element={<TrialPage />} />
         <Route path="/managed-setup" element={<ManagedSetupPage />} />
@@ -173,16 +173,14 @@ export default function App() {
         <Route
           path="/home"
           element={
-            <ProtectedRoute allowedRoles={activeMemberRoles}>
-              <StudyHomePage />
-            </ProtectedRoute>
+            <Navigate to="/library" replace />
           }
         />
         <Route path="/staff" element={<Navigate to="/home" replace />} />
         <Route
           path="/library"
           element={
-            <ProtectedRoute allowedRoles={activeMemberRoles}>
+            <ProtectedRoute allowPublic allowedRoles={activeMemberRoles}>
               <StaffLibrary />
             </ProtectedRoute>
           }
@@ -190,7 +188,7 @@ export default function App() {
         <Route
           path="/training-library"
           element={
-            <ProtectedRoute allowedRoles={activeMemberRoles}>
+            <ProtectedRoute allowPublic allowedRoles={activeMemberRoles}>
               <Navigate to="/library" replace />
             </ProtectedRoute>
           }

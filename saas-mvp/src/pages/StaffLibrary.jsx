@@ -139,14 +139,15 @@ export default function StaffLibrary() {
     try {
       const restaurantId = workspace.restaurant.id;
       const userProfileId = workspace.userProfile.id;
+      const publicOptions = workspace.isPublic ? { authMode: "identityPool" } : {};
       const [nextCollections, allDocs, nextFiles, nextAcknowledgements, assignments, groupMembers, nextProgress] = await Promise.all([
-        listCollectionsForRestaurant(restaurantId),
-        listTrainingDocsForRestaurant(restaurantId),
-        listFileAssetsForRestaurant(restaurantId),
-        listMyTrainingAcknowledgements({ restaurantId, userProfileId }),
-        listTrainingAssignmentsForRestaurant(restaurantId),
-        listStaffGroupMembersForRestaurant(restaurantId),
-        listMyTrainingProgress({ restaurantId, userProfileId })
+        listCollectionsForRestaurant(restaurantId, publicOptions),
+        listTrainingDocsForRestaurant(restaurantId, publicOptions),
+        listFileAssetsForRestaurant(restaurantId, publicOptions),
+        workspace.isPublic ? [] : listMyTrainingAcknowledgements({ restaurantId, userProfileId }),
+        workspace.isPublic ? [] : listTrainingAssignmentsForRestaurant(restaurantId),
+        workspace.isPublic ? [] : listStaffGroupMembersForRestaurant(restaurantId),
+        workspace.isPublic ? [] : listMyTrainingProgress({ restaurantId, userProfileId })
       ]);
       const publishedDocs = allDocs.filter((doc) => doc.status === "published");
       const firstImageByDoc = new Map();
@@ -291,6 +292,9 @@ export default function StaffLibrary() {
   }
 
   async function handleStudyResponse(card, response) {
+    // Visitors can use the complete practice deck without an account. Their
+    // response advances the local deck but is intentionally not written to DB.
+    if (workspace.isPublic) return;
     const existingProgress = progressRecords.find((record) => record.trainingDocId === card.trainingDocId);
     const result = await recordTrainingFactResponse({
       restaurantId: workspace.restaurant.id,
@@ -336,7 +340,7 @@ export default function StaffLibrary() {
           <p>Find a dish, drink, wine, or procedure and study it without leaving the page.</p>
         </div>
         <div className="header-action-row">
-          <Link className="secondary-button" to="/home">Quick practice</Link>
+          {!workspace.isPublic ? <Link className="secondary-button" to="/home">Quick practice</Link> : null}
           {canManageLibrary ? <Link className="primary-button" to="/manager/create-training">Add training page</Link> : null}
         </div>
       </header>
@@ -346,7 +350,7 @@ export default function StaffLibrary() {
           <span>Search the library</span>
           <input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search dishes, allergens, ingredients, wines..." />
         </label>
-        <div className="quick-filter-row" aria-label="Study status filters">
+        {!workspace.isPublic ? <div className="quick-filter-row" aria-label="Study status filters">
           {[
             ["all", "All"],
             ["needs-review", "Needs review"],
@@ -357,7 +361,7 @@ export default function StaffLibrary() {
               {label}
             </button>
           ))}
-        </div>
+        </div> : null}
       </div>
 
       {message ? <div className="inline-alert">{message}</div> : null}
@@ -466,11 +470,11 @@ export default function StaffLibrary() {
             {activeDoc ? (
               <>
                 <div className="library-study-status">
-                  <span className={activeReviewed ? "status-badge status-published" : "status-badge status-review"}>{activeReviewed ? "Reviewed" : "Needs review"}</span>
-                  <h2>{activeFactCount}/{reviewQuestionCount} facts complete</h2>
-                  <div className="study-progress-track"><span style={{ width: `${Math.min(100, (activeFactCount / reviewQuestionCount) * 100)}%` }} /></div>
-                  <p>Get five facts right to mark this page current.</p>
-                  <button className="primary-button full-width" type="button" onClick={startReview}>{activeReviewed ? "Practice again" : activeFactCount ? "Continue review" : "Start review"}</button>
+                  <span className={activeReviewed ? "status-badge status-published" : "status-badge status-review"}>{workspace.isPublic ? "Practice" : activeReviewed ? "Reviewed" : "Needs review"}</span>
+                  <h2>{workspace.isPublic ? `${activeQuestions.length} study facts` : `${activeFactCount}/${reviewQuestionCount} facts complete`}</h2>
+                  {!workspace.isPublic ? <div className="study-progress-track"><span style={{ width: `${Math.min(100, (activeFactCount / reviewQuestionCount) * 100)}%` }} /></div> : null}
+                  <p>{workspace.isPublic ? "Test yourself on the most important details." : "Get five facts right to mark this page current."}</p>
+                  <button className="primary-button full-width" type="button" onClick={startReview}>{workspace.isPublic ? "Start practice" : activeReviewed ? "Practice again" : activeFactCount ? "Continue review" : "Start review"}</button>
                 </div>
 
                 {activeContent?.allergens ? (
@@ -507,9 +511,9 @@ export default function StaffLibrary() {
         />
       ) : null}
 
-      <footer className="library-workspace-footer">
+      {!workspace.isPublic ? <footer className="library-workspace-footer">
         <Link to="/report-issue">Report outdated information</Link>
-      </footer>
+      </footer> : null}
     </section>
   );
 }

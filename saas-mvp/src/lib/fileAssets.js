@@ -158,9 +158,9 @@ export async function uploadFileAsset({ restaurantId, trainingDocId = null, mana
   );
 }
 
-export async function listFileAssetsForRestaurant(restaurantId) {
+export async function listFileAssetsForRestaurant(restaurantId, options = {}) {
   requireRestaurantId(restaurantId);
-  const dataClient = getDataClient();
+  const dataClient = getDataClient(options.authMode ? { authMode: options.authMode } : {});
   const records = await listAllRecords(dataClient.models.FileAsset, {
     filter: {
       restaurantId: {

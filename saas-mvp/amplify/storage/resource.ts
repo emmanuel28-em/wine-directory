@@ -6,7 +6,10 @@ export const storage = defineStorage({
     // Files are organized by restaurantId in the key path.
     // App-layer helpers still verify restaurant membership before upload/list/delete.
     "restaurants/*": [
-      allow.authenticated.to(["read", "write", "delete"])
+      allow.authenticated.to(["read", "write", "delete"]),
+      // Public visitors may view training images, but can never upload,
+      // replace, or delete restaurant files.
+      allow.guest.to(["read"])
     ],
     // Public uploads are intentionally not enabled yet.
     // Managed setup files are accepted after a user signs into a restaurant workspace.
